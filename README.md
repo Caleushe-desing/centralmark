@@ -21,6 +21,26 @@ npm run dev
 
 Abre [http://localhost:3000](http://localhost:3000)
 
+## Flujo entre computadoras (notebook / PC)
+
+Comandos en el chat del agente de Cursor (mismo usuario en ambos equipos):
+
+| Comando | Cuándo usarlo |
+|---------|---------------|
+| `/iniciar-jornada` | Al **empezar** a trabajar (sincroniza con GitHub) |
+| `/cerrar-jornada` | Al **terminar** — sube la rama, **sin** tocar master |
+| `/cerrar-jornada` + merge | Al terminar y los cambios **están listos** — sube y mergea a master |
+
+También puedes decir en lenguaje natural: *"iniciar jornada"*, *"cerrar jornada"*, *"cerrar jornada y mergear"*.
+
+Equivalente manual:
+
+```bash
+npm run work:start
+npm run work:end -- -m "tu mensaje"
+npm run work:end -- -m "tu mensaje" --merge
+```
+
 ### Rutas
 
 | Ruta | Descripción |

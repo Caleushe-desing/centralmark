@@ -36,26 +36,24 @@ El logo del comercio se superpone después — no lo dibujes.
 
 Responde SOLO con JSON: {"dallePrompt": "..."}`;
 
-const PROMPT_SYSTEM_COMPLETE = `Eres un experto en convertir pedidos en español a prompts para generación de imágenes con IA (GPT Image).
+const PROMPT_SYSTEM_COMPLETE = `Eres un director de arte de agencia especializado en fondos para anuncios Instagram 1080×1080.
 
-El usuario eligió "imagen completa": necesitas solo la ESCENA FOTOGRÁFICA de fondo.
-Los textos promocionales en español se superponen después con tipografía real (ortografía perfecta).
+Genera prompts para ESCENAS FOTOGRÁFICAS DE FONDO — los textos promocionales se superponen después con tipografía profesional.
 
-REGLA #1 — LA ESCENA DEBE COINCIDIR SOLO CON EL BRIEF DEL CLIENTE:
-- Si el brief habla de software, páginas web, oficina, servicios → escena tecnológica/profesional (NO zapatillas, NO tienda deportiva)
-- Si habla de comida → gastronomía. Si habla de ropa → moda. Etc.
-- NUNCA asumas calzado, outlet deportivo o zapatillas si el brief no los menciona
+ESTILO VISUAL OBLIGATORIO:
+- Fotografía comercial premium, cinematográfica, alta gama
+- Composición limpia con ESPACIO NEGATIVO en tercio superior e inferior (zonas oscuras/naturales para texto)
+- Profundidad de campo suave (bokeh), iluminación direccional elegante
+- Paleta sobria y profesional — evita colores chillones o saturación excesiva
+- Escena despejada, sin elementos que compitan con el texto
+- NO texto, letreros, watermarks ni logos en la imagen
 
-Describe una ESCENA estilo anuncio profesional de Instagram según el brief.
-- Iluminación comercial, composición cuadrada 1:1, alta calidad
-- Si el cliente nombra una MARCA en el brief, productos con esa marca visible (sin texto legible inventado)
+LA ESCENA DEBE COINCIDIR SOLO CON EL BRIEF:
+- Software/web → ambiente tech minimal, pantallas desenfocadas, oficina moderna
+- Retail → producto hero bien iluminado, fondo limpio
+- NUNCA asumas zapatillas/outlet si el brief no lo pide
 
-PROHIBIDO en la imagen: texto escrito, letreros con palabras, watermarks, tipografía, logos inventados.
-El logo del comercio se superpone después — no lo dibujes.
-
-Genera UN prompt en INGLÉS, detallado (4-8 oraciones).
-
-Responde SOLO con JSON: {"dallePrompt": "..."}`;
+Prompt en INGLÉS, 4-6 oraciones. JSON: {"dallePrompt": "..."}`;
 
 function getOpenAI() {
   const apiKey = process.env.OPENAI_API_KEY;
@@ -174,10 +172,10 @@ export async function generateImageWithDalle(
 
   const suffix =
     mode === "complete"
-      ? `Square 1:1. Scene ONLY from client brief. NO shoes or sport store unless brief asks. NO text, words, signs, or logos in image. ${brandSuffix} Merchant logo added separately. No watermarks.`
+      ? `Square 1:1. Premium agency advertising photography. Clean composition with natural dark negative space in top and bottom thirds for text overlay. Muted cinematic color grading, shallow depth of field. Scene ONLY from client brief. NO text, words, signs, or logos. ${brandSuffix} No watermarks.`
       : `Square 1:1 aspect ratio. Scene ONLY from client brief. No promotional text overlay. ${brandSuffix} Merchant store logo added separately in top-right. No watermarks.`;
 
-  const quality = mode === "complete" && hasBrands ? "high" : "medium";
+  const quality = mode === "complete" ? "high" : hasBrands ? "high" : "medium";
 
   try {
     const result = await openai.images.generate({

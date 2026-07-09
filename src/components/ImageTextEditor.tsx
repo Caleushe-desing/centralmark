@@ -336,10 +336,14 @@ export function ImageTextEditor({
   }, [discountPercent, setLayersWithHistory]);
 
   useEffect(() => {
+    const isEditorial = layers.some(
+      (l) => l.align === "left" && (l.fontFamily === "playfair" || l.fontFamily === "oswald")
+    );
     onRegisterExport(() =>
       exportComposedImage(imageUrl, layers, 1080, logoUrl, logoLayer, {
         promoScrims: isComplete && layers.length > 0,
-        accentRibbon: isComplete && layers.some((l) => l.variant === "badge"),
+        accentLine: isComplete && layers.length >= 3,
+        editorialLayout: isEditorial,
       })
     );
     return () => onRegisterExport(null);

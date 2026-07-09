@@ -296,39 +296,23 @@ EVITAR en esta pieza:
 ${direction.avoidPatterns.map((p) => `- ${p}`).join("\n")}`;
 }
 
-export const LAYER_JSON_SCHEMA = `Devuelve JSON:
+export const LAYER_JSON_SCHEMA = `Devuelve JSON con SOLO los textos (el estilo visual lo aplica el sistema automáticamente):
 {
-  "composition": "nombre de tu interpretación creativa",
+  "composition": "nombre corto de tu concepto",
   "marketingTechnique": "técnica aplicada",
   "layers": [
-    {
-      "text": "texto",
-      "x": 0-100,
-      "y": 0-100,
-      "fontSize": 18-110,
-      "fontFamily": "bebas|anton|oswald|montserrat|playfair|impact|pacifico|system",
-      "color": "#hex",
-      "bold": true,
-      "italic": false,
-      "align": "left|center|right",
-      "strokeWidth": 0-6,
-      "strokeColor": "#hex o null",
-      "backgroundColor": null o "rgba(...)",
-      "variant": "text|badge|pill",
-      "badgeColor": "#hex o null",
-      "letterSpacing": 0-8,
-      "rotation": -8 a 8
-    }
+    { "text": "gancho corto 3-5 palabras", "x": 50, "y": 14, "fontSize": 24, "fontFamily": "oswald", "color": "#fff", "variant": "text" },
+    { "text": "titular producto", "x": 50, "y": 34, "fontSize": 64, "fontFamily": "bebas", "color": "#fff", "variant": "text" },
+    { "text": "beneficio clave", "x": 50, "y": 54, "fontSize": 24, "fontFamily": "montserrat", "color": "#fff", "variant": "text" },
+    { "text": "CTA verbo", "x": 50, "y": 88, "fontSize": 26, "fontFamily": "oswald", "color": "#050505", "variant": "pill" }
   ]
 }
 
-REGLAS TÉCNICAS (CRÍTICAS — incumplirlas arruina el diseño):
-- MÁXIMO 4 capas de texto (gancho + titular + beneficio + CTA)
-- Cada capa = UNA frase corta. Máximo 28 caracteres en gancho/titular, 40 en beneficio, 18 en CTA
-- NUNCA pongas párrafos largos ni oraciones completas de más de 6 palabras por capa
-- NUNCA uses saltos de línea \\n en el texto
-- Coordenadas Y obligatorias: gancho y:14-18, titular y:32-38, beneficio y:50-58, CTA y:86-90
-- Separa capas al menos 15 puntos en Y entre centros
-- badge SOLO si texto ≤8 caracteres (ej. "-30%", "2x1")
-- Copy español chileno perfecto, sin emojis
-- CTA con verbo en pill inferior`;
+REGLAS DE COPY (lo importante es el TEXTO, no el diseño):
+- Exactamente 3 o 4 capas
+- Gancho: pregunta o frase de impacto, máx 28 caracteres
+- Titular: nombre del producto/servicio, máx 26 caracteres
+- Beneficio: una frase de valor, máx 38 caracteres
+- CTA: verbo + acción, máx 18 caracteres (ej. "Solicita demo", "Cotiza hoy")
+- Sin emojis, español chileno impecable
+- NO párrafos largos, NO saltos de línea`;

@@ -1,5 +1,5 @@
 import { buildOutletInstagramLayers } from "./promo-templates";
-import { drawAccentRibbon, drawPromoScrims } from "./promo-overlays";
+import { drawAccentLine, drawLeftAccentLine, drawPromoScrims } from "./promo-overlays";
 import { drawStoreLogoOnCanvas, type LogoLayer } from "./store-logo";
 
 export type TextVariant = "text" | "badge" | "pill";
@@ -216,9 +216,9 @@ function drawTextLayer(ctx: CanvasRenderingContext2D, layer: TextLayer, size: nu
     }
 
     ctx.fillStyle = layer.color;
-    ctx.shadowColor = "rgba(0,0,0,0.75)";
-    ctx.shadowBlur = Math.max(4, layer.fontSize * 0.1);
-    ctx.shadowOffsetY = 2;
+    ctx.shadowColor = "rgba(0,0,0,0.55)";
+    ctx.shadowBlur = Math.max(6, layer.fontSize * 0.14);
+    ctx.shadowOffsetY = 3;
     ctx.fillText(line, 0, ly);
   }
 
@@ -274,7 +274,11 @@ export async function exportComposedImage(
   size = 1080,
   logoUrl?: string | null,
   logoLayer?: LogoLayer | null,
-  options?: { promoScrims?: boolean; accentRibbon?: boolean }
+  options?: {
+    promoScrims?: boolean;
+    accentLine?: boolean;
+    editorialLayout?: boolean;
+  }
 ): Promise<Blob> {
   await ensureFontsReady(layers);
 
@@ -293,8 +297,12 @@ export async function exportComposedImage(
   const usePromo = options?.promoScrims ?? layers.length > 0;
   if (usePromo) {
     drawPromoScrims(ctx, size);
-    if (options?.accentRibbon) {
-      drawAccentRibbon(ctx, size);
+    if (options?.accentLine) {
+      if (options.editorialLayout) {
+        drawLeftAccentLine(ctx, size, 34);
+      } else {
+        drawAccentLine(ctx, size, 38);
+      }
     }
   }
 

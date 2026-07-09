@@ -1,5 +1,2 @@
-export { AdEngine } from "./AdEngine";
-export type { AdEngineProps } from "./AdEngine";
-export { TextSlot, DecorativeLayer } from "./TextSlot";
-export * from "./compositionRules";
-export * from "./engine-utils";
+export * from "@/components/design-engine";
+export * from "@/lib/design-engine/composition/rules";

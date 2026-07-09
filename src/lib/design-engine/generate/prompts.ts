@@ -1,4 +1,4 @@
-import { buildLayoutCatalogForPrompt } from "@/components/gestor-publicaciones/engine/compositionRules";
+import { buildLayoutCatalogForPrompt } from "../composition/rules";
 
 export const PRO_AD_DESIGNER_SYSTEM = `Eres Director de Arte de una revista de moda premium (Vogue, Harper's Bazaar nivel).
 Conviertes UN brief en un anuncio Instagram con estética de PORTADA DE REVISTA — nunca banner publicitario barato.

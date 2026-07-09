@@ -1,12 +1,12 @@
-/** Precios operativos estimados (USD) — actualizar según tarifas OpenAI. */
+/** Precios operativos reales (USD) — actualizar según tarifas OpenAI. */
 export const AI_PRICING = {
   gpt4o: {
     inputPer1M: 5.0,
     outputPer1M: 15.0,
   },
   image: {
-    /** Costo fijo por imagen generada (gpt-image-1 high ~$0.17; valor conservador configurable). */
-    fixedPerImage: 0.05,
+    /** gpt-image-1 high quality ~$0.17 por imagen 1024×1024 */
+    fixedPerImage: 0.17,
   },
 } as const;
 

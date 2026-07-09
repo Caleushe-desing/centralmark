@@ -3,10 +3,12 @@
 import { CaptionEditor } from "@/components/CaptionEditor";
 import { CensoredInput, CensoredTextarea } from "@/components/CensoredField";
 import { OfferPreview } from "@/components/OfferPreview";
+import { DesignEnginePreview } from "@/components/design-engine/DesignEnginePreview";
+import type { DesignPreviewState } from "@/components/design-engine/DesignEnginePreview";
 import { buildDefaultHashtags } from "@/lib/offer/default-copy";
 import type { ImageCreationMode } from "@/lib/ai/image-generator";
 import type { TextLayer } from "@/lib/image/text-layers";
-import { ImagePlus, Layers, Scissors, Sparkles, Upload, Wand2, Zap } from "lucide-react";
+import { ImagePlus, Scissors, Sparkles, Upload, Wand2 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { CampaignApplyPayload } from "@/components/CampaignStudio";
 
@@ -50,6 +52,9 @@ export function OfferCreator({
   const [previewTextLayers, setPreviewTextLayers] = useState<TextLayer[] | undefined>();
   const [captionSuggestLoading, setCaptionSuggestLoading] = useState(false);
   const [campaignImagePrompt, setCampaignImagePrompt] = useState<string | null>(null);
+  const [designTrigger, setDesignTrigger] = useState(0);
+  const [designPreview, setDesignPreview] = useState<DesignPreviewState | null>(null);
+  const [generationPhase, setGenerationPhase] = useState<string | null>(null);
 
   useEffect(() => {
     if (!campaignSeed?.applyId) return;
@@ -77,6 +82,8 @@ export function OfferCreator({
     setCaption("");
     setOfferHashtags("");
     setUploadedFile(null);
+    setDesignPreview(null);
+    setGenerationPhase(null);
   }
 
   function applyAiSuggestions(data: {
@@ -136,35 +143,25 @@ export function OfferCreator({
     }
   }
 
-  async function generatePreview() {
+  function generatePreview() {
     if (!brief.trim()) {
       setError("Escribe qué quieres publicar");
       return;
     }
-    setPreviewLoading(true);
     setError(null);
-    resetPreview();
+    setDesignPreview(null);
+    setPreviewImageUrl(null);
+    setExportImage(null);
+    setDesignTrigger((t) => t + 1);
+  }
 
-    const res = await fetch("/api/store/preview-image", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ aiBrief: brief, creationMode: aiCreationMode }),
-    });
-
-    setPreviewLoading(false);
-
-    if (!res.ok) {
-      const data = await res.json().catch(() => ({}));
-      setError((data as { error?: string }).error ?? "No se pudo generar la vista previa");
-      return;
+  function handleDesignReady(state: DesignPreviewState) {
+    setDesignPreview(state);
+    setPreviewMeta({ productName: state.design.hook, discountPercent: null });
+    setCaption(state.design.caption);
+    if (!offerHashtags.trim()) {
+      setOfferHashtags(buildDefaultHashtags(null, state.design.hook));
     }
-
-    const data = await res.json();
-    setPreviewImageUrl(data.previewDataUrl ?? data.previewUrl);
-    setActiveCreationMode(
-      data.creationMode === "complete" ? "complete" : aiCreationMode
-    );
-    applyAiSuggestions(data);
   }
 
 type UploadMode = "default" | "enhance" | "removeBg";
@@ -229,8 +226,8 @@ type UploadMode = "default" | "enhance" | "removeBg";
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!previewImageUrl || !exportImage) {
-      setError("Primero prepara tu imagen (genera o sube una foto)");
+    if (!exportImage) {
+      setError("Primero genera tu publicación con el motor de diseño");
       return;
     }
     if (!caption.trim()) {
@@ -387,61 +384,12 @@ type UploadMode = "default" | "enhance" | "removeBg";
         ) : (
           <div className="space-y-3">
             <div>
-              <label className="block text-sm text-neutral-400 mb-2">
-                ¿Cómo quieres crear la imagen?
-              </label>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setAiCreationMode("complete");
-                    if (previewImageUrl) resetPreview();
-                  }}
-                  className={`text-left p-3 rounded-xl border transition ${
-                    aiCreationMode === "complete"
-                      ? "border-mm-yellow/50 bg-mm-yellow/10"
-                      : "border-white/10 hover:border-mm-yellow/25"
-                  }`}
-                >
-                  <div className="flex items-center gap-2 text-sm font-medium text-white mb-1">
-                    <Zap className="w-4 h-4 text-mm-yellow" />
-                    Imagen completa (IA)
-                  </div>
-                  <p className="text-xs text-neutral-500 leading-relaxed">
-                    Publicación lista para compartir: escena + textos integrados con ortografía
-                    verificada.
-                  </p>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setAiCreationMode("editor");
-                    if (previewImageUrl) resetPreview();
-                  }}
-                  className={`text-left p-3 rounded-xl border transition ${
-                    aiCreationMode === "editor"
-                      ? "border-mm-neon/50 bg-mm-neon/10"
-                      : "border-white/10 hover:border-mm-neon/25"
-                  }`}
-                >
-                  <div className="flex items-center gap-2 text-sm font-medium text-white mb-1">
-                    <Layers className="w-4 h-4 text-mm-neon" />
-                    Escena + editor
-                  </div>
-                  <p className="text-xs text-neutral-500 leading-relaxed">
-                    La IA genera solo el fondo; tú editas textos, colores y posición encima.
-                  </p>
-                </button>
-              </div>
-            </div>
-
-            <div>
               <label className="block text-sm text-neutral-400 mb-1">
-                Idea para generar la imagen con IA *
+                Idea para tu publicación *
               </label>
               {campaignImagePrompt && (
                 <p className="text-xs text-mm-yellow/90 bg-mm-yellow/5 border border-mm-yellow/20 rounded-lg px-3 py-2 mb-2 leading-relaxed">
-                  <strong className="text-mm-yellow">Prompt visual sugerido por la campaña:</strong>{" "}
+                  <strong className="text-mm-yellow">Sugerencia de campaña:</strong>{" "}
                   {campaignImagePrompt.slice(0, 220)}
                   {campaignImagePrompt.length > 220 ? "…" : ""}
                 </p>
@@ -451,18 +399,17 @@ type UploadMode = "default" | "enhance" | "removeBg";
                 value={brief}
                 onChange={(v) => {
                   setBrief(v);
-                  if (previewImageUrl) resetPreview();
+                  if (designPreview || previewImageUrl) resetPreview();
                 }}
                 rows={5}
-                placeholder="Ej: Publicación Instagram, zapatillas Adidas outlet 30% en todos los pares, tienda deportiva…"
+                placeholder="Ej: Zapatillas Nike outlet 30%, estética editorial premium, urgencia fin de semana…"
                 className="w-full bg-mm-surface border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-neutral-600 resize-none"
               />
             </div>
 
             <p className="text-xs text-neutral-600">
-              En &quot;Imagen completa&quot; la IA arma la publicación lista para Instagram. Los textos
-              se integran con tipografía real (no los dibuja la IA) para evitar errores de
-              ortografía. Usa &quot;Escena + editor&quot; si prefieres armar los textos tú mismo.
+              El Design Engine genera composición editorial, imagen IA y copy optimizado. Misma
+              calidad que el Gestor Pro, integrado en tu flujo de tienda.
             </p>
 
             <button
@@ -471,16 +418,12 @@ type UploadMode = "default" | "enhance" | "removeBg";
               onClick={generatePreview}
               className="w-full py-2.5 rounded-xl bg-mm-neon/90 text-black text-sm hover:bg-mm-neon-dim disabled:opacity-50"
             >
-              {previewLoading
-                ? "Generando imagen…"
-                : aiCreationMode === "complete"
-                  ? "✨ Generar publicación completa"
-                  : "✨ Generar escena con IA"}
+              {previewLoading ? (generationPhase ?? "Generando…") : "✨ Generar con Design Engine"}
             </button>
           </div>
         )}
 
-        {(previewImageUrl || caption.trim()) && (
+        {(designPreview || previewImageUrl || caption.trim()) && (
           <div className="space-y-4 pt-2 border-t border-white/10">
             <div>
               <label className="block text-sm text-neutral-400 mb-1">
@@ -531,7 +474,7 @@ type UploadMode = "default" | "enhance" | "removeBg";
 
         <button
           type="submit"
-          disabled={loading || previewLoading || !previewImageUrl}
+          disabled={loading || previewLoading || !exportImage}
           className="w-full py-3 rounded-xl mm-btn-primary mm-glow-neon disabled:opacity-50"
         >
           {loading ? "Subiendo publicación…" : "Subir publicación"}
@@ -539,21 +482,42 @@ type UploadMode = "default" | "enhance" | "removeBg";
       </form>
 
       <div className="lg:sticky lg:top-24">
-        <OfferPreview
-          previewImageUrl={previewImageUrl}
-          previewLoading={previewLoading}
-          creationMode={activeCreationMode}
-          productName={previewMeta?.productName}
-          discountPercent={previewMeta?.discountPercent ?? undefined}
-          caption={caption}
-          offerHashtags={offerHashtags}
-          mallHashtags={mallHashtags}
-          storeName={storeBranding?.name}
-          mallName={storeBranding?.mallName}
-          logoUrl={storeBranding?.logoUrl}
-          initialTextLayers={previewTextLayers}
-          onRegisterExport={handleRegisterExport}
-        />
+        {imageSource === "ai" ? (
+          <div className="space-y-4">
+            <DesignEnginePreview
+              brief={brief}
+              trigger={designTrigger}
+              onReady={handleDesignReady}
+              onExportReady={handleRegisterExport}
+              onError={setError}
+              onLoadingChange={(v) => {
+                setPreviewLoading(v);
+                if (!v) setGenerationPhase(null);
+              }}
+            />
+            {!designPreview && !previewLoading && (
+              <p className="text-neutral-600 text-sm text-center py-12">
+                La vista previa editorial aparecerá aquí
+              </p>
+            )}
+          </div>
+        ) : (
+          <OfferPreview
+            previewImageUrl={previewImageUrl}
+            previewLoading={previewLoading}
+            creationMode={activeCreationMode}
+            productName={previewMeta?.productName}
+            discountPercent={previewMeta?.discountPercent ?? undefined}
+            caption={caption}
+            offerHashtags={offerHashtags}
+            mallHashtags={mallHashtags}
+            storeName={storeBranding?.name}
+            mallName={storeBranding?.mallName}
+            logoUrl={storeBranding?.logoUrl}
+            initialTextLayers={previewTextLayers}
+            onRegisterExport={handleRegisterExport}
+          />
+        )}
       </div>
     </div>
   );

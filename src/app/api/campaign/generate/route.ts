@@ -4,7 +4,11 @@ import { createDesignJob, enqueueDesignJob } from "@/lib/design-engine/jobs/proc
 import { DesignEngineError } from "@/lib/design-engine/errors";
 import { requireStoreSession } from "@/lib/auth/session";
 
-/** @deprecated Usa POST /api/campaign/generate */
+/**
+ * POST /api/campaign/generate
+ * Inicia generación asíncrona: Brief → Composición → Render → Persist.
+ * Retorna jobId para polling en GET /api/campaign/generate/[jobId]
+ */
 export async function POST(request: Request) {
   try {
     const session = await requireStoreSession();
@@ -27,16 +31,18 @@ export async function POST(request: Request) {
         jobId,
         status: "QUEUED",
         pollUrl: `/api/campaign/generate/${jobId}`,
-        deprecated: true,
-        message: "Usa /api/campaign/generate para nuevas integraciones",
       },
       { status: 202 }
     );
   } catch (error) {
     if (error instanceof DesignEngineError) {
+      const headers: HeadersInit = {};
+      if (error.retryAfterSeconds) {
+        headers["Retry-After"] = String(error.retryAfterSeconds);
+      }
       return NextResponse.json(
         { error: error.message, code: error.code },
-        { status: error.statusCode }
+        { status: error.statusCode, headers }
       );
     }
 

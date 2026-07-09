@@ -193,7 +193,7 @@ export function applyLayoutSlots(
       x: alignLeft && role !== "badge" ? 14 : layer.x,
       align: alignLeft && role !== "badge" ? "left" : layer.align,
       fontSize,
-      variant: role === "cta" ? "pill" : layer.variant === "badge" ? "badge" : layer.variant,
+      variant: role === "cta" ? "pill" : role === "badge" ? "badge" : layer.variant,
       backgroundColor:
         role === "cta"
           ? layer.backgroundColor ?? "#ffe600"

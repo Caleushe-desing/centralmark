@@ -139,7 +139,7 @@ export async function generateAdImage(input: AdImageInput): Promise<AdImageResul
       validated.size
     );
 
-    const image = result.data?.[0];
+    const image = "data" in result ? result.data?.[0] : undefined;
     if (!image) {
       throw new AdImageGenerationError("Respuesta vacía de generación de imagen", "EMPTY_RESPONSE", 502);
     }

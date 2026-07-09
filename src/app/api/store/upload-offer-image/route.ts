@@ -74,7 +74,7 @@ export async function POST(request: NextRequest) {
         filename,
         "promo"
       );
-      buffer = await composeProductShot(noBg);
+      buffer = Buffer.from(await composeProductShot(noBg));
       mimeType = "image/png";
       wasRemoveBg = true;
       removeBgUsedAi = usedAi;
@@ -82,7 +82,7 @@ export async function POST(request: NextRequest) {
       const squareForEnhance = await prepareSquarePng(buffer);
       const enhanced = await enhanceOfferImage(squareForEnhance, aiBrief);
       if (enhanced) {
-        buffer = enhanced;
+        buffer = Buffer.from(enhanced);
         mimeType = "image/png";
         wasEnhanced = true;
       }

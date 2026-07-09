@@ -1,4 +1,3 @@
-export { generateProAd, ProAdGenerationError, resolveCompositionLayout, getStyleName } from "./generate-pro-ad";
-export type { ProAdInput, ProAdResult, ProAdDesign, CompositionCategory } from "./schemas";
-export { proAdInputSchema } from "./schemas";
-export { calculateGenerationCost, formatCostUsd, AI_PRICING } from "./financial-engine";
+// Re-export legacy path → design-engine
+export * from "@/lib/design-engine";
+export { generateProAd, ProAdGenerationError } from "@/lib/design-engine/generate/legacy-compat";

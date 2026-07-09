@@ -116,6 +116,7 @@ ESTRATEGIA DE MARKETING:
 
 ${LAYER_JSON_SCHEMA}
 
+IMPORTANTE: Máximo 4 capas en el JSON final. Textos MUY cortos (3-6 palabras por capa).
 Ejecuta la estrategia con criterio de diseñador gráfico senior.`,
         },
         {

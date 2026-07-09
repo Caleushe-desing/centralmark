@@ -1,6 +1,9 @@
 import OpenAI from "openai";
 import { z } from "zod";
 import {
+  finalizeLayerLayout,
+} from "@/lib/image/layer-layout";
+import {
   createTextLayer,
   normalizeLayer,
   type TextLayer,
@@ -139,15 +142,8 @@ function ensureTextFitsSafeArea(layer: TextLayer): TextLayer {
   } else if (align === "left") {
     if (x < margin) x = margin;
     if (x + widthPct > 100 - margin) {
-      const words = text.split(/\s+/);
-      if (words.length > 2 && !text.includes("\n")) {
-        const mid = Math.ceil(words.length / 2);
-        text = `${words.slice(0, mid).join(" ")}\n${words.slice(mid).join(" ")}`;
-        fontSize = Math.min(fontSize, 52);
-        widthPct = estimateTextWidthPercent(text, fontSize);
-      } else {
-        fontSize = Math.min(fontSize, 42);
-      }
+      fontSize = Math.min(fontSize, 36);
+      widthPct = estimateTextWidthPercent(text, fontSize);
     }
   } else if (align === "right") {
     if (x - widthPct < margin) x = margin + widthPct;
@@ -163,9 +159,12 @@ function ensureTextFitsSafeArea(layer: TextLayer): TextLayer {
   });
 }
 
-function normalizeCreativeLayers(raw: z.infer<typeof creativeDesignSchema>["layers"]): TextLayer[] {
+function normalizeCreativeLayers(
+  raw: z.infer<typeof creativeDesignSchema>["layers"],
+  compositionId?: string
+): TextLayer[] {
   const layers = raw.map((layer) => {
-    let text = applyLocalSpanishFixes(truncate(layer.text, 56));
+    let text = applyLocalSpanishFixes(truncate(layer.text.replace(/\n/g, " "), 42));
     let variant = layer.variant ?? "text";
 
     if (variant === "badge" && text.length > 10) {
@@ -195,20 +194,21 @@ function normalizeCreativeLayers(raw: z.infer<typeof creativeDesignSchema>["laye
     return ensureTextFitsSafeArea(normalized);
   });
 
-  return separateOverlappingLayers(layers);
+  return finalizeLayerLayout(layers, compositionId);
 }
 
-function separateOverlappingLayers(layers: TextLayer[]): TextLayer[] {
-  const sorted = [...layers].sort((a, b) => a.y - b.y);
-  for (let i = 1; i < sorted.length; i++) {
-    const prev = sorted[i - 1];
-    const curr = sorted[i];
-    const gap = curr.fontSize > 50 || prev.fontSize > 50 ? 9 : 7;
-    if (curr.y - prev.y < gap) {
-      curr.y = clamp(prev.y + gap, 8, 94);
-    }
-  }
-  return sorted;
+function processLayers(
+  layers: TextLayer[],
+  compositionId?: string
+): TextLayer[] {
+  return finalizeLayerLayout(
+    layers.map((l) =>
+      ensureTextFitsSafeArea(
+        normalizeLayer({ ...l, text: l.text.replace(/\n/g, " ") })
+      )
+    ),
+    compositionId
+  );
 }
 
 /**
@@ -240,10 +240,11 @@ export async function suggestImageTextLayers(params: {
 
   try {
     const design = creativeDesignSchema.parse(JSON.parse(designJson));
-    const layers = normalizeCreativeLayers(design.layers);
+    const compositionId = direction.composition.id;
+    const layers = normalizeCreativeLayers(design.layers, compositionId);
     if (layers.length < 3) return buildSmartFallback(params, direction, strategy);
     const proofread = await proofreadLayerTexts(layers, params.aiBrief);
-    return separateOverlappingLayers(proofread.map(ensureTextFitsSafeArea));
+    return processLayers(proofread, compositionId);
   } catch {
     return buildSmartFallback(params, direction, strategy);
   }
@@ -265,7 +266,8 @@ async function proofreadLayerTexts(
           role: "system",
           content: `Corrige ortografía en español chileno de textos de anuncio.
 Devuelve JSON: { "texts": ["texto capa 1", "texto capa 2", ...] }
-Misma cantidad de textos, mismo orden. No cambies diseño ni alargues mucho.`,
+Misma cantidad de textos, mismo orden.
+MANTÉN cada texto CORTO (máx 40 caracteres). No alargues ni unas frases.`,
         },
         {
           role: "user",
@@ -315,7 +317,7 @@ function buildSmartFallback(
   const comp = direction.composition.id;
 
   if (comp === "promo_bold" && params.discountPercent != null) {
-    return separateOverlappingLayers(
+    return finalizeLayerLayout(
       [
         createTextLayer(`-${params.discountPercent}%`, {
           x: 82,
@@ -354,12 +356,13 @@ function buildSmartFallback(
           backgroundColor: "#b8ff00",
           bold: true,
         }),
-      ].map((l) => ensureTextFitsSafeArea(normalizeLayer(l)))
+      ].map((l) => ensureTextFitsSafeArea(normalizeLayer(l))),
+      comp
     );
   }
 
   if (comp === "luxury_minimal" || comp === "corner_anchor" || comp === "f_left") {
-    return separateOverlappingLayers(
+    return finalizeLayerLayout(
       [
         createTextLayer(product, {
           x: 14,
@@ -391,12 +394,13 @@ function buildSmartFallback(
           backgroundColor: "#ffe600",
           bold: true,
         }),
-      ].map((l) => ensureTextFitsSafeArea(normalizeLayer(l)))
+      ].map((l) => ensureTextFitsSafeArea(normalizeLayer(l))),
+      comp
     );
   }
 
   if (comp === "lower_third" || comp === "stacked_center") {
-    return separateOverlappingLayers(
+    return finalizeLayerLayout(
       [
         createTextLayer(truncate(hook, 32), {
           x: 50,
@@ -425,11 +429,12 @@ function buildSmartFallback(
           backgroundColor: "#b8ff00",
           bold: true,
         }),
-      ].map((l) => ensureTextFitsSafeArea(normalizeLayer(l)))
+      ].map((l) => ensureTextFitsSafeArea(normalizeLayer(l))),
+      comp
     );
   }
 
-  return separateOverlappingLayers(
+  return finalizeLayerLayout(
     [
       createTextLayer(truncate(hook, 36), {
         x: 50,
@@ -468,7 +473,8 @@ function buildSmartFallback(
         backgroundColor: "#ffe600",
         bold: true,
       }),
-    ].map((l) => ensureTextFitsSafeArea(normalizeLayer(l)))
+    ].map((l) => ensureTextFitsSafeArea(normalizeLayer(l))),
+    comp
   );
 }
 

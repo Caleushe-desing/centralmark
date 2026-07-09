@@ -322,9 +322,13 @@ export const LAYER_JSON_SCHEMA = `Devuelve JSON:
   ]
 }
 
-REGLAS TÉCNICAS:
-- 4 a 6 capas con roles de marketing (gancho, beneficio, prueba, CTA…)
-- badge SOLO si texto ≤8 caracteres
-- Separa capas ≥8% en eje Y
+REGLAS TÉCNICAS (CRÍTICAS — incumplirlas arruina el diseño):
+- MÁXIMO 4 capas de texto (gancho + titular + beneficio + CTA)
+- Cada capa = UNA frase corta. Máximo 28 caracteres en gancho/titular, 40 en beneficio, 18 en CTA
+- NUNCA pongas párrafos largos ni oraciones completas de más de 6 palabras por capa
+- NUNCA uses saltos de línea \\n en el texto
+- Coordenadas Y obligatorias: gancho y:14-18, titular y:32-38, beneficio y:50-58, CTA y:86-90
+- Separa capas al menos 15 puntos en Y entre centros
+- badge SOLO si texto ≤8 caracteres (ej. "-30%", "2x1")
 - Copy español chileno perfecto, sin emojis
-- CTA con verbo en capa inferior`;
+- CTA con verbo en pill inferior`;

@@ -1,5 +1,7 @@
 import OpenAI from "openai";
 import { z } from "zod";
+import { pickDirectionForBrief } from "@/lib/ai/digital-designer";
+import { DESIGNER_PERSONA } from "@/lib/ai/digital-designer-knowledge";
 
 const responseSchema = z.object({
   caption: z.string(),
@@ -33,25 +35,36 @@ export async function suggestOfferCaption(params: {
     .filter(Boolean)
     .join("\n");
 
+  const direction = pickDirectionForBrief({
+    aiBrief: params.aiBrief,
+    productName: params.productName,
+    discountPercent: params.discountPercent,
+  });
+
   try {
     const res = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
         {
           role: "system",
-          content: `Eres copywriter para Instagram/Facebook de tiendas en malls chilenos.
-Escribe un texto CORTO y LLAMATIVO para el pie del post (fuera de la imagen).
+          content: `${DESIGNER_PERSONA}
+
+Escribe el PIE del post (caption Instagram/Facebook) — complementa la imagen, no la repitas.
+
+Técnica de marketing para esta pieza: ${direction.technique.name}
+→ ${direction.technique.copyHint}
+Tono: ${direction.tone}
 
 Reglas:
-- Español latinoamericano, tono comercial cercano
-- 2 a 4 líneas, emojis con moderación (1-3)
-- Incluye un llamado a la acción claro
-- SIN hashtags (van aparte)
-- NO copies ni repitas literalmente el brief del cliente
-- NO inventes un % de descuento si no está en los datos
+- Español chileno, 2-4 líneas, emojis con moderación (1-3)
+- CTA claro con verbo
+- SIN hashtags
+- NO copies el brief literalmente
+- NO inventes % si no está en los datos
 - Máximo 400 caracteres
+- Varía el estilo según la técnica (no siempre el mismo gancho)
 
-Responde SOLO JSON: { "caption": "..." }`,
+JSON: { "caption": "..." }`,
         },
         {
           role: "user",

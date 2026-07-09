@@ -312,7 +312,7 @@ export const LAYER_JSON_SCHEMA = `Devuelve JSON:
       "italic": false,
       "align": "left|center|right",
       "strokeWidth": 0-6,
-      "strokeColor": "#hex",
+      "strokeColor": "#hex o null",
       "backgroundColor": null o "rgba(...)",
       "variant": "text|badge|pill",
       "badgeColor": "#hex o null",

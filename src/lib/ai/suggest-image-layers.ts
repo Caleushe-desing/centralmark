@@ -9,7 +9,9 @@ import {
   analyzeMarketingStrategy,
   designPublicationWithStrategy,
   pickDirectionForBrief,
+  type MarketingStrategy,
 } from "@/lib/ai/digital-designer";
+import type { CreativeDirection } from "@/lib/ai/digital-designer-knowledge";
 
 const FONT_IDS = [
   "bebas",
@@ -22,33 +24,51 @@ const FONT_IDS = [
   "system",
 ] as const;
 
+type FontId = (typeof FONT_IDS)[number];
+
+const creativeLayerSchema = z.object({
+  text: z.string(),
+  x: z.coerce.number(),
+  y: z.coerce.number(),
+  fontSize: z.coerce.number(),
+  fontFamily: z.string(),
+  color: z.string(),
+  bold: z.coerce.boolean().optional(),
+  italic: z.coerce.boolean().optional(),
+  align: z.enum(["left", "center", "right"]).optional(),
+  strokeWidth: z.coerce.number().optional(),
+  strokeColor: z.string().nullish(),
+  backgroundColor: z.string().nullish(),
+  variant: z.enum(["text", "badge", "pill"]).optional(),
+  badgeColor: z.string().nullish(),
+  letterSpacing: z.coerce.number().optional(),
+  rotation: z.coerce.number().optional(),
+});
+
 const creativeDesignSchema = z.object({
   composition: z.string().optional(),
   marketingTechnique: z.string().optional(),
-  layers: z
-    .array(
-      z.object({
-        text: z.string(),
-        x: z.number(),
-        y: z.number(),
-        fontSize: z.number(),
-        fontFamily: z.enum(FONT_IDS),
-        color: z.string(),
-        bold: z.boolean().optional(),
-        italic: z.boolean().optional(),
-        align: z.enum(["left", "center", "right"]).optional(),
-        strokeWidth: z.number().optional(),
-        strokeColor: z.string().optional(),
-        backgroundColor: z.string().nullable().optional(),
-        variant: z.enum(["text", "badge", "pill"]).optional(),
-        badgeColor: z.string().nullable().optional(),
-        letterSpacing: z.number().optional(),
-        rotation: z.number().optional(),
-      })
-    )
-    .min(3)
-    .max(7),
+  layers: z.array(creativeLayerSchema).min(3).max(7),
 });
+
+function normalizeFontFamily(raw: string): FontId {
+  const id = raw.toLowerCase().replace(/[^a-z]/g, "");
+  const map: Record<string, FontId> = {
+    bebas: "bebas",
+    bebasneue: "bebas",
+    anton: "anton",
+    oswald: "oswald",
+    montserrat: "montserrat",
+    playfair: "playfair",
+    playfairdisplay: "playfair",
+    impact: "impact",
+    pacifico: "pacifico",
+    system: "system",
+    arial: "system",
+    roboto: "montserrat",
+  };
+  return map[id] ?? (FONT_IDS.includes(id as FontId) ? (id as FontId) : "montserrat");
+}
 
 export type ImageTextBlocks = {
   headline: string;
@@ -95,6 +115,54 @@ function truncate(text: string, max: number): string {
   return (lastSpace > max * 0.5 ? cut.slice(0, lastSpace) : cut).trim();
 }
 
+function estimateTextWidthPercent(text: string, fontSize: number): number {
+  const lines = text.split("\n");
+  const longest = Math.max(...lines.map((l) => l.length), 1);
+  return (longest * fontSize * 0.55) / 10.8;
+}
+
+/** Evita textos cortados en los bordes del canvas 1080×1080 */
+function ensureTextFitsSafeArea(layer: TextLayer): TextLayer {
+  let { text, x, y, fontSize, align } = layer;
+  const margin = 8;
+  let widthPct = estimateTextWidthPercent(text, fontSize);
+
+  while (widthPct > 84 && fontSize > 22) {
+    fontSize -= 4;
+    widthPct = estimateTextWidthPercent(text, fontSize);
+  }
+
+  if (align === "center") {
+    const half = widthPct / 2;
+    if (x - half < margin) x = margin + half;
+    if (x + half > 100 - margin) x = 100 - margin - half;
+  } else if (align === "left") {
+    if (x < margin) x = margin;
+    if (x + widthPct > 100 - margin) {
+      const words = text.split(/\s+/);
+      if (words.length > 2 && !text.includes("\n")) {
+        const mid = Math.ceil(words.length / 2);
+        text = `${words.slice(0, mid).join(" ")}\n${words.slice(mid).join(" ")}`;
+        fontSize = Math.min(fontSize, 52);
+        widthPct = estimateTextWidthPercent(text, fontSize);
+      } else {
+        fontSize = Math.min(fontSize, 42);
+      }
+    }
+  } else if (align === "right") {
+    if (x - widthPct < margin) x = margin + widthPct;
+    if (x > 100 - margin) x = 100 - margin;
+  }
+
+  return normalizeLayer({
+    ...layer,
+    text,
+    x: clamp(x, margin, 100 - margin),
+    y: clamp(y, margin, 94),
+    fontSize: clamp(fontSize, 18, 110),
+  });
+}
+
 function normalizeCreativeLayers(raw: z.infer<typeof creativeDesignSchema>["layers"]): TextLayer[] {
   const layers = raw.map((layer) => {
     let text = applyLocalSpanishFixes(truncate(layer.text, 56));
@@ -104,15 +172,13 @@ function normalizeCreativeLayers(raw: z.infer<typeof creativeDesignSchema>["laye
       variant = "pill";
     }
 
-    return normalizeLayer(
+    const normalized = normalizeLayer(
       createTextLayer(text, {
         x: clamp(layer.x, 8, 92),
         y: clamp(layer.y, 8, 94),
         fontSize: clamp(layer.fontSize, 18, 110),
-        fontFamily: FONT_IDS.includes(layer.fontFamily as (typeof FONT_IDS)[number])
-          ? layer.fontFamily
-          : "montserrat",
-        color: layer.color,
+        fontFamily: normalizeFontFamily(layer.fontFamily),
+        color: layer.color?.startsWith("#") ? layer.color : "#FFFFFF",
         bold: layer.bold ?? layer.fontSize >= 40,
         italic: layer.italic ?? false,
         align: layer.align ?? "center",
@@ -125,6 +191,8 @@ function normalizeCreativeLayers(raw: z.infer<typeof creativeDesignSchema>["laye
         rotation: clamp(layer.rotation ?? 0, -12, 12),
       })
     );
+
+    return ensureTextFitsSafeArea(normalized);
   });
 
   return separateOverlappingLayers(layers);
@@ -166,16 +234,18 @@ export async function suggestImageTextLayers(params: {
     strategy,
   });
 
-  if (!designJson) return buildFallbackLayers(params);
+  if (!designJson) {
+    return buildSmartFallback(params, direction, strategy);
+  }
 
   try {
     const design = creativeDesignSchema.parse(JSON.parse(designJson));
     const layers = normalizeCreativeLayers(design.layers);
-    if (layers.length < 3) return buildFallbackLayers(params);
+    if (layers.length < 3) return buildSmartFallback(params, direction, strategy);
     const proofread = await proofreadLayerTexts(layers, params.aiBrief);
-    return separateOverlappingLayers(proofread);
+    return separateOverlappingLayers(proofread.map(ensureTextFitsSafeArea));
   } catch {
-    return buildFallbackLayers(params);
+    return buildSmartFallback(params, direction, strategy);
   }
 }
 
@@ -218,151 +288,198 @@ Misma cantidad de textos, mismo orden. No cambies diseño ni alargues mucho.`,
   }
 }
 
-/** Solo si falla la IA — variante pseudoaleatoria, no plantilla fija */
+/** Fallback con copy del brief/estrategia — nunca texto genérico de plantilla */
+function buildSmartFallback(
+  params: {
+    aiBrief: string;
+    productName?: string;
+    discountPercent?: number | null;
+    priceText?: string | null;
+  },
+  direction: CreativeDirection,
+  strategy: MarketingStrategy | null
+): TextLayer[] {
+  const seed = direction.variationSeed;
+  const hook = truncate(
+    strategy?.copyAngles?.[0] ??
+      strategy?.mainMessage ??
+      params.aiBrief.split(/[.!?\n]/)[0]?.trim() ??
+      params.productName ??
+      "Tu próxima gran idea",
+    42
+  );
+  const benefit = truncate(strategy?.mainMessage ?? params.aiBrief.split(/[.!?\n]/)[1]?.trim() ?? hook, 48);
+  const cta = truncate(strategy?.ctaSuggestion ?? "Conoce más", 24);
+  const product = truncate(params.productName ?? "Oferta", 28);
+
+  const comp = direction.composition.id;
+
+  if (comp === "promo_bold" && params.discountPercent != null) {
+    return separateOverlappingLayers(
+      [
+        createTextLayer(`-${params.discountPercent}%`, {
+          x: 82,
+          y: 16,
+          fontSize: 56,
+          fontFamily: "anton",
+          color: "#050505",
+          variant: "badge",
+          badgeColor: "#ffe600",
+        }),
+        createTextLayer(product.toUpperCase(), {
+          x: 50,
+          y: 42,
+          fontSize: 68,
+          fontFamily: "bebas",
+          color: "#FFFFFF",
+          strokeWidth: 3,
+          strokeColor: "#050505",
+        }),
+        createTextLayer(truncate(benefit, 36), {
+          x: 50,
+          y: 58,
+          fontSize: 24,
+          fontFamily: "montserrat",
+          color: "#b8ff00",
+          variant: "pill",
+          backgroundColor: "rgba(5,5,5,0.75)",
+        }),
+        createTextLayer(cta, {
+          x: 50,
+          y: 90,
+          fontSize: 26,
+          fontFamily: "oswald",
+          color: "#050505",
+          variant: "pill",
+          backgroundColor: "#b8ff00",
+          bold: true,
+        }),
+      ].map((l) => ensureTextFitsSafeArea(normalizeLayer(l)))
+    );
+  }
+
+  if (comp === "luxury_minimal" || comp === "corner_anchor" || comp === "f_left") {
+    return separateOverlappingLayers(
+      [
+        createTextLayer(product, {
+          x: 14,
+          y: 14 + (seed % 3),
+          fontSize: 48,
+          fontFamily: "playfair",
+          color: "#FFFFFF",
+          align: "left",
+          italic: true,
+          strokeWidth: 1,
+          strokeColor: "#050505",
+        }),
+        createTextLayer(truncate(hook, 40), {
+          x: 14,
+          y: 30,
+          fontSize: 22,
+          fontFamily: "montserrat",
+          color: "#D4AF37",
+          align: "left",
+        }),
+        createTextLayer(cta, {
+          x: 14,
+          y: 90,
+          fontSize: 24,
+          fontFamily: "oswald",
+          color: "#050505",
+          align: "left",
+          variant: "pill",
+          backgroundColor: "#ffe600",
+          bold: true,
+        }),
+      ].map((l) => ensureTextFitsSafeArea(normalizeLayer(l)))
+    );
+  }
+
+  if (comp === "lower_third" || comp === "stacked_center") {
+    return separateOverlappingLayers(
+      [
+        createTextLayer(truncate(hook, 32), {
+          x: 50,
+          y: 66,
+          fontSize: 28,
+          fontFamily: "oswald",
+          color: "#ffe600",
+          letterSpacing: 2,
+        }),
+        createTextLayer(product, {
+          x: 50,
+          y: 76,
+          fontSize: 58,
+          fontFamily: seed % 2 === 0 ? "bebas" : "anton",
+          color: "#FFFFFF",
+          strokeWidth: 2,
+          strokeColor: "#050505",
+        }),
+        createTextLayer(cta, {
+          x: 50,
+          y: 90,
+          fontSize: 26,
+          fontFamily: "montserrat",
+          color: "#050505",
+          variant: "pill",
+          backgroundColor: "#b8ff00",
+          bold: true,
+        }),
+      ].map((l) => ensureTextFitsSafeArea(normalizeLayer(l)))
+    );
+  }
+
+  return separateOverlappingLayers(
+    [
+      createTextLayer(truncate(hook, 36), {
+        x: 50,
+        y: 18 + (seed % 4),
+        fontSize: 30,
+        fontFamily: "montserrat",
+        color: "#b8ff00",
+        bold: true,
+        variant: "pill",
+        backgroundColor: "rgba(5,5,5,0.8)",
+      }),
+      createTextLayer(product, {
+        x: 50,
+        y: 40,
+        fontSize: 64,
+        fontFamily: "bebas",
+        color: "#FFFFFF",
+        strokeWidth: 3,
+        strokeColor: "#050505",
+        rotation: seed % 4 === 0 ? -3 : 0,
+      }),
+      createTextLayer(truncate(benefit, 40), {
+        x: 50,
+        y: 56,
+        fontSize: 22,
+        fontFamily: "montserrat",
+        color: "#FFFFFF",
+      }),
+      createTextLayer(cta, {
+        x: 50,
+        y: 90,
+        fontSize: 26,
+        fontFamily: "oswald",
+        color: "#050505",
+        variant: "pill",
+        backgroundColor: "#ffe600",
+        bold: true,
+      }),
+    ].map((l) => ensureTextFitsSafeArea(normalizeLayer(l)))
+  );
+}
+
+/** @deprecated use buildSmartFallback */
 function buildFallbackLayers(params: {
   aiBrief: string;
   productName?: string;
   discountPercent?: number | null;
 }): TextLayer[] {
   const direction = pickDirectionForBrief(params);
-  const seed = direction.variationSeed;
-  const variants = [
-    () => fallbackAsymmetric(params, seed),
-    () => fallbackBottomHeavy(params, seed),
-    () => fallbackCenterHero(params, seed),
-  ];
-  return variants[seed % variants.length]();
-}
-
-function fallbackAsymmetric(
-  params: { productName?: string; discountPercent?: number | null },
-  seed: number
-): TextLayer[] {
-  const name = truncate(params.productName ?? "Oferta", 28);
-  const layers = [
-    createTextLayer(name.toUpperCase(), {
-      x: 14,
-      y: 14 + (seed % 4),
-      fontSize: 58,
-      fontFamily: "bebas",
-      color: "#FFFFFF",
-      align: "left",
-      strokeWidth: 2,
-      strokeColor: "#050505",
-    }),
-    createTextLayer("Calidad que destaca", {
-      x: 14,
-      y: 28,
-      fontSize: 22,
-      fontFamily: "montserrat",
-      color: "#b8ff00",
-      align: "left",
-      bold: true,
-    }),
-  ];
-  if (params.discountPercent != null) {
-    layers.push(
-      createTextLayer(`-${params.discountPercent}%`, {
-        x: 82,
-        y: 18,
-        fontSize: 48,
-        fontFamily: "anton",
-        color: "#050505",
-        variant: "badge",
-        badgeColor: "#ffe600",
-      })
-    );
-  }
-  layers.push(
-    createTextLayer("Ver más", {
-      x: 14,
-      y: 90,
-      fontSize: 24,
-      fontFamily: "oswald",
-      color: "#050505",
-      align: "left",
-      variant: "pill",
-      backgroundColor: "#b8ff00",
-      bold: true,
-    })
-  );
-  return separateOverlappingLayers(layers.map((l) => normalizeLayer(l)));
-}
-
-function fallbackBottomHeavy(
-  params: { productName?: string },
-  seed: number
-): TextLayer[] {
-  return separateOverlappingLayers(
-    [
-      createTextLayer("Nuevo", {
-        x: 50,
-        y: 62 + (seed % 3),
-        fontSize: 32,
-        fontFamily: "oswald",
-        color: "#ffe600",
-        letterSpacing: 4,
-      }),
-      createTextLayer(truncate(params.productName ?? "Colección", 24), {
-        x: 50,
-        y: 72,
-        fontSize: 64,
-        fontFamily: "playfair",
-        color: "#FFFFFF",
-        italic: true,
-        strokeWidth: 1,
-        strokeColor: "#050505",
-      }),
-      createTextLayer("Descúbrelo hoy", {
-        x: 50,
-        y: 90,
-        fontSize: 26,
-        fontFamily: "montserrat",
-        color: "#050505",
-        variant: "pill",
-        backgroundColor: "#b8ff00",
-        bold: true,
-      }),
-    ].map((l) => normalizeLayer(l))
-  );
-}
-
-function fallbackCenterHero(
-  params: { productName?: string; discountPercent?: number | null },
-  seed: number
-): TextLayer[] {
-  const layers = [
-    createTextLayer(truncate(params.productName ?? "Oferta especial", 30), {
-      x: 50,
-      y: 38 + (seed % 5),
-      fontSize: 72,
-      fontFamily: seed % 2 === 0 ? "bebas" : "anton",
-      color: "#FFFFFF",
-      strokeWidth: 3,
-      strokeColor: "#050505",
-      rotation: seed % 3 === 0 ? -3 : 0,
-    }),
-    createTextLayer("Edición limitada", {
-      x: 50,
-      y: 52,
-      fontSize: 20,
-      fontFamily: "montserrat",
-      color: "#FFFFFF",
-      variant: "pill",
-      backgroundColor: "rgba(5,5,5,0.65)",
-    }),
-    createTextLayer("Consíguelo ahora", {
-      x: 50,
-      y: 88,
-      fontSize: 24,
-      fontFamily: "oswald",
-      color: "#050505",
-      variant: "pill",
-      backgroundColor: "#ffe600",
-      bold: true,
-    }),
-  ];
-  return separateOverlappingLayers(layers.map((l) => normalizeLayer(l)));
+  return buildSmartFallback(params, direction, null);
 }
 
 export function inferImageLayoutStyle(_brief: string): ImageLayoutStyle {

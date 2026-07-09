@@ -10,7 +10,7 @@ import {
   Check,
 } from "lucide-react";
 import type { ProAdCopy } from "@/lib/pro-ad/schemas";
-import { DynamicLayoutComposer } from "./DynamicLayoutComposer";
+import { ProAdComposer } from "./ProAdComposer";
 import { downloadDataUrl, exportProAdToPng } from "@/lib/gestor-publicaciones/export-ad";
 
 type GenerationPhase = "idle" | "design" | "image" | "done";
@@ -186,6 +186,8 @@ export function GestorPublicaciones() {
                     >
                       <span className="text-mm-neon font-mono">{el.id}</span>
                       <span className="text-neutral-600">·</span>
+                      <span className="text-neutral-500">{el.layoutZone}</span>
+                      <span className="text-neutral-600">·</span>
                       <span className="text-neutral-400 truncate">{el.typography}</span>
                       <span className="text-neutral-600">·</span>
                       <span className="text-neutral-300 truncate">{el.text}</span>
@@ -265,7 +267,7 @@ export function GestorPublicaciones() {
                     height: 1080,
                   }}
                 >
-                  <DynamicLayoutComposer
+                  <ProAdComposer
                     ref={composerRef}
                     imageUrl={imageUrl}
                     copy={copy}

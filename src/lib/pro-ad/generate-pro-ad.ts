@@ -15,6 +15,7 @@ import {
   type ProAdResult,
 } from "./schemas";
 import { normalizeBackgroundColor, normalizeRawProAdCopy, normalizeTextColor } from "./normalize-colors";
+import { sanitizeLayoutElementFields } from "./normalize-layout";
 
 export class ProAdGenerationError extends Error {
   readonly code: string;
@@ -42,17 +43,9 @@ function trimHookElement(el: LayoutElement): LayoutElement {
 function sanitizeLayoutElements(elements: LayoutElement[]): LayoutElement[] {
   return elements.map((el) =>
     trimHookElement({
-      ...el,
-      id: el.id.trim(),
-      text: el.text.trim(),
+      ...sanitizeLayoutElementFields(el),
       color: normalizeTextColor(el.color),
       backgroundColor: normalizeBackgroundColor(el.backgroundColor),
-      position: {
-        top: el.position.top.trim() || "auto",
-        left: el.position.left.trim() || "auto",
-        right: el.position.right.trim() || "auto",
-        bottom: el.position.bottom.trim() || "auto",
-      },
     })
   );
 }

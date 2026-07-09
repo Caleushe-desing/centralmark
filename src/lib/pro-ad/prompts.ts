@@ -33,13 +33,24 @@ backgroundColor: siempre incluir. Usa "transparent" (sin #) cuando backgroundSty
 Para glassmorphism usa HEX de 8 dígitos con alpha (ej: "#00000080", "#FFFFFF33") o rgba().
 Para solid-hex usa HEX de 6 dígitos (ej: "#000000", "#FFE600").
 
-═══ DISEÑO ESPACIAL (CRÍTICO) ═══
-Piensa como diseñador: el sujeto del producto o personas suele estar en el CENTRO de la imagen.
-- NUNCA coloques elementos en el centro (evita top: 35%-65% Y left: 25%-75% simultáneamente).
-- Posiciona en tercios superiores (top: "5%"-"15%"), inferiores (bottom: "8%"-"15%") o laterales (left/right: "4%"-"8%").
-- Para position: usa "auto" en los lados no usados (ej: top: "8%", left: "5%", right: "auto", bottom: "auto").
-- Distribuye elementos sin solaparlos: hook arriba-izquierda, badge arriba-derecha, subtext abajo, cta abajo-centro.
-- Si imagePrompt describe personas saltando o producto centrado, refuerza márgenes laterales y zonas superior/inferior.
+═══ SISTEMA DE ZONAS (layoutZone + textAlign) — OBLIGATORIO ═══
+NO uses coordenadas absolutas. El renderizador apila elementos en zonas Flexbox seguras.
+
+layoutZone — dónde se apila el bloque (el sistema los ordena verticalmente con gap, sin colisiones):
+- "top" → titulares, hooks, badges (zona superior; deja el centro libre para el producto)
+- "center" → solo si es imprescindible; úsalo con moderación
+- "bottom" → subtext, CTA, beneficios (zona inferior)
+
+textAlign — alineación horizontal dentro de la zona:
+- "left" → hook principal, textos largos
+- "center" → CTA, mensajes centrados
+- "right" → badges de urgencia/descuento
+
+REGLAS DE DISTRIBUCIÓN:
+- Coloca main-hook y discount-badge en layoutZone "top" (badge con textAlign "right" si conviene).
+- Coloca subtext y cta en layoutZone "bottom".
+- Evita más de 2 elementos en "center" — el producto de la foto suele estar ahí.
+- Ordena los elementos en el array de arriba a abajo dentro de cada zona.
 
 ═══ imagePrompt ═══
 EN INGLÉS. MÁXIMO 2 oraciones (~350 caracteres). Solo describe la escena y el producto.
@@ -55,6 +66,7 @@ export function buildProAdUserPrompt(brief: string): string {
   return `Brief del cliente (único input):
 "${brief.trim()}"
 
-Genera el anuncio pro: imagePrompt + layoutElements con composición espacial única + caption AIDA.
-El main-hook debe tener máximo 4 palabras. El imagePrompt máximo 350 caracteres.`;
+Genera el anuncio pro: imagePrompt + layoutElements con layoutZone/textAlign + caption AIDA.
+El main-hook debe tener máximo 4 palabras. El imagePrompt máximo 350 caracteres.
+Distribuye elementos en zonas top/bottom para no tapar el producto central.`;
 }

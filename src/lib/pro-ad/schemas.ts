@@ -21,14 +21,13 @@ export const proAdBackgroundStyleSchema = z.enum([
   "neon-glow",
 ]);
 
-export const layoutPositionSchema = z.object({
-  top: z.string(),
-  left: z.string(),
-  right: z.string(),
-  bottom: z.string(),
-});
+export const layoutZoneSchema = z.enum(["top", "center", "bottom"]);
 
-export type LayoutPosition = z.infer<typeof layoutPositionSchema>;
+export type LayoutZone = z.infer<typeof layoutZoneSchema>;
+
+export const textAlignSchema = z.enum(["left", "center", "right"]);
+
+export type TextAlign = z.infer<typeof textAlignSchema>;
 
 export const layoutElementSchema = z.object({
   id: z.string().min(2).max(48),
@@ -40,7 +39,8 @@ export const layoutElementSchema = z.object({
     .string()
     .transform(normalizeTextColor)
     .pipe(z.string().regex(/^#[0-9A-Fa-f]{6}$/)),
-  position: layoutPositionSchema,
+  layoutZone: layoutZoneSchema,
+  textAlign: textAlignSchema,
   backgroundStyle: proAdBackgroundStyleSchema,
   backgroundColor: z
     .string()
@@ -75,7 +75,8 @@ const LAYOUT_ELEMENT_JSON_SCHEMA = {
     "fontWeight",
     "fontSize",
     "color",
-    "position",
+    "layoutZone",
+    "textAlign",
     "backgroundStyle",
     "backgroundColor",
     "textShadow",
@@ -93,17 +94,8 @@ const LAYOUT_ELEMENT_JSON_SCHEMA = {
     },
     fontSize: { type: "string" },
     color: { type: "string" },
-    position: {
-      type: "object",
-      additionalProperties: false,
-      required: ["top", "left", "right", "bottom"],
-      properties: {
-        top: { type: "string" },
-        left: { type: "string" },
-        right: { type: "string" },
-        bottom: { type: "string" },
-      },
-    },
+    layoutZone: { type: "string", enum: ["top", "center", "bottom"] },
+    textAlign: { type: "string", enum: ["left", "center", "right"] },
     backgroundStyle: {
       type: "string",
       enum: ["none", "solid-hex", "glassmorphism", "neon-glow"],

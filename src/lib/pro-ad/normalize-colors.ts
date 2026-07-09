@@ -1,4 +1,5 @@
 import { clampImageConcept } from "./clamp-concept";
+import { normalizeLayoutElementRaw } from "./normalize-layout";
 
 /** Normaliza color de texto a HEX de 6 dígitos. */
 export function normalizeTextColor(value: string): string {
@@ -59,8 +60,9 @@ export function normalizeRawProAdCopy(raw: unknown): unknown {
     imagePrompt:
       typeof obj.imagePrompt === "string" ? clampImageConcept(obj.imagePrompt, 500) : obj.imagePrompt,
     layoutElements: obj.layoutElements.map((item) => {
-      if (!item || typeof item !== "object") return item;
-      const el = item as Record<string, unknown>;
+      const withZone = normalizeLayoutElementRaw(item);
+      if (!withZone || typeof withZone !== "object") return withZone;
+      const el = withZone as Record<string, unknown>;
 
       return {
         ...el,

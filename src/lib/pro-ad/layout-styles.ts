@@ -37,17 +37,6 @@ function resolveFontSize(fontSize: string): string {
   return TAILWIND_FONT_SIZE[fontSize] ?? fontSize;
 }
 
-function resolvePosition(position: LayoutElement["position"]): CSSProperties {
-  const style: CSSProperties = { position: "absolute" };
-
-  if (position.top !== "auto") style.top = position.top;
-  if (position.left !== "auto") style.left = position.left;
-  if (position.right !== "auto") style.right = position.right;
-  if (position.bottom !== "auto") style.bottom = position.bottom;
-
-  return style;
-}
-
 function buildBackgroundStyle(el: LayoutElement): CSSProperties {
   switch (el.backgroundStyle) {
     case "solid-hex":
@@ -69,7 +58,8 @@ function buildBackgroundStyle(el: LayoutElement): CSSProperties {
       };
     case "neon-glow":
       return {
-        backgroundColor: el.backgroundColor === "transparent" ? "rgba(0,0,0,0.85)" : el.backgroundColor,
+        backgroundColor:
+          el.backgroundColor === "transparent" ? "rgba(0,0,0,0.85)" : el.backgroundColor,
         padding: "0.5em 1em",
         borderRadius: "0.75rem",
         border: `2px solid ${el.color}`,
@@ -80,23 +70,27 @@ function buildBackgroundStyle(el: LayoutElement): CSSProperties {
   }
 }
 
+export function hasElementBackground(el: LayoutElement): boolean {
+  return el.backgroundStyle !== "none" && el.backgroundColor !== "transparent";
+}
+
+/** Estilos tipográficos del bloque (sin posicionamiento absoluto). */
 export function buildLayoutElementStyle(el: LayoutElement): CSSProperties {
   const fontSize = resolveFontSize(el.fontSize);
   const bg = buildBackgroundStyle(el);
+  const needsShadow = el.textShadow || el.backgroundStyle === "none";
 
   return {
-    ...resolvePosition(el),
     color: el.color,
     fontFamily: FONT_FAMILIES[el.typography] ?? FONT_FAMILIES.Inter,
     fontWeight: FONT_WEIGHT_MAP[el.fontWeight] ?? 700,
     fontSize,
     lineHeight: 1.1,
     letterSpacing: el.fontWeight === "black" ? "-0.03em" : "-0.01em",
-    maxWidth: "88%",
-    zIndex: 10,
+    textAlign: el.textAlign,
     textTransform: el.id.includes("hook") || el.id.includes("badge") ? "uppercase" : undefined,
-    textShadow: el.textShadow
-      ? "0 2px 12px rgba(0,0,0,0.9), 0 4px 24px rgba(0,0,0,0.6)"
+    textShadow: needsShadow
+      ? "0 2px 8px rgba(0,0,0,0.95), 0 4px 20px rgba(0,0,0,0.75), 0 0 2px rgba(0,0,0,1)"
       : undefined,
     ...bg,
   };

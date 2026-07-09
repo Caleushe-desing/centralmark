@@ -3,16 +3,17 @@ import {
   generateProAd,
   proAdInputSchema,
   ProAdGenerationError,
+  resolveCompositionLayout,
 } from "@/lib/pro-ad";
 import { requireStoreSession } from "@/lib/auth/session";
 
 /**
  * POST /api/generate-pro-ad
- * Brief único → diseño paramétrico (gpt-4o Structured Outputs) + imagen HD automática.
+ * Brief → Composition Engine (categoría + layout) + imagen + costo operativo.
  */
 export async function POST(request: Request) {
   try {
-    await requireStoreSession();
+    const session = await requireStoreSession();
     const body = await request.json();
     const parsed = proAdInputSchema.safeParse(body);
 
@@ -23,12 +24,19 @@ export async function POST(request: Request) {
       );
     }
 
-    const result = await generateProAd(parsed.data);
+    const result = await generateProAd(parsed.data, { storeId: session.storeId });
+
+    const layout = resolveCompositionLayout(result.design);
 
     return NextResponse.json({
       success: true,
-      copy: result.copy,
+      design: result.design,
+      layout,
+      styleName: result.styleName,
       imageUrl: result.imageUrl,
+      costoEstimado: result.costoEstimado,
+      costBreakdown: result.costBreakdown,
+      generationId: result.generationId,
       metadata: result.metadata,
     });
   } catch (error) {

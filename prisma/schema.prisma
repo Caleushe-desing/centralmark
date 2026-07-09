@@ -38,6 +38,7 @@ model Store {
   products       Product[]
   offers         Offer[]
   socialAccount  StoreSocialAccount?
+  proAdGenerations ProAdGeneration[]
 }
 
 model Product {
@@ -145,6 +146,29 @@ model StoreSocialAccount {
   connectedAt        DateTime?
   createdAt          DateTime  @default(now())
   updatedAt          DateTime  @updatedAt
+}
+
+/** Historial de generaciones del Gestor de Publicaciones Pro */
+model ProAdGeneration {
+  id                  String   @id @default(cuid())
+  storeId             String
+  store               Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  brief               String
+  compositionCategory String
+  compositionLayoutId String
+  styleName           String
+  hook                String
+  badge               String
+  subtext             String
+  cta                 String
+  caption             String
+  imageUrl            String
+  costUsd             Float
+  promptTokens        Int
+  completionTokens    Int
+  textModel           String
+  imageModel          String
+  createdAt           DateTime @default(now())
 }
 
 /** Sesión temporal tras OAuth de Meta (elegir página) */

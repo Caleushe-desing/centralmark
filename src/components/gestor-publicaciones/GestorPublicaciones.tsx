@@ -8,18 +8,22 @@ import {
   Megaphone,
   Sparkles,
   Check,
+  DollarSign,
 } from "lucide-react";
-import type { ProAdCopy } from "@/lib/pro-ad/schemas";
-import { ProAdComposer } from "./ProAdComposer";
+import type { ProAdDesign } from "@/lib/pro-ad/schemas";
+import type { CompositionLayout } from "@/components/gestor-publicaciones/engine/compositionRules";
+import { AdEngine } from "@/components/gestor-publicaciones/engine/AdEngine";
 import { downloadDataUrl, exportProAdToPng } from "@/lib/gestor-publicaciones/export-ad";
 
 type GenerationPhase = "idle" | "design" | "image" | "done";
 
 interface ProAdResponse {
   success: boolean;
-  copy: ProAdCopy;
+  design: ProAdDesign;
+  layout: CompositionLayout;
+  styleName: string;
   imageUrl: string;
-  metadata?: { durationMs: number };
+  costoEstimado: number;
   error?: string;
 }
 
@@ -43,8 +47,11 @@ export function GestorPublicaciones() {
   const [loading, setLoading] = useState(false);
   const [phase, setPhase] = useState<GenerationPhase>("idle");
   const [error, setError] = useState<string | null>(null);
-  const [copy, setCopy] = useState<ProAdCopy | null>(null);
+  const [design, setDesign] = useState<ProAdDesign | null>(null);
+  const [layout, setLayout] = useState<CompositionLayout | null>(null);
+  const [styleName, setStyleName] = useState<string | null>(null);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [costoEstimado, setCostoEstimado] = useState<number | null>(null);
   const [exporting, setExporting] = useState(false);
   const [captionCopied, setCaptionCopied] = useState(false);
 
@@ -57,8 +64,11 @@ export function GestorPublicaciones() {
 
     setLoading(true);
     setError(null);
-    setCopy(null);
+    setDesign(null);
+    setLayout(null);
+    setStyleName(null);
     setImageUrl(null);
+    setCostoEstimado(null);
     setPhase("design");
 
     try {
@@ -75,8 +85,11 @@ export function GestorPublicaciones() {
       }
 
       setPhase("image");
-      setCopy(data.copy);
+      setDesign(data.design);
+      setLayout(data.layout);
+      setStyleName(data.styleName);
       setImageUrl(data.imageUrl);
+      setCostoEstimado(data.costoEstimado);
       setPhase("done");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error inesperado");
@@ -101,15 +114,15 @@ export function GestorPublicaciones() {
   }
 
   async function handleCopyCaption() {
-    if (!copy?.caption) return;
-    await navigator.clipboard.writeText(copy.caption);
+    if (!design?.caption) return;
+    await navigator.clipboard.writeText(design.caption);
     setCaptionCopied(true);
     setTimeout(() => setCaptionCopied(false), 2000);
   }
 
   const phaseLabel =
     phase === "design"
-      ? "Diseñando composición única…"
+      ? "Seleccionando estilo y copy…"
       : phase === "image"
         ? "Renderizando fotografía comercial…"
         : "Generando Campaña Pro…";
@@ -122,11 +135,11 @@ export function GestorPublicaciones() {
           Gestor de Publicaciones
         </div>
         <h1 className="text-4xl md:text-5xl font-black tracking-tighter text-white mb-3">
-          Un texto. <span className="mm-gradient-text">Diseño único.</span>
+          Un texto. <span className="mm-gradient-text">Portada editorial.</span>
         </h1>
         <p className="text-neutral-400 max-w-xl mx-auto">
-          Describe tu oferta en una línea. La IA diseña la composición visual, escribe el copy
-          agresivo y genera la foto — sin plantillas fijas.
+          Estética de revista de moda premium: tipografía serif, acentos finos y ghost buttons.
+          La IA elige el layout del Composition Engine y genera la fotografía editorial.
         </p>
       </header>
 
@@ -172,25 +185,31 @@ export function GestorPublicaciones() {
             )}
           </div>
 
-          {copy && (
+          {design && layout && styleName && costoEstimado !== null && (
             <div className="mm-card p-6 space-y-4">
+              <div className="rounded-xl bg-mm-neon/5 border border-mm-neon/20 px-4 py-3">
+                <p className="text-sm text-white font-semibold">
+                  Diseño generado estilo <span className="text-mm-neon">{styleName}</span>
+                </p>
+                <p className="text-xs text-neutral-400 mt-1 flex items-center gap-1.5">
+                  <DollarSign className="w-3.5 h-3.5" />
+                  Costo operativo:{" "}
+                  <span className="text-mm-yellow font-mono">${costoEstimado.toFixed(2)} USD</span>
+                </p>
+                <p className="text-xs text-neutral-500 mt-1">
+                  Categoría: {design.compositionCategory} · Layout: {design.compositionLayoutId}
+                </p>
+              </div>
+
               <div>
                 <h2 className="text-sm font-semibold text-neutral-400 uppercase tracking-wider mb-3">
-                  Composición generada ({copy.layoutElements.length} elementos)
+                  Copy ensamblado
                 </h2>
-                <ul className="space-y-2">
-                  {copy.layoutElements.map((el) => (
-                    <li
-                      key={el.id}
-                      className="text-xs text-neutral-500 flex items-center gap-2 bg-white/5 rounded-lg px-3 py-2"
-                    >
-                      <span className="text-mm-neon font-mono">{el.id}</span>
-                      <span className="text-neutral-600">·</span>
-                      <span className="text-neutral-500">{el.layoutZone}</span>
-                      <span className="text-neutral-600">·</span>
-                      <span className="text-neutral-400 truncate">{el.typography}</span>
-                      <span className="text-neutral-600">·</span>
-                      <span className="text-neutral-300 truncate">{el.text}</span>
+                <ul className="space-y-2 text-sm">
+                  {(["hook", "badge", "subtext", "cta"] as const).map((key) => (
+                    <li key={key} className="bg-white/5 rounded-lg px-3 py-2">
+                      <span className="text-mm-neon font-mono text-xs uppercase">{key}</span>
+                      <span className="text-neutral-300 ml-2">{design[key]}</span>
                     </li>
                   ))}
                 </ul>
@@ -220,7 +239,7 @@ export function GestorPublicaciones() {
                   </button>
                 </div>
                 <p className="text-sm text-neutral-300 whitespace-pre-wrap leading-relaxed max-h-48 overflow-y-auto">
-                  {copy.caption}
+                  {design.caption}
                 </p>
               </div>
 
@@ -253,7 +272,7 @@ export function GestorPublicaciones() {
 
           {loading && <PreviewSkeleton />}
 
-          {!loading && copy && imageUrl && (
+          {!loading && design && layout && imageUrl && (
             <div className="relative w-full flex justify-center">
               <div
                 className="overflow-hidden rounded-2xl border border-mm-neon/20 shadow-[0_0_60px_rgba(184,255,0,0.08)]"
@@ -267,21 +286,27 @@ export function GestorPublicaciones() {
                     height: 1080,
                   }}
                 >
-                  <ProAdComposer
+                  <AdEngine
                     ref={composerRef}
                     imageUrl={imageUrl}
-                    copy={copy}
+                    copy={{
+                      hook: design.hook,
+                      badge: design.badge,
+                      subtext: design.subtext,
+                      cta: design.cta,
+                    }}
+                    layout={layout}
                   />
                 </div>
               </div>
             </div>
           )}
 
-          {!loading && !copy && (
+          {!loading && !design && (
             <div className="w-full max-w-[420px] aspect-square rounded-2xl border border-dashed border-white/10 flex flex-col items-center justify-center gap-3 text-neutral-600">
               <Sparkles className="w-10 h-10 opacity-30" />
               <p className="text-sm text-center px-6">
-                Cada campaña tendrá una composición visual única diseñada por IA
+                El Composition Engine ensamblará tu anuncio con reglas profesionales
               </p>
             </div>
           )}

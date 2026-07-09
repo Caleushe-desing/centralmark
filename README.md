@@ -1,36 +1,94 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# MarkMall — Marketing con IA para Malls
 
-## Getting Started
+Plataforma MVP que permite a tiendas de un mall crear ofertas, generar automáticamente arte visual y copy con IA, y publicar en Instagram, Facebook y vitrina digital.
 
-First, run the development server:
+## Flujo
+
+1. **Tienda** crea una oferta (producto, descuento, fechas, foto opcional)
+2. **MarkAI** genera fondo con DALL-E, compone la imagen final, escribe captions y hashtags
+3. **Admin del mall** aprueba la oferta
+4. **Publicación** en Instagram, Facebook y vitrina digital
+
+## Inicio rápido
 
 ```bash
+npm install
+npm run db:setup
+cp .env.example .env
+# Edita .env con tus API keys
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Abre [http://localhost:3000](http://localhost:3000)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Rutas
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Ruta | Descripción |
+|------|-------------|
+| `/` | Landing |
+| `/tienda` | Panel de tienda — crear ofertas |
+| `/admin` | Panel admin — aprobar y publicar |
+| `/vitrina` | Vitrina digital fullscreen |
 
-## Learn More
+## Configuración de APIs
 
-To learn more about Next.js, take a look at the following resources:
+### OpenAI (requerido para IA completa)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. Crea una API key en [platform.openai.com](https://platform.openai.com)
+2. Agrégala como `OPENAI_API_KEY` en `.env`
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Sin OpenAI, el sistema usa contenido y fondos de respaldo (menos impresionante en demo).
 
-## Deploy on Vercel
+### Meta — Instagram + Facebook (para publicación real)
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+1. Crea una app en [developers.facebook.com](https://developers.facebook.com)
+2. Agrega el producto **Instagram Graph API** y **Facebook Login**
+3. Vincula tu cuenta Instagram Business a una página de Facebook
+4. Genera un **Page Access Token** con permisos:
+   - `instagram_basic`
+   - `instagram_content_publish`
+   - `pages_manage_posts`
+   - `pages_read_engagement`
+5. Configura en `.env`:
+   - `META_ACCESS_TOKEN`
+   - `META_PAGE_ID` — ID de tu página de Facebook
+   - `META_INSTAGRAM_ACCOUNT_ID` — ID de la cuenta IG Business
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### URL pública (requerida para Instagram)
+
+Instagram necesita una URL pública para descargar la imagen generada.
+
+**En local con ngrok:**
+```bash
+ngrok http 3000
+```
+Copia la URL `https://xxxx.ngrok.io` en `APP_PUBLIC_URL`.
+
+Facebook puede publicar subiendo el archivo directamente (no requiere URL pública).
+
+## Demo en vivo (2 minutos)
+
+1. Ve a `/tienda`
+2. Crea oferta: "Zapatillas Nike Air Max, 30%, hoy y mañana"
+3. Espera ~20s mientras la IA genera arte y copy
+4. Ve a `/admin` → Aprueba la oferta
+5. Click "Publicar en redes"
+6. Abre `/vitrina` para ver la pantalla del mall
+
+## Stack
+
+- **Next.js 16** — App Router
+- **Prisma 7** + SQLite — base de datos local
+- **OpenAI GPT-4o-mini** — copy y hashtags
+- **DALL-E 3** — fondos visuales generativos
+- **Sharp** — composición de imagen final
+- **Meta Graph API** — publicación IG/FB
+
+## Scripts
+
+```bash
+npm run dev          # Servidor de desarrollo
+npm run build        # Build de producción
+npm run db:setup     # Migrar + seed
+npm run db:seed      # Solo seed
+```

@@ -1,0 +1,157 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Mall {
+  id             String   @id @default(cuid())
+  name           String
+  tagline        String?
+  primaryColor   String   @default("#E11D48")
+  secondaryColor String   @default("#1E1B4B")
+  fixedHashtags  String   @default("#MarkMall #Ofertas")
+  adminPassword  String   @default("admin2026")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  stores         Store[]
+}
+
+model Store {
+  id             String    @id @default(cuid())
+  name           String
+  category       String
+  username       String    @unique
+  passwordHash   String
+  logoUrl        String?
+  primaryColor   String    @default("#E11D48")
+  secondaryColor String    @default("#1E1B4B")
+  customHashtags String?
+  templateId     String    @default("flash-sale")
+  mallId         String
+  mall           Mall      @relation(fields: [mallId], references: [id])
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  products       Product[]
+  offers         Offer[]
+  socialAccount  StoreSocialAccount?
+}
+
+model Product {
+  id           String   @id @default(cuid())
+  storeId      String
+  store        Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  name         String
+  description  String?
+  price        Float?
+  category     String?
+  imageUrl     String
+  imageNoBgUrl String?
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  offers       Offer[]
+}
+
+enum OfferStatus {
+  DRAFT
+  GENERATING
+  PENDING
+  APPROVED
+  PUBLISHED
+  REJECTED
+  FAILED
+}
+
+model Offer {
+  id              String           @id @default(cuid())
+  storeId         String
+  store           Store            @relation(fields: [storeId], references: [id])
+  productId       String?
+  product         Product?         @relation(fields: [productId], references: [id])
+  productName     String
+  discountPercent Int
+  description     String?
+  offerHashtags   String?
+  aiBrief         String?
+  startDate       DateTime
+  endDate         DateTime
+  productImageUrl String?
+  templateId      String?
+  status          OfferStatus      @default(DRAFT)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  content         GeneratedContent?
+  publications    Publication[]
+}
+
+model GeneratedContent {
+  id               String   @id @default(cuid())
+  offerId          String   @unique
+  offer            Offer    @relation(fields: [offerId], references: [id], onDelete: Cascade)
+  captionInstagram String
+  captionFacebook  String
+  hashtags         String
+  imagePath        String
+  backgroundPrompt String
+  visualStyle      String?
+  templateId       String?
+  createdAt        DateTime @default(now())
+}
+
+enum Platform {
+  INSTAGRAM
+  FACEBOOK
+  VITRINA
+}
+
+enum PublicationStatus {
+  PENDING
+  SUCCESS
+  FAILED
+}
+
+model Publication {
+  id             String            @id @default(cuid())
+  offerId        String
+  offer          Offer             @relation(fields: [offerId], references: [id], onDelete: Cascade)
+  platform       Platform
+  externalPostId String?
+  errorMessage   String?
+  status         PublicationStatus @default(PENDING)
+  publishedAt    DateTime?
+  createdAt      DateTime          @default(now())
+}
+
+/** Cuentas de redes conectadas por cada tienda (OAuth) */
+model StoreSocialAccount {
+  id                 String    @id @default(cuid())
+  storeId            String    @unique
+  store              Store     @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  metaPageId         String?
+  metaPageName       String?
+  metaIgAccountId    String?
+  metaIgUsername     String?
+  metaAccessToken    String?
+  metaTokenExpiresAt DateTime?
+  tiktokOpenId       String?
+  tiktokUsername     String?
+  tiktokAccessToken  String?
+  tiktokRefreshToken String?
+  tiktokExpiresAt    DateTime?
+  connectedAt        DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+}
+
+/** Sesión temporal tras OAuth de Meta (elegir página) */
+model MetaOAuthPending {
+  id        String   @id @default(cuid())
+  storeId   String
+  pagesJson String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}

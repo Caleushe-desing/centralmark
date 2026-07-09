@@ -1,26 +1,73 @@
+@import url("https://fonts.googleapis.com/css2?family=Anton&family=Bebas+Neue&family=Montserrat:ital,wght@0,400;0,700;0,900;1,400&family=Oswald:wght@400;700&family=Pacifico&family=Playfair+Display:wght@700&display=swap");
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #050505;
+  --foreground: #f5f5f5;
+  --mm-neon: #b8ff00;
+  --mm-yellow: #ffe600;
+  --mm-surface: #0a0a0a;
+  --mm-card: #111111;
+  --mm-border: rgba(184, 255, 0, 0.14);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-mm-black: #050505;
+  --color-mm-surface: #0a0a0a;
+  --color-mm-card: #111111;
+  --color-mm-elevated: #161616;
+  --color-mm-neon: #b8ff00;
+  --color-mm-neon-dim: #8fcc00;
+  --color-mm-yellow: #ffe600;
+  --color-mm-yellow-dim: #ccb800;
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), system-ui, sans-serif;
+  background-image:
+    radial-gradient(ellipse 90% 55% at 50% -15%, rgba(184, 255, 0, 0.07), transparent 55%),
+    radial-gradient(ellipse 55% 45% at 100% 100%, rgba(255, 230, 0, 0.05), transparent 50%),
+    radial-gradient(ellipse 40% 35% at 0% 80%, rgba(184, 255, 0, 0.04), transparent 45%);
+  background-attachment: fixed;
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(184, 255, 0, 0.2) transparent;
+}
+
+@layer utilities {
+  .mm-gradient-text {
+    @apply bg-gradient-to-r from-mm-neon to-mm-yellow bg-clip-text text-transparent;
+  }
+
+  .mm-btn-primary {
+    @apply bg-gradient-to-r from-mm-neon to-mm-yellow text-black font-semibold hover:brightness-110 transition;
+  }
+
+  .mm-btn-outline {
+    @apply border border-mm-neon/35 text-mm-neon hover:bg-mm-neon/10 transition;
+  }
+
+  .mm-card {
+    @apply rounded-2xl border border-mm-neon/12 bg-mm-card/90 backdrop-blur-sm;
+  }
+
+  .mm-input {
+    @apply w-full bg-mm-surface border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-neutral-600 focus:border-mm-neon/50 focus:outline-none focus:ring-1 focus:ring-mm-neon/30 transition;
+  }
+
+  .mm-glow-neon {
+    box-shadow: 0 0 24px rgba(184, 255, 0, 0.15);
+  }
+
+  .mm-glow-yellow {
+    box-shadow: 0 0 20px rgba(255, 230, 0, 0.12);
+  }
 }

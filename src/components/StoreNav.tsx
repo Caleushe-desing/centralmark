@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Sparkles, Package, Settings, Tag, LogOut } from "lucide-react";
+import { Sparkles, Package, Settings, Tag, LogOut, Megaphone } from "lucide-react";
 
 interface StoreNavProps {
   storeName: string;
@@ -15,6 +15,7 @@ export function StoreNav({ storeName, mallName }: StoreNavProps) {
 
   const links = [
     { href: "/tienda", label: "Ofertas", icon: Tag },
+    { href: "/gestor-publicaciones", label: "Gestor Pro", icon: Megaphone },
     { href: "/tienda/productos", label: "Catálogo", icon: Package },
     { href: "/tienda/configuracion", label: "Configuración", icon: Settings },
   ];
@@ -46,7 +47,7 @@ export function StoreNav({ storeName, mallName }: StoreNavProps) {
                 key={href}
                 href={href}
                 className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition ${
-                  pathname === href
+                  pathname === href || pathname.startsWith(`${href}/`)
                     ? "bg-mm-neon/15 text-mm-neon border border-mm-neon/25"
                     : "text-neutral-400 hover:text-mm-yellow hover:bg-mm-yellow/5"
                 }`}

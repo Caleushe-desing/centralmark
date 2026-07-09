@@ -7,7 +7,8 @@ import { buildDefaultHashtags } from "@/lib/offer/default-copy";
 import type { ImageCreationMode } from "@/lib/ai/image-generator";
 import type { TextLayer } from "@/lib/image/text-layers";
 import { ImagePlus, Layers, Scissors, Sparkles, Upload, Wand2, Zap } from "lucide-react";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import type { CampaignApplyPayload } from "@/components/CampaignStudio";
 
 interface StoreBranding {
   name: string;
@@ -21,10 +22,12 @@ type ImageSource = "ai" | "upload";
 export function OfferCreator({
   mallHashtags,
   storeBranding,
+  campaignSeed,
   onCreated,
 }: {
   mallHashtags?: string;
   storeBranding?: StoreBranding;
+  campaignSeed?: CampaignApplyPayload | null;
   onCreated: () => void;
 }) {
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -46,6 +49,19 @@ export function OfferCreator({
   const [exportImage, setExportImage] = useState<(() => Promise<Blob>) | null>(null);
   const [previewTextLayers, setPreviewTextLayers] = useState<TextLayer[] | undefined>();
   const [captionSuggestLoading, setCaptionSuggestLoading] = useState(false);
+  const [campaignImagePrompt, setCampaignImagePrompt] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!campaignSeed?.applyId) return;
+    setBrief(campaignSeed.brief);
+    setCaption(campaignSeed.caption);
+    setOfferHashtags(campaignSeed.hashtags);
+    setPreviewMeta({ productName: campaignSeed.productName, discountPercent: null });
+    setCampaignImagePrompt(campaignSeed.imagePrompt ?? null);
+    setError(null);
+    setImageSource("ai");
+    setAiCreationMode("complete");
+  }, [campaignSeed?.applyId, campaignSeed]);
 
   const handleRegisterExport = useCallback(
     (exporter: (() => Promise<Blob>) | null) => setExportImage(() => exporter),
@@ -423,6 +439,13 @@ type UploadMode = "default" | "enhance" | "removeBg";
               <label className="block text-sm text-neutral-400 mb-1">
                 Idea para generar la imagen con IA *
               </label>
+              {campaignImagePrompt && (
+                <p className="text-xs text-mm-yellow/90 bg-mm-yellow/5 border border-mm-yellow/20 rounded-lg px-3 py-2 mb-2 leading-relaxed">
+                  <strong className="text-mm-yellow">Prompt visual sugerido por la campaña:</strong>{" "}
+                  {campaignImagePrompt.slice(0, 220)}
+                  {campaignImagePrompt.length > 220 ? "…" : ""}
+                </p>
+              )}
               <CensoredTextarea
                 name="aiBrief"
                 value={brief}
@@ -457,7 +480,7 @@ type UploadMode = "default" | "enhance" | "removeBg";
           </div>
         )}
 
-        {previewImageUrl && (
+        {(previewImageUrl || caption.trim()) && (
           <div className="space-y-4 pt-2 border-t border-white/10">
             <div>
               <label className="block text-sm text-neutral-400 mb-1">

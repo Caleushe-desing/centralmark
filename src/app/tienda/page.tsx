@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { OfferCard } from "@/components/OfferCard";
 import { OfferCreator } from "@/components/OfferCreator";
+import { CampaignStudio, type CampaignApplyPayload } from "@/components/CampaignStudio";
 
 interface StoreSettings {
   name: string;
@@ -14,6 +15,7 @@ interface StoreSettings {
 export default function TiendaPage() {
   const [offers, setOffers] = useState<never[]>([]);
   const [store, setStore] = useState<StoreSettings | null>(null);
+  const [campaignSeed, setCampaignSeed] = useState<CampaignApplyPayload | null>(null);
 
   const loadData = useCallback(async () => {
     const [offersRes, settingsRes] = await Promise.all([
@@ -37,18 +39,27 @@ export default function TiendaPage() {
         </p>
       </div>
 
-      <div className="mb-10 p-6 mm-card">
+      <div className="mb-10 space-y-6">
         {store && (
-          <OfferCreator
-            mallHashtags={store.mall.fixedHashtags}
-            storeBranding={{
-              name: store.name,
-              mallName: store.mall.name,
-              logoUrl: store.logoUrl,
-              customHashtags: store.customHashtags,
-            }}
-            onCreated={loadData}
-          />
+          <>
+            <CampaignStudio
+              storeName={store.name}
+              onApply={setCampaignSeed}
+            />
+            <div className="p-6 mm-card">
+              <OfferCreator
+                mallHashtags={store.mall.fixedHashtags}
+                storeBranding={{
+                  name: store.name,
+                  mallName: store.mall.name,
+                  logoUrl: store.logoUrl,
+                  customHashtags: store.customHashtags,
+                }}
+                campaignSeed={campaignSeed}
+                onCreated={loadData}
+              />
+            </div>
+          </>
         )}
       </div>
 

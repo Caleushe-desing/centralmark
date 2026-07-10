@@ -5,6 +5,8 @@ import { toPng } from "html-to-image";
 import { AdEngine } from "@/components/design-engine";
 import type { CompositionLayout } from "@/lib/design-engine/composition/rules";
 import type { DesignDocument } from "@/lib/design-engine/schemas";
+import type { CopyMode } from "@/lib/design-engine/copy-modes";
+import { DEFAULT_COPY_MODE } from "@/lib/design-engine/copy-modes";
 import { Loader2 } from "lucide-react";
 
 const POLL_MS = 1500;
@@ -20,6 +22,7 @@ export interface DesignPreviewState {
 
 interface DesignEnginePreviewProps {
   brief: string;
+  copyMode?: CopyMode;
   /** Incrementar para disparar nueva generación */
   trigger: number;
   onReady: (state: DesignPreviewState) => void;
@@ -30,6 +33,7 @@ interface DesignEnginePreviewProps {
 
 export function DesignEnginePreview({
   brief,
+  copyMode = DEFAULT_COPY_MODE,
   trigger,
   onReady,
   onExportReady,
@@ -47,6 +51,9 @@ export function DesignEnginePreview({
 
   const briefRef = useRef(brief);
   briefRef.current = brief;
+
+  const copyModeRef = useRef(copyMode);
+  copyModeRef.current = copyMode;
 
   const setLoad = useCallback((v: boolean) => {
     setLoading(v);
@@ -137,7 +144,7 @@ export function DesignEnginePreview({
         const res = await fetch("/api/campaign/generate", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ brief: briefText }),
+          body: JSON.stringify({ brief: briefText, copyMode: copyModeRef.current }),
         });
         const data = await res.json();
         if (cancelled) return;

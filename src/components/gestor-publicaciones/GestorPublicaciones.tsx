@@ -13,6 +13,8 @@ import {
 import type { DesignDocument } from "@/lib/design-engine/schemas";
 import type { CompositionLayout } from "@/lib/design-engine/composition/rules";
 import { AdEngine } from "@/components/design-engine";
+import { DesignModePicker } from "@/components/design-engine/DesignModePicker";
+import { DEFAULT_COPY_MODE, type CopyMode } from "@/lib/design-engine/copy-modes";
 import { downloadDataUrl, exportProAdToPng } from "@/lib/gestor-publicaciones/export-ad";
 
 type GenerationPhase = "idle" | "queued" | "processing" | "done";
@@ -47,6 +49,7 @@ export function GestorPublicaciones() {
   const [costoEstimado, setCostoEstimado] = useState<number | null>(null);
   const [exporting, setExporting] = useState(false);
   const [captionCopied, setCaptionCopied] = useState(false);
+  const [copyMode, setCopyMode] = useState<CopyMode>(DEFAULT_COPY_MODE);
 
   const pollJob = useCallback(async (jobId: string): Promise<void> => {
     const res = await fetch(`/api/campaign/generate/${jobId}`);
@@ -98,7 +101,7 @@ export function GestorPublicaciones() {
       const res = await fetch("/api/campaign/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ brief: trimmed }),
+        body: JSON.stringify({ brief: trimmed, copyMode }),
       });
 
       const data = await res.json();
@@ -159,6 +162,11 @@ export function GestorPublicaciones() {
             rows={6}
             placeholder="Ej: Colección verano sneakers premium, 30% solo fin de semana, tono editorial urbano…"
             className="w-full bg-mm-surface border border-white/10 rounded-xl px-4 py-3 text-white resize-none"
+          />
+          <DesignModePicker
+            value={copyMode}
+            onChange={setCopyMode}
+            disabled={loading}
           />
           <button
             type="button"

@@ -6,8 +6,9 @@ import {
   resolveLayout,
   type CompositionLayout,
 } from "../composition/rules";
-import { buildProAdUserPrompt, PRO_AD_DESIGNER_SYSTEM } from "./prompts";
+import { buildProAdUserPrompt, getDesignerSystemPrompt } from "./prompts";
 import { clampImageConcept } from "./clamp-concept";
+import { getCopyModeDefinition, parseCopyMode, type CopyMode } from "../copy-modes";
 import {
   proAdDesignSchema,
   proAdInputSchema,
@@ -24,34 +25,34 @@ function countWords(text: string): number {
   return text.trim().split(/\s+/).filter(Boolean).length;
 }
 
-function trimHook(hook: string): string {
+function trimHook(hook: string, maxWords: number): string {
   const words = hook.trim().split(/\s+/);
-  return words.length > 4 ? words.slice(0, 4).join(" ") : hook.trim();
+  return words.length > maxWords ? words.slice(0, maxWords).join(" ") : hook.trim();
 }
 
-/** Dirección de arte premium — sin UPPERCASE forzado */
-function sanitizeDesign(raw: DesignDocument): DesignDocument {
+function sanitizeDesign(raw: DesignDocument, copyMode: CopyMode): DesignDocument {
+  const maxHookWords = getCopyModeDefinition(copyMode).maxHookWords;
   return {
     ...raw,
     imagePrompt: clampImageConcept(raw.imagePrompt.trim()),
     caption: raw.caption.trim(),
-    hook: trimHook(raw.hook),
+    hook: trimHook(raw.hook, maxHookWords),
     badge: raw.badge.trim(),
     subtext: raw.subtext.trim(),
     cta: raw.cta.trim(),
   };
 }
 
-async function generateDesignFromBrief(brief: string) {
+async function generateDesignFromBrief(brief: string, copyMode: CopyMode) {
   const client = getOpenAIClient();
   const model = getCampaignModel();
 
   const response = await client.chat.completions.create({
     model,
-    temperature: 0.78,
+    temperature: copyMode === "retail" ? 0.72 : 0.78,
     messages: [
-      { role: "system", content: PRO_AD_DESIGNER_SYSTEM },
-      { role: "user", content: buildProAdUserPrompt(brief) },
+      { role: "system", content: getDesignerSystemPrompt(copyMode) },
+      { role: "user", content: buildProAdUserPrompt(brief, copyMode) },
     ],
     response_format: {
       type: "json_schema",
@@ -69,10 +70,11 @@ async function generateDesignFromBrief(brief: string) {
   }
 
   const parsed = proAdDesignSchema.parse(JSON.parse(raw));
-  const design = sanitizeDesign(parsed);
+  const design = sanitizeDesign(parsed, copyMode);
 
-  if (countWords(design.hook) > 4) {
-    design.hook = trimHook(design.hook);
+  const maxHookWords = getCopyModeDefinition(copyMode).maxHookWords;
+  if (countWords(design.hook) > maxHookWords) {
+    design.hook = trimHook(design.hook, maxHookWords);
   }
 
   const usage = response.usage ?? { prompt_tokens: 0, completion_tokens: 0 };
@@ -111,7 +113,9 @@ export async function runDesignEngine(
   options: RunDesignEngineOptions
 ): Promise<DesignGenerationResult> {
   const startedAt = Date.now();
-  const { brief } = proAdInputSchema.parse(input);
+  const parsed = proAdInputSchema.parse(input);
+  const { brief, copyMode: rawMode } = parsed;
+  const copyMode = parseCopyMode(rawMode);
   const { storeId, jobId, onPhase } = options;
 
   try {
@@ -125,7 +129,10 @@ export async function runDesignEngine(
 
   try {
     await onPhase?.("brief");
-    const { design, model, promptTokens, completionTokens } = await generateDesignFromBrief(brief);
+    const { design, model, promptTokens, completionTokens } = await generateDesignFromBrief(
+      brief,
+      copyMode
+    );
 
     await onPhase?.("composition");
     const layout = resolveCompositionLayout(design);

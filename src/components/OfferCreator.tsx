@@ -4,7 +4,10 @@ import { CaptionEditor } from "@/components/CaptionEditor";
 import { CensoredInput, CensoredTextarea } from "@/components/CensoredField";
 import { OfferPreview } from "@/components/OfferPreview";
 import { DesignEnginePreview } from "@/components/design-engine/DesignEnginePreview";
+import { DesignModePicker } from "@/components/design-engine/DesignModePicker";
 import type { DesignPreviewState } from "@/components/design-engine/DesignEnginePreview";
+import type { CopyMode } from "@/lib/design-engine/copy-modes";
+import { DEFAULT_COPY_MODE } from "@/lib/design-engine/copy-modes";
 import { buildDefaultHashtags } from "@/lib/offer/default-copy";
 import type { ImageCreationMode } from "@/lib/ai/image-generator";
 import type { TextLayer } from "@/lib/image/text-layers";
@@ -53,6 +56,7 @@ export function OfferCreator({
   const [captionSuggestLoading, setCaptionSuggestLoading] = useState(false);
   const [campaignImagePrompt, setCampaignImagePrompt] = useState<string | null>(null);
   const [designTrigger, setDesignTrigger] = useState(0);
+  const [copyMode, setCopyMode] = useState<CopyMode>(DEFAULT_COPY_MODE);
   const [designPreview, setDesignPreview] = useState<DesignPreviewState | null>(null);
   const [generationPhase, setGenerationPhase] = useState<string | null>(null);
 
@@ -412,9 +416,20 @@ type UploadMode = "default" | "enhance" | "removeBg";
               />
             </div>
 
+            <DesignModePicker
+              value={copyMode}
+              onChange={(mode) => {
+                setCopyMode(mode);
+                if (designPreview) {
+                  setDesignPreview(null);
+                  setExportImage(null);
+                }
+              }}
+              disabled={previewLoading || loading}
+            />
+
             <p className="text-xs text-neutral-600">
-              El Design Engine genera composición editorial, imagen IA y copy optimizado. Misma
-              calidad que el Gestor Pro, integrado en tu flujo de tienda.
+              El Design Engine genera imagen IA + textos según el estilo elegido.
             </p>
 
             <button
@@ -491,6 +506,7 @@ type UploadMode = "default" | "enhance" | "removeBg";
           <div className="space-y-4">
             <DesignEnginePreview
               brief={brief}
+              copyMode={copyMode}
               trigger={designTrigger}
               onReady={handleDesignReady}
               onExportReady={handleRegisterExport}
@@ -499,7 +515,7 @@ type UploadMode = "default" | "enhance" | "removeBg";
             />
             {!designPreview && !previewLoading && (
               <p className="text-neutral-600 text-sm text-center py-12">
-                La vista previa editorial aparecerá aquí
+                La vista previa aparecerá aquí al generar
               </p>
             )}
           </div>

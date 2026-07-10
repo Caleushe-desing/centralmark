@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db";
 import { assertStoreAiRateLimit, StoreAiRateLimitError } from "@/lib/ai/rate-limit/store-ai-limiter";
+import { parseCopyMode, type CopyMode } from "../copy-modes";
 import { DesignEngineError } from "../errors";
 
 const STALE_PROCESSING_MS = 8 * 60 * 1000;
@@ -91,7 +92,11 @@ export async function tryClaimDesignJob(jobId: string): Promise<boolean> {
   return result.count > 0;
 }
 
-export async function createDesignJob(storeId: string, brief: string): Promise<string> {
+export async function createDesignJob(
+  storeId: string,
+  brief: string,
+  copyMode: CopyMode = "retail"
+): Promise<string> {
   try {
     assertStoreAiRateLimit(storeId, "premium");
   } catch (error) {
@@ -110,6 +115,7 @@ export async function createDesignJob(storeId: string, brief: string): Promise<s
     data: {
       storeId,
       brief,
+      copyMode: parseCopyMode(copyMode),
       status: "QUEUED",
       phase: "queued",
     },

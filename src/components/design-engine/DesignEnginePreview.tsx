@@ -42,6 +42,12 @@ export function DesignEnginePreview({
   const [preview, setPreview] = useState<DesignPreviewState | null>(null);
   const [localError, setLocalError] = useState<string | null>(null);
 
+  const callbacksRef = useRef({ onReady, onError, onExportReady, onLoadingChange });
+  callbacksRef.current = { onReady, onError, onExportReady, onLoadingChange };
+
+  const briefRef = useRef(brief);
+  briefRef.current = brief;
+
   const setLoad = useCallback(
     (v: boolean) => {
       setLoading(v);
@@ -73,10 +79,14 @@ export function DesignEnginePreview({
   }, [preview, registerExport]);
 
   useEffect(() => {
-    if (!trigger || !brief.trim()) return;
+    if (!trigger) return;
+
+    const briefText = briefRef.current.trim();
+    if (!briefText) return;
 
     let cancelled = false;
     let pollTimer: ReturnType<typeof setTimeout>;
+    const callbacks = callbacksRef.current;
 
     async function poll(jobId: string) {
       const res = await fetch(`/api/campaign/generate/${jobId}`);
@@ -87,7 +97,7 @@ export function DesignEnginePreview({
         setLoad(false);
         const msg = data.error ?? "Error al consultar generación";
         setLocalError(msg);
-        onError(msg);
+        callbacks.onError(msg);
         return;
       }
 
@@ -102,7 +112,7 @@ export function DesignEnginePreview({
           costoEstimado: data.result.costoEstimado,
         };
         setPreview(state);
-        onReady(state);
+        callbacks.onReady(state);
         setLoad(false);
         setPhaseLabel(null);
         return;
@@ -112,7 +122,7 @@ export function DesignEnginePreview({
         setLoad(false);
         const msg = data.error ?? "La generación falló";
         setLocalError(msg);
-        onError(msg);
+        callbacks.onError(msg);
         return;
       }
 
@@ -123,14 +133,14 @@ export function DesignEnginePreview({
       setLoad(true);
       setPreview(null);
       setLocalError(null);
-      onExportReady(null);
+      callbacks.onExportReady(null);
       setPhaseLabel("Iniciando…");
 
       try {
         const res = await fetch("/api/campaign/generate", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ brief: brief.trim() }),
+          body: JSON.stringify({ brief: briefText }),
         });
         const data = await res.json();
         if (cancelled) return;
@@ -145,7 +155,7 @@ export function DesignEnginePreview({
           setLoad(false);
           const msg = err instanceof Error ? err.message : "Error desconocido";
           setLocalError(msg);
-          onError(msg);
+          callbacks.onError(msg);
         }
       }
     }
@@ -156,7 +166,8 @@ export function DesignEnginePreview({
       cancelled = true;
       clearTimeout(pollTimer);
     };
-  }, [trigger, brief, onReady, onExportReady, onError, setLoad]);
+    // Solo re-disparar cuando el usuario pulsa "Generar" (trigger), no en cada re-render del padre.
+  }, [trigger, setLoad]);
 
   if (!preview && !loading && !localError) return null;
 
@@ -179,11 +190,8 @@ export function DesignEnginePreview({
         </div>
       )}
       {preview && (
-        <div className="overflow-hidden rounded-2xl border border-white/10 bg-black mx-auto max-w-full">
-          <div
-            className="origin-top-left scale-[0.36] sm:scale-[0.42] md:scale-[0.48] lg:scale-[0.38] xl:scale-[0.42]"
-            style={{ width: 1080, height: 1080 * 0.42 }}
-          >
+        <div className="overflow-hidden rounded-2xl border border-white/10 bg-black mx-auto max-w-full flex justify-center">
+          <div className="scale-[0.36] sm:scale-[0.42] md:scale-[0.48] lg:scale-[0.38] xl:scale-[0.42] origin-top">
             <AdEngine
               ref={composerRef}
               imageUrl={preview.imageUrl}

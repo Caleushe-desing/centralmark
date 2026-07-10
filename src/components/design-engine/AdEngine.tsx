@@ -37,7 +37,7 @@ export const AdEngine = forwardRef<HTMLDivElement, AdEngineProps>(function AdEng
         src={imageUrl}
         alt=""
         className="absolute inset-0 w-full h-full object-cover"
-        crossOrigin="anonymous"
+        crossOrigin={imageUrl.startsWith("http") ? "anonymous" : undefined}
       />
 
       <div style={topScrim} aria-hidden />

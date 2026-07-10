@@ -155,14 +155,19 @@ export function OfferCreator({
     setDesignTrigger((t) => t + 1);
   }
 
-  function handleDesignReady(state: DesignPreviewState) {
+  const handleDesignReady = useCallback((state: DesignPreviewState) => {
     setDesignPreview(state);
     setPreviewMeta({ productName: state.design.hook, discountPercent: null });
     setCaption(state.design.caption);
-    if (!offerHashtags.trim()) {
-      setOfferHashtags(buildDefaultHashtags(null, state.design.hook));
-    }
-  }
+    setOfferHashtags((prev) =>
+      prev.trim() ? prev : buildDefaultHashtags(null, state.design.hook)
+    );
+  }, []);
+
+  const handlePreviewLoadingChange = useCallback((v: boolean) => {
+    setPreviewLoading(v);
+    if (!v) setGenerationPhase(null);
+  }, []);
 
 type UploadMode = "default" | "enhance" | "removeBg";
 
@@ -490,10 +495,7 @@ type UploadMode = "default" | "enhance" | "removeBg";
               onReady={handleDesignReady}
               onExportReady={handleRegisterExport}
               onError={setError}
-              onLoadingChange={(v) => {
-                setPreviewLoading(v);
-                if (!v) setGenerationPhase(null);
-              }}
+              onLoadingChange={handlePreviewLoadingChange}
             />
             {!designPreview && !previewLoading && (
               <p className="text-neutral-600 text-sm text-center py-12">

@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { requireStoreSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/db";
 import { suggestOfferCaption } from "@/lib/ai/suggest-caption";
+import { assertStoreAiRateLimit, StoreAiRateLimitError } from "@/lib/ai/rate-limit/store-ai-limiter";
+import { aiRateLimitResponse } from "@/lib/ai/rate-limit/http";
 
 export async function POST(request: Request) {
   try {
@@ -20,6 +22,8 @@ export async function POST(request: Request) {
     if (!store) {
       return NextResponse.json({ error: "Tienda no encontrada" }, { status: 404 });
     }
+
+    assertStoreAiRateLimit(session.storeId, "standard");
 
     const caption = await suggestOfferCaption({
       aiBrief,
@@ -41,6 +45,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ caption });
   } catch (e) {
     const msg = e instanceof Error ? e.message : "Error";
+    if (e instanceof StoreAiRateLimitError) {
+      return aiRateLimitResponse(e);
+    }
     if (msg === "UNAUTHORIZED") {
       return NextResponse.json({ error: "No autenticado" }, { status: 401 });
     }

@@ -18,8 +18,6 @@ import {
 } from "../schemas";
 import { calculateGenerationCost } from "../financial/pricing";
 import { persistDesignGenerationAtomic } from "../persist/generation";
-import { assertStoreRateLimit, StoreRateLimitError } from "../rate-limit/store-limiter";
-
 import { DesignEngineError } from "../errors";
 
 function countWords(text: string): number {
@@ -121,18 +119,6 @@ export async function runDesignEngine(
   } catch (error) {
     if (error instanceof OpenAIConfigError) {
       throw new DesignEngineError(error.message, error.code, 503, { cause: error });
-    }
-    throw error;
-  }
-
-  try {
-    assertStoreRateLimit(storeId);
-  } catch (error) {
-    if (error instanceof StoreRateLimitError) {
-      throw new DesignEngineError(error.message, "STORE_RATE_LIMIT", 429, {
-        cause: error,
-        retryAfterSeconds: error.retryAfterSeconds,
-      });
     }
     throw error;
   }

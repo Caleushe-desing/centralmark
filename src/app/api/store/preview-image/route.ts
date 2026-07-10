@@ -4,6 +4,8 @@ import path from "path";
 import sharp from "sharp";
 import { requireStoreSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/db";
+import { assertStoreAiRateLimit, StoreAiRateLimitError } from "@/lib/ai/rate-limit/store-ai-limiter";
+import { aiRateLimitResponse } from "@/lib/ai/rate-limit/http";
 import {
   craftDallePromptFromBrief,
   generateImageWithDalle,
@@ -28,6 +30,8 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    assertStoreAiRateLimit(session.storeId, "premium");
 
     const parsed = await parseOfferBrief(aiBrief);
     const productName = parsed.productName;
@@ -113,9 +117,14 @@ export async function POST(request: NextRequest) {
       suggestedCaption,
       suggestedHashtags,
       textLayers,
+      deprecated: true,
+      message: "Usa POST /api/campaign/generate (Design Engine) en su lugar.",
     });
   } catch (e) {
     const msg = e instanceof Error ? e.message : "Error";
+    if (e instanceof StoreAiRateLimitError) {
+      return aiRateLimitResponse(e);
+    }
     if (msg === "UNAUTHORIZED") {
       return NextResponse.json({ error: "No autenticado" }, { status: 401 });
     }

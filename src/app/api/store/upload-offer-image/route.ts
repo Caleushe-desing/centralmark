@@ -13,6 +13,8 @@ import {
 } from "@/lib/image/remove-background";
 import { parseOfferBrief } from "@/lib/ai/parse-brief";
 import { suggestOfferCaption, suggestOfferHashtags } from "@/lib/ai/suggest-caption";
+import { assertStoreAiRateLimit, StoreAiRateLimitError } from "@/lib/ai/rate-limit/store-ai-limiter";
+import { aiRateLimitResponse } from "@/lib/ai/rate-limit/http";
 
 const MAX_BYTES = 12 * 1024 * 1024;
 
@@ -55,6 +57,11 @@ export async function POST(request: NextRequest) {
     if (!store) {
       return NextResponse.json({ error: "Tienda no encontrada" }, { status: 404 });
     }
+
+    if (enhance || removeBg) {
+      assertStoreAiRateLimit(session.storeId, "premium");
+    }
+    assertStoreAiRateLimit(session.storeId, "standard");
 
     let buffer = Buffer.from(await file.arrayBuffer());
     let mimeType = file.type || "image/jpeg";
@@ -146,6 +153,9 @@ export async function POST(request: NextRequest) {
     });
   } catch (e) {
     const msg = e instanceof Error ? e.message : "Error";
+    if (e instanceof StoreAiRateLimitError) {
+      return aiRateLimitResponse(e);
+    }
     if (msg === "UNAUTHORIZED") {
       return NextResponse.json({ error: "No autenticado" }, { status: 401 });
     }

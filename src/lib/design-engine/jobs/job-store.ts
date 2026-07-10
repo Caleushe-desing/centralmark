@@ -1,5 +1,8 @@
 import { prisma } from "@/lib/db";
+import { assertStoreAiRateLimit, StoreAiRateLimitError } from "@/lib/ai/rate-limit/store-ai-limiter";
 import { DesignEngineError } from "../errors";
+
+const STALE_PROCESSING_MS = 8 * 60 * 1000;
 
 export async function assertNoInflightDesignJob(storeId: string): Promise<void> {
   const inflight = await prisma.designGenerationJob.findFirst({
@@ -20,7 +23,50 @@ export async function assertNoInflightDesignJob(storeId: string): Promise<void> 
   }
 }
 
+/** Marca jobs colgados en PROCESSING como fallidos (evita re-ejecutar y cobrar dos veces). */
+export async function failStaleProcessingJobs(jobId: string): Promise<void> {
+  const staleBefore = new Date(Date.now() - STALE_PROCESSING_MS);
+  await prisma.designGenerationJob.updateMany({
+    where: {
+      id: jobId,
+      status: "PROCESSING",
+      updatedAt: { lt: staleBefore },
+    },
+    data: {
+      status: "FAILED",
+      phase: "failed",
+      errorMessage: "La generación expiró. Pulsa Generar de nuevo.",
+      completedAt: new Date(),
+    },
+  });
+}
+
+/**
+ * Reclama un job QUEUED de forma atómica. Solo un procesador puede ganar.
+ */
+export async function tryClaimDesignJob(jobId: string): Promise<boolean> {
+  await failStaleProcessingJobs(jobId);
+
+  const result = await prisma.designGenerationJob.updateMany({
+    where: { id: jobId, status: "QUEUED" },
+    data: { status: "PROCESSING", phase: "queued" },
+  });
+  return result.count > 0;
+}
+
 export async function createDesignJob(storeId: string, brief: string): Promise<string> {
+  try {
+    assertStoreAiRateLimit(storeId, "premium");
+  } catch (error) {
+    if (error instanceof StoreAiRateLimitError) {
+      throw new DesignEngineError(error.message, "STORE_RATE_LIMIT", 429, {
+        cause: error,
+        retryAfterSeconds: error.retryAfterSeconds,
+      });
+    }
+    throw error;
+  }
+
   await assertNoInflightDesignJob(storeId);
 
   const job = await prisma.designGenerationJob.create({

@@ -9,7 +9,10 @@ import { publishGeneratedImage } from "@/lib/ftp/upload";
 import { moderateOfferText, moderateUserContent } from "./moderation";
 import { buildHashtags } from "@/lib/templates";
 
-export async function runOfferGenerationPipeline(offerId: string) {
+export async function runOfferGenerationPipeline(
+  offerId: string,
+  options?: { skipModeration?: boolean }
+) {
   const offer = await prisma.offer.findUnique({
     where: { id: offerId },
     include: {
@@ -29,18 +32,35 @@ export async function runOfferGenerationPipeline(offerId: string) {
   try {
     const productName = offer.product?.name ?? offer.productName;
 
-    const moderation = await moderateUserContent({
-      productName,
-      description: offer.description ?? undefined,
-      offerHashtags: offer.offerHashtags ?? undefined,
-      aiBrief: offer.aiBrief ?? undefined,
-    });
+    let corrected: {
+      productName?: string;
+      description?: string;
+      offerHashtags?: string;
+      aiBrief?: string;
+    };
 
-    if (!moderation.approved) {
-      throw new Error(moderation.issues.join(" ") || "Contenido no permitido");
+    if (options?.skipModeration) {
+      corrected = {
+        productName,
+        description: offer.description ?? undefined,
+        offerHashtags: offer.offerHashtags ?? undefined,
+        aiBrief: offer.aiBrief ?? undefined,
+      };
+    } else {
+      const moderation = await moderateUserContent({
+        productName,
+        description: offer.description ?? undefined,
+        offerHashtags: offer.offerHashtags ?? undefined,
+        aiBrief: offer.aiBrief ?? undefined,
+      });
+
+      if (!moderation.approved) {
+        throw new Error(moderation.issues.join(" ") || "Contenido no permitido");
+      }
+
+      corrected = moderation.fields;
     }
 
-    const corrected = moderation.fields;
     const description = corrected.description ?? offer.description;
     const aiBrief = corrected.aiBrief ?? offer.aiBrief;
     const offerHashtags = offer.offerHashtags;

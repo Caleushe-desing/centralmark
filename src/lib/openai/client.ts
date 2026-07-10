@@ -27,7 +27,7 @@ export function getOpenAIClient(): OpenAI {
 
   cachedClient = new OpenAI({
     apiKey,
-    maxRetries: 2,
+    maxRetries: 0,
     timeout: 90_000,
   });
 

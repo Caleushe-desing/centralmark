@@ -5,6 +5,8 @@ import {
   CampaignGenerationError,
   generateAdCampaign,
 } from "@/lib/ai/campaign";
+import { assertStoreAiRateLimit, StoreAiRateLimitError } from "@/lib/ai/rate-limit/store-ai-limiter";
+import { aiRateLimitResponse } from "@/lib/ai/rate-limit/http";
 import { requireStoreSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/db";
 
@@ -41,6 +43,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Tienda no encontrada" }, { status: 404 });
     }
 
+    assertStoreAiRateLimit(session.storeId, "standard");
+
     const parsed = requestBodySchema.safeParse({
       ...body,
       storeName: body.storeName ?? store.name,
@@ -61,6 +65,9 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ success: true, campaign });
   } catch (error) {
+    if (error instanceof StoreAiRateLimitError) {
+      return aiRateLimitResponse(error);
+    }
     if (error instanceof CampaignGenerationError) {
       const headers: HeadersInit = {};
       if (error.retryAfterSeconds) {

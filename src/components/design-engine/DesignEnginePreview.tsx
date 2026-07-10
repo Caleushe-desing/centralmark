@@ -48,13 +48,10 @@ export function DesignEnginePreview({
   const briefRef = useRef(brief);
   briefRef.current = brief;
 
-  const setLoad = useCallback(
-    (v: boolean) => {
-      setLoading(v);
-      onLoadingChange?.(v);
-    },
-    [onLoadingChange]
-  );
+  const setLoad = useCallback((v: boolean) => {
+    setLoading(v);
+    callbacksRef.current.onLoadingChange?.(v);
+  }, []);
 
   const registerExport = useCallback(() => {
     const el = composerRef.current;
@@ -167,7 +164,7 @@ export function DesignEnginePreview({
       clearTimeout(pollTimer);
     };
     // Solo re-disparar cuando el usuario pulsa "Generar" (trigger), no en cada re-render del padre.
-  }, [trigger, setLoad]);
+  }, [trigger]);
 
   if (!preview && !loading && !localError) return null;
 

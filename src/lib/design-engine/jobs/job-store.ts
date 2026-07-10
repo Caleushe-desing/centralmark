@@ -1,6 +1,28 @@
 import { prisma } from "@/lib/db";
+import { DesignEngineError } from "../errors";
+
+export async function assertNoInflightDesignJob(storeId: string): Promise<void> {
+  const inflight = await prisma.designGenerationJob.findFirst({
+    where: {
+      storeId,
+      status: { in: ["QUEUED", "PROCESSING"] },
+    },
+    orderBy: { createdAt: "desc" },
+  });
+
+  if (inflight) {
+    throw new DesignEngineError(
+      "Ya hay una generación en curso. Espera a que termine antes de pedir otra.",
+      "GENERATION_IN_PROGRESS",
+      409,
+      { retryAfterSeconds: 5 }
+    );
+  }
+}
 
 export async function createDesignJob(storeId: string, brief: string): Promise<string> {
+  await assertNoInflightDesignJob(storeId);
+
   const job = await prisma.designGenerationJob.create({
     data: {
       storeId,

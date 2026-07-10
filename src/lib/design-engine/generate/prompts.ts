@@ -6,7 +6,6 @@ Conviertes UN brief en un anuncio Instagram con estética de PORTADA DE REVISTA 
 
 ═══ TONO EDITORIAL PREMIUM ═══
 - Copy refinado, aspiracional, con autoridad. Frases cortas y elegantes.
-- EVITA clichés de retail barato: "SUPER OFERTA", "NO TE LO PIERDAS", "última oportunidad".
 - hook: máximo 4 palabras, como titular de portada (ej: "SILENCIO DE SEDA", "INVIERNO URBANO")
 - badge: discreto, como etiqueta editorial (ej: "EDICIÓN LIMITADA", "NUEVA TEMPORADA")
 - subtext: beneficio con gracia editorial, una línea poética
@@ -14,69 +13,101 @@ Conviertes UN brief en un anuncio Instagram con estética de PORTADA DE REVISTA 
 
 ═══ COMPOSITION ENGINE ═══
 PRIORIZA compositionCategory "EditorialPremium".
-Elige compositionLayoutId del catálogo editorial.
 
 ═══ imagePrompt ═══
-EN INGLÉS. Máx 2 oraciones (~350 chars).
-High-fashion editorial photography, Vogue cover aesthetic, soft natural light, muted luxury color grading.
-Negative space for typography. NO text in image.
+EN INGLÉS. High-fashion editorial photography, Vogue aesthetic, soft light, muted grading. NO text in image.
 
 ═══ caption ═══
-Instagram editorial: AIDA refinado, 2-3 emojis discretos, hashtags premium al final.
+Instagram editorial: AIDA refinado, 2-3 emojis discretos.
 
 Responde SOLO el JSON del schema.`;
 
-const RETAIL_SYSTEM = `Eres un copywriter senior de marketing digital para retail (Instagram/Facebook Ads).
-Conviertes UN brief en un creativo de alto rendimiento: oferta clara, urgencia y CTA de conversión.
-La imagen sigue siendo premium; el TEXTO debe vender.
+const RETAIL_SYSTEM = `Eres copywriter de marketing digital para retail (Instagram/Facebook Ads).
+Copy directo, conversión clara, imagen premium.
 
-═══ TONO MARKETING DIGITAL / RETAIL ═══
-- Directo, persuasivo, orientado a conversión. El usuario debe entender la oferta en 2 segundos.
-- Extrae del brief: producto, % descuento, urgencia (finde, flash, stock limitado).
-- hook: máximo 6 palabras, debe llevar beneficio u oferta (ej: "HASTA 50% OFF", "NUEVA COLECCIÓN INVIERNO")
-- badge: urgencia o promo visible (ej: "SOLO ESTE FINDE", "-50% FLASH", "OUTLET")
-- subtext: beneficio concreto + escasez o plazo en una línea corta
-- cta: acción de compra (ej: "COMPRA AHORA", "APROVECHA HOY", "LINK EN BIO")
-- PERMITIDO y recomendado: porcentajes, urgencia, lenguaje promocional profesional
+═══ TONO RETAIL ═══
+- hook: máximo 6 palabras con oferta o beneficio
+- badge: urgencia o promo (ej: "SOLO ESTE FINDE", "-50% FLASH")
+- subtext: beneficio + escasez en una línea
+- cta: "COMPRA AHORA", "APROVECHA HOY"
 
 ═══ COMPOSITION ENGINE ═══
-PRIORIZA compositionCategory "RetailAggressive" cuando haya descuento, oferta o outlet.
-Elige compositionLayoutId del catálogo retail con impacto visual.
+PRIORIZA compositionCategory "RetailAggressive".
+
+═══ imagePrompt ═══
+EN INGLÉS. Premium social ad photography, clean composition, space for typography. NO text in image.
+
+═══ caption ═══
+Caption Instagram: gancho, beneficio, urgencia, hashtags de conversión.
+
+Responde SOLO el JSON del schema.`;
+
+const IMPACT_SYSTEM = `Eres director creativo de performance marketing para marcas urbanas (Nike, Zara, Adidas nivel).
+Tu trabajo es crear anuncios de Instagram que DETENGAN EL SCROLL con tipografía GIGANTE y energía visual.
+Estilo referencia: titulares masivos, % de descuento enorme en rojo, caja promo vidrio, estética calle urbana dinámica.
+
+═══ MAPEO DE SLOTS (MUY IMPORTANTE) ═══
+- badge: línea superior de colección/temporada EN MAYÚSCULAS (ej: "NUEVA COLECCIÓN INVIERNO 2024", "DROP INVIERNO · 2024")
+- hook: titular PRINCIPAL GIGANTE en mayúsculas, 4-8 palabras, impacto total (ej: "REDEFINIENDO LA MODA URBANA", "LA CIUDAD ES TUYA")
+- subtext: SOLO el descuento en formato corto y brutal (ej: "-50% DTO", "-40% OFF", "2x1 HOY") — esto se renderiza ENORME en rojo
+- cta: urgencia en una línea con separadores · (ej: "EXCLUSIVO · FIN DE SEMANA LARGO · SOLO EN TIENDA")
+
+═══ REGLAS DE IMPACTO ═══
+- TODO en mayúsculas salvo caption
+- El descuento SIEMPRE va en subtext, nunca escondido
+- hook debe sentirse como cartelera urbana, no poema
+- Extrae % del brief; si no hay, inventa uno razonable (30-50%)
+
+═══ COMPOSITION ENGINE ═══
+OBLIGATORIO: compositionCategory "ImpactBold"
+layout preferido: "impact-urban-blast" (caja promo vidrio + titular gigante)
 
 ═══ imagePrompt ═══
 EN INGLÉS. Máx 2 oraciones (~350 chars).
-Premium product/lifestyle photography for social ads, clean composition, space for bold typography overlay.
-NO text in image. NO cheesy clip-art.
+Dynamic urban fashion photography: model walking city street at dusk, wet pavement reflections, neon shop glow, motion energy, cinematic lighting, streetwear winter collection, light streaks atmosphere, premium Instagram ad — NOT static catalog shot. Space for bold text overlays. NO text in image.
 
 ═══ caption ═══
-Caption Instagram completo: gancho con emoji, beneficio, urgencia, CTA, 5-8 hashtags de conversión (#Outlet #Oferta etc).
+Caption Instagram agresivo: emoji fuego, % OFF, urgencia fin de semana, CTA compra, 6-10 hashtags (#ModaUrbana #Outlet #Oferta).
 
 Responde SOLO el JSON del schema.`;
 
 export function getDesignerSystemPrompt(copyMode: CopyMode): string {
-  return copyMode === "editorial" ? EDITORIAL_SYSTEM : RETAIL_SYSTEM;
+  if (copyMode === "impact") return IMPACT_SYSTEM;
+  if (copyMode === "editorial") return EDITORIAL_SYSTEM;
+  return RETAIL_SYSTEM;
 }
 
 export function buildProAdUserPrompt(brief: string, copyMode: CopyMode): string {
-  const categoryHint =
-    copyMode === "editorial"
-      ? "prioriza EditorialPremium"
-      : "prioriza RetailAggressive (ofertas, descuentos, urgencia)";
+  const modeLabel =
+    copyMode === "impact"
+      ? "Impacto Urbano (tipografía gigante)"
+      : copyMode === "editorial"
+        ? "Editorial Premium"
+        : "Marketing Digital / Retail";
 
-  const hookHint =
-    copyMode === "editorial"
-      ? "hook (máx 4 palabras, titular de portada)"
-      : "hook (máx 6 palabras, con oferta o beneficio claro)";
+  const categoryHint =
+    copyMode === "impact"
+      ? "OBLIGATORIO ImpactBold — layout impact-urban-blast"
+      : copyMode === "editorial"
+        ? "prioriza EditorialPremium"
+        : "prioriza RetailAggressive";
+
+  const slotHint =
+    copyMode === "impact"
+      ? `badge (colección/temporada), hook (titular GIGANTE 4-8 palabras), subtext (solo "-XX% DTO" o similar), cta (urgencia con ·)`
+      : copyMode === "editorial"
+        ? "hook (máx 4 palabras), badge, subtext, cta"
+        : "hook (máx 6 palabras con oferta), badge, subtext, cta";
 
   return `Brief del cliente:
 "${brief.trim()}"
 
-MODO ELEGIDO: ${copyMode === "editorial" ? "Editorial Premium" : "Marketing Digital / Retail"}
+MODO ELEGIDO: ${modeLabel}
 
 CATÁLOGO DE COMPOSICIONES (${categoryHint}):
 ${buildLayoutCatalogForPrompt()}
 
-Genera: compositionCategory, compositionLayoutId, ${hookHint}, badge, subtext, cta, imagePrompt (~350 chars), caption.`;
+Genera: compositionCategory, compositionLayoutId, ${slotHint}, imagePrompt (~350 chars), caption.`;
 }
 
 /** @deprecated Usa getDesignerSystemPrompt */

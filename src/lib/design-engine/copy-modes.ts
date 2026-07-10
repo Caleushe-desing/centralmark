@@ -1,17 +1,16 @@
 import { getLayoutById, type CompositionLayout } from "./composition/rules";
 import type { DesignDocument } from "./schemas";
 
-export const COPY_MODE_IDS = ["retail", "editorial"] as const;
+export const COPY_MODE_IDS = ["impact", "retail", "editorial"] as const;
 export type CopyMode = (typeof COPY_MODE_IDS)[number];
 
-export const DEFAULT_COPY_MODE: CopyMode = "retail";
+export const DEFAULT_COPY_MODE: CopyMode = "impact";
 
 export interface CopyModeDefinition {
   id: CopyMode;
   label: string;
   shortLabel: string;
   description: string;
-  /** Imagen de ejemplo fija para la tarjeta de selección */
   sampleImageUrl: string;
   sampleLayoutId: string;
   sampleCopy: {
@@ -21,23 +20,42 @@ export interface CopyModeDefinition {
     cta: string;
   };
   maxHookWords: number;
+  preferredCategory: "ImpactBold" | "RetailAggressive" | "EditorialPremium";
 }
 
 export const COPY_MODES: CopyModeDefinition[] = [
   {
+    id: "impact",
+    label: "Impacto urbano",
+    shortLabel: "Impacto",
+    description:
+      "Tipografías gigantes, % en rojo, energía de calle. El estilo que vende en Instagram.",
+    sampleImageUrl: "/design-modes/impact-sample.png",
+    sampleLayoutId: "impact-urban-blast",
+    sampleCopy: {
+      badge: "NUEVA COLECCIÓN INVIERNO",
+      hook: "REDEFINIENDO LA MODA URBANA",
+      subtext: "-50% DTO",
+      cta: "EXCLUSIVO · FIN DE SEMANA · SOLO EN TIENDA",
+    },
+    maxHookWords: 8,
+    preferredCategory: "ImpactBold",
+  },
+  {
     id: "retail",
     label: "Marketing digital",
     shortLabel: "Retail",
-    description: "Ofertas, urgencia y CTA de compra. Ideal para outlets y promociones.",
+    description: "Ofertas claras y CTA directo. Menos dramático que Impacto.",
     sampleImageUrl: "/design-modes/retail-sample.png",
     sampleLayoutId: "retail-impact-banner",
     sampleCopy: {
       badge: "-50% SOLO ESTE FINDE",
       hook: "HASTA 50% OFF",
-      subtext: "Nueva colección invierno urbano. Stock limitado en tienda.",
+      subtext: "Nueva colección invierno urbano.",
       cta: "COMPRA AHORA",
     },
     maxHookWords: 6,
+    preferredCategory: "RetailAggressive",
   },
   {
     id: "editorial",
@@ -53,6 +71,7 @@ export const COPY_MODES: CopyModeDefinition[] = [
       cta: "VER COLECCIÓN",
     },
     maxHookWords: 4,
+    preferredCategory: "EditorialPremium",
   },
 ];
 
@@ -63,15 +82,14 @@ export function getCopyModeDefinition(mode: string | undefined | null): CopyMode
 
 export function getSampleLayout(mode: CopyMode): CompositionLayout {
   const def = getCopyModeDefinition(mode);
-  return getLayoutById(def.sampleLayoutId) ?? getLayoutById("retail-impact-banner")!;
+  return getLayoutById(def.sampleLayoutId) ?? getLayoutById("impact-urban-blast")!;
 }
 
 export function parseCopyMode(value: unknown): CopyMode {
-  if (value === "editorial" || value === "retail") return value;
+  if (value === "impact" || value === "editorial" || value === "retail") return value;
   return DEFAULT_COPY_MODE;
 }
 
-/** Documento de muestra solo para previews estáticas en el selector */
 export function buildSampleDesignDocument(mode: CopyMode): Pick<
   DesignDocument,
   "hook" | "badge" | "subtext" | "cta"

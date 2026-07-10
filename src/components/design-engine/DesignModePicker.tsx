@@ -22,7 +22,7 @@ export function DesignModePicker({ value, onChange, disabled }: DesignModePicker
       <p className="text-xs text-neutral-600 leading-relaxed">
         Elige cómo se verán los textos sobre la imagen. Cada modo muestra un ejemplo real del motor.
       </p>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         {COPY_MODES.map((mode) => {
           const selected = value === mode.id;
           const layout = getSampleLayout(mode.id);
@@ -47,8 +47,8 @@ export function DesignModePicker({ value, onChange, disabled }: DesignModePicker
                 </span>
               )}
 
-              <div className="bg-black flex justify-center overflow-hidden h-[168px]">
-                <div className="scale-[0.155] origin-top pointer-events-none select-none">
+              <div className="bg-black flex justify-center overflow-hidden h-[200px]">
+                <div className="scale-[0.185] origin-top pointer-events-none select-none">
                   <AdEngine
                     imageUrl={mode.sampleImageUrl}
                     copy={copy}

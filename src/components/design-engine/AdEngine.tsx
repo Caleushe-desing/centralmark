@@ -18,8 +18,9 @@ export const AdEngine = forwardRef<HTMLDivElement, AdEngineProps>(function AdEng
 ) {
   const topSlots = layout.slots.filter((s) => s.zone === "top");
   const bottomSlots = layout.slots.filter((s) => s.zone === "bottom");
-  const topScrim = zoneScrimStylePlain("top", 0.52);
-  const bottomScrim = zoneScrimStylePlain("bottom", 0.58);
+  const isImpact = layout.category === "ImpactBold";
+  const topScrim = zoneScrimStylePlain("top", isImpact ? 0.32 : 0.52);
+  const bottomScrim = zoneScrimStylePlain("bottom", isImpact ? 0.22 : 0.58);
 
   return (
     <div

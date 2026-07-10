@@ -43,13 +43,40 @@ function sanitizeDesign(raw: DesignDocument, copyMode: CopyMode): DesignDocument
   };
 }
 
+function enforceCopyModeCategory(design: DesignDocument, copyMode: CopyMode): DesignDocument {
+  const def = getCopyModeDefinition(copyMode);
+  if (copyMode === "impact") {
+    const layoutId = design.compositionLayoutId.startsWith("impact-")
+      ? design.compositionLayoutId
+      : "impact-urban-blast";
+    return { ...design, compositionCategory: "ImpactBold", compositionLayoutId: layoutId };
+  }
+  if (design.compositionCategory !== def.preferredCategory) {
+    const fallbackLayout = getLayoutById(design.compositionLayoutId);
+    if (!fallbackLayout || fallbackLayout.category !== def.preferredCategory) {
+      const master = def.preferredCategory;
+      return {
+        ...design,
+        compositionCategory: master,
+        compositionLayoutId:
+          master === "RetailAggressive"
+            ? "retail-impact-banner"
+            : master === "EditorialPremium"
+              ? "editorial-serif-frame"
+              : design.compositionLayoutId,
+      };
+    }
+  }
+  return design;
+}
+
 async function generateDesignFromBrief(brief: string, copyMode: CopyMode) {
   const client = getOpenAIClient();
   const model = getCampaignModel();
 
   const response = await client.chat.completions.create({
     model,
-    temperature: copyMode === "retail" ? 0.72 : 0.78,
+    temperature: copyMode === "impact" ? 0.82 : copyMode === "retail" ? 0.72 : 0.78,
     messages: [
       { role: "system", content: getDesignerSystemPrompt(copyMode) },
       { role: "user", content: buildProAdUserPrompt(brief, copyMode) },
@@ -70,7 +97,8 @@ async function generateDesignFromBrief(brief: string, copyMode: CopyMode) {
   }
 
   const parsed = proAdDesignSchema.parse(JSON.parse(raw));
-  const design = sanitizeDesign(parsed, copyMode);
+  let design = sanitizeDesign(parsed, copyMode);
+  design = enforceCopyModeCategory(design, copyMode);
 
   const maxHookWords = getCopyModeDefinition(copyMode).maxHookWords;
   if (countWords(design.hook) > maxHookWords) {

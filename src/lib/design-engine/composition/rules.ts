@@ -1,4 +1,5 @@
 export type CompositionCategory =
+  | "ImpactBold"
   | "RetailAggressive"
   | "EditorialPremium"
   | "TechModern";
@@ -23,7 +24,11 @@ export type SlotAccent =
   | "vertical-line"
   | "color-dot"
   | "hairline-above"
-  | "typographic-cta";
+  | "typographic-cta"
+  | "glitch-headline"
+  | "impact-italic"
+  | "mega-discount"
+  | "glass-urgency";
 
 export interface SlotRule {
   slotKey: SlotKey;
@@ -35,7 +40,7 @@ export interface SlotRule {
 }
 
 export interface DecorativeRule {
-  type: "hairline-rule" | "masthead-rule" | "frame-hairline";
+  type: "hairline-rule" | "masthead-rule" | "frame-hairline" | "light-streaks";
   className: string;
 }
 
@@ -80,6 +85,13 @@ const TOP_ZONE = "flex-1 flex flex-col justify-start px-14 pt-16 gap-6";
 const BOTTOM_ZONE = "flex flex-col justify-end px-14 pb-16 gap-6 min-h-[30%]";
 
 export const CATEGORY_MASTERS: CategoryMaster[] = [
+  {
+    id: "ImpactBold",
+    label: "Impacto Urbano",
+    description: "Tipografía gigante, energía y promo visual de alto impacto",
+    keywords: ["impacto", "urbano", "descuento", "flash", "colección", "outlet", "50%", "dto"],
+    layouts: [layoutImpactUrbanBlast(), layoutImpactStreetFusion()],
+  },
   {
     id: "RetailAggressive",
     label: "Fashion Retail Editorial",
@@ -163,6 +175,131 @@ function baseTypography(
       color: "#FFFFFF",
       ...cta,
     },
+  };
+}
+
+function layoutImpactUrbanBlast(): CompositionLayout {
+  return {
+    id: "impact-urban-blast",
+    name: "Urban Impact Blast",
+    category: "ImpactBold",
+    description: "Titulares gigantes, glitch, caja promo vidrio y % en rojo",
+    containerClass: "bg-black",
+    overlayClass: OVERLAY,
+    topZoneClass: "flex flex-col justify-start px-10 pt-12 gap-2 items-start z-10 max-w-[94%]",
+    bottomZoneClass:
+      "absolute bottom-8 right-8 z-20 flex flex-col items-end gap-0.5 p-5 sm:p-6 rounded-2xl border border-cyan-400/40 bg-black/55 backdrop-blur-md shadow-[0_0_48px_rgba(0,229,255,0.15)] max-w-[58%]",
+    slots: [
+      { slotKey: "badge", zone: "top", align: "left", className: "leading-tight", accent: "glitch-headline" },
+      {
+        slotKey: "hook",
+        zone: "top",
+        align: "left",
+        className: "max-w-full leading-[0.92] mt-1",
+        accent: "impact-italic",
+      },
+      { slotKey: "subtext", zone: "bottom", align: "right", className: "leading-none w-full", accent: "mega-discount" },
+      {
+        slotKey: "cta",
+        zone: "bottom",
+        align: "right",
+        className: "text-right leading-snug w-full mt-1",
+        accent: "glass-urgency",
+      },
+    ],
+    typography: {
+      badge: {
+        fontFamily: "'Montserrat', system-ui, sans-serif",
+        fontWeight: "800",
+        fontSize: "1.75rem",
+        letterSpacing: "0.04em",
+        uppercase: true,
+        color: "#FFFFFF",
+      },
+      hook: {
+        fontFamily: "'Montserrat', system-ui, sans-serif",
+        fontWeight: "900",
+        fontSize: "5.25rem",
+        letterSpacing: "-0.03em",
+        uppercase: true,
+        color: "#FFFFFF",
+      },
+      subtext: {
+        fontFamily: "'Montserrat', system-ui, sans-serif",
+        fontWeight: "900",
+        fontSize: "7.5rem",
+        letterSpacing: "-0.04em",
+        uppercase: true,
+        color: "#FF2332",
+      },
+      cta: {
+        fontFamily: "'Montserrat', system-ui, sans-serif",
+        fontWeight: "700",
+        fontSize: "1.1rem",
+        letterSpacing: "0.14em",
+        uppercase: true,
+        color: "#FFFFFF",
+      },
+    },
+    palette: { accent: "#00E5FF", contrast: "#FF2332", surface: "#050505", muted: "#94A3B8" },
+    decorative: {
+      type: "light-streaks",
+      className: "pointer-events-none",
+    },
+  };
+}
+
+function layoutImpactStreetFusion(): CompositionLayout {
+  return {
+    id: "impact-street-fusion",
+    name: "Street Fusion",
+    category: "ImpactBold",
+    description: "Asimétrico con titular masivo y promo lateral",
+    containerClass: "bg-black",
+    overlayClass: OVERLAY,
+    topZoneClass: "flex flex-col justify-end px-10 pb-6 gap-2 items-start min-h-[55%] z-10",
+    bottomZoneClass:
+      "flex flex-col justify-end px-10 pb-10 gap-4 items-stretch z-10",
+    slots: [
+      { slotKey: "badge", zone: "top", align: "left", className: "", accent: "glitch-headline" },
+      { slotKey: "hook", zone: "top", align: "left", className: "max-w-[95%] leading-[0.9]", accent: "impact-italic" },
+      { slotKey: "subtext", zone: "bottom", align: "left", className: "leading-none", accent: "mega-discount" },
+      { slotKey: "cta", zone: "bottom", align: "left", className: "max-w-[70%]", accent: "glass-urgency" },
+    ],
+    typography: {
+      badge: {
+        fontFamily: "'Montserrat', system-ui, sans-serif",
+        fontWeight: "800",
+        fontSize: "1.5rem",
+        letterSpacing: "0.08em",
+        uppercase: true,
+        color: "#00E5FF",
+      },
+      hook: {
+        fontFamily: "'Montserrat', system-ui, sans-serif",
+        fontWeight: "900",
+        fontSize: "5.75rem",
+        letterSpacing: "-0.02em",
+        uppercase: true,
+        color: "#FFFFFF",
+      },
+      subtext: {
+        fontFamily: "'Montserrat', system-ui, sans-serif",
+        fontWeight: "900",
+        fontSize: "6.5rem",
+        color: "#FF2332",
+      },
+      cta: {
+        fontFamily: "'Montserrat', system-ui, sans-serif",
+        fontWeight: "700",
+        fontSize: "1rem",
+        letterSpacing: "0.18em",
+        uppercase: true,
+        color: "#F8FAFC",
+      },
+    },
+    palette: { accent: "#00E5FF", contrast: "#FF2332", surface: "#0A0A0A", muted: "#64748B" },
+    decorative: { type: "light-streaks", className: "pointer-events-none" },
   };
 }
 

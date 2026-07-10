@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
+import { after } from "next/server";
 import { campaignBriefSchema } from "@/lib/design-engine/schemas/brief";
-import { createDesignJob, enqueueDesignJob } from "@/lib/design-engine/jobs/process-job";
+import { createDesignJob, processDesignJob } from "@/lib/design-engine/jobs/process-job";
 import { DesignEngineError } from "@/lib/design-engine/errors";
 import { requireStoreSession } from "@/lib/auth/session";
 
@@ -23,7 +24,9 @@ export async function POST(request: Request) {
     }
 
     const jobId = await createDesignJob(session.storeId, parsed.data.brief);
-    enqueueDesignJob(jobId);
+    after(() => {
+      void processDesignJob(jobId);
+    });
 
     return NextResponse.json(
       {

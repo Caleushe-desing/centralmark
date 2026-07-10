@@ -13,65 +13,84 @@ export interface JobPollResult {
 
 export { createDesignJob } from "./job-store";
 
-export async function processDesignJob(jobId: string): Promise<void> {
-  const { prisma } = await import("@/lib/db");
-  const fullJob = await prisma.designGenerationJob.findUnique({ where: { id: jobId } });
-  if (!fullJob || fullJob.status === "COMPLETED" || fullJob.status === "FAILED") return;
+/** Evita procesar el mismo job dos veces en paralelo */
+const activeProcessors = new Set<string>();
 
-  const { runDesignEngine, resolveCompositionLayout } = await import("../generate/orchestrator");
-  const { DesignEngineError } = await import("../errors");
+export async function processDesignJob(jobId: string): Promise<void> {
+  if (activeProcessors.has(jobId)) return;
+  activeProcessors.add(jobId);
 
   try {
-    await updateJobPhase(jobId, "brief", "PROCESSING");
+    const { prisma } = await import("@/lib/db");
+    const fullJob = await prisma.designGenerationJob.findUnique({ where: { id: jobId } });
+    if (!fullJob || fullJob.status === "COMPLETED" || fullJob.status === "FAILED") return;
 
-    const result = await runDesignEngine(
-      { brief: fullJob.brief },
-      {
-        storeId: fullJob.storeId,
-        jobId,
-        onPhase: async (phase) => {
-          await updateJobPhase(jobId, phase, "PROCESSING");
+    const { runDesignEngine, resolveCompositionLayout } = await import("../generate/orchestrator");
+    const { DesignEngineError } = await import("../errors");
+
+    try {
+      await updateJobPhase(jobId, "brief", "PROCESSING");
+
+      const result = await runDesignEngine(
+        { brief: fullJob.brief },
+        {
+          storeId: fullJob.storeId,
+          jobId,
+          onPhase: async (phase) => {
+            await updateJobPhase(jobId, phase, "PROCESSING");
+          },
+        }
+      );
+
+      const layout = resolveCompositionLayout(result.design);
+
+      await prisma.designGenerationJob.update({
+        where: { id: jobId },
+        data: {
+          status: "COMPLETED",
+          phase: "done",
+          resultJson: JSON.stringify({ ...result, layout }),
+          costUsd: result.costoEstimado,
+          completedAt: new Date(),
         },
-      }
-    );
-
-    const layout = resolveCompositionLayout(result.design);
-
-    const { prisma } = await import("@/lib/db");
-    await prisma.designGenerationJob.update({
-      where: { id: jobId },
-      data: {
-        status: "COMPLETED",
-        phase: "done",
-        resultJson: JSON.stringify({ ...result, layout }),
-        costUsd: result.costoEstimado,
-        completedAt: new Date(),
-      },
-    });
-  } catch (error) {
-    const message =
-      error instanceof DesignEngineError
-        ? error.message
-        : error instanceof Error
+      });
+    } catch (error) {
+      const message =
+        error instanceof DesignEngineError
           ? error.message
-          : "Error desconocido";
+          : error instanceof Error
+            ? error.message
+            : "Error desconocido";
 
-    const { prisma } = await import("@/lib/db");
-    await prisma.designGenerationJob.update({
-      where: { id: jobId },
-      data: {
-        status: "FAILED",
-        phase: "failed",
-        errorMessage: message,
-        completedAt: new Date(),
-      },
-    });
+      await prisma.designGenerationJob.update({
+        where: { id: jobId },
+        data: {
+          status: "FAILED",
+          phase: "failed",
+          errorMessage: message,
+          completedAt: new Date(),
+        },
+      });
+    }
+  } finally {
+    activeProcessors.delete(jobId);
   }
 }
 
+/** Si el job sigue en cola, dispara el procesamiento (fallback para Next.js dev) */
+export function ensureJobProcessing(jobId: string): void {
+  void processDesignJob(jobId);
+}
+
 export async function getDesignJob(jobId: string, storeId: string): Promise<JobPollResult | null> {
-  const job = await getDesignJobRecord(jobId, storeId);
+  let job = await getDesignJobRecord(jobId, storeId);
   if (!job) return null;
+
+  if (job.status === "QUEUED") {
+    ensureJobProcessing(jobId);
+    // Releer tras disparar procesamiento
+    job = (await getDesignJobRecord(jobId, storeId)) ?? job;
+  }
 
   const base: JobPollResult = {
     jobId: job.id,
@@ -93,5 +112,5 @@ export async function getDesignJob(jobId: string, storeId: string): Promise<JobP
 }
 
 export function enqueueDesignJob(jobId: string): void {
-  void processDesignJob(jobId);
+  ensureJobProcessing(jobId);
 }

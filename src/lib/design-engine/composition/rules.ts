@@ -75,6 +75,10 @@ export interface AdCopySlots {
   cta: string;
 }
 
+const OVERLAY = "absolute inset-0 flex flex-col pointer-events-none";
+const TOP_ZONE = "flex-1 flex flex-col justify-start px-14 pt-16 gap-6";
+const BOTTOM_ZONE = "flex flex-col justify-end px-14 pb-16 gap-6 min-h-[30%]";
+
 export const CATEGORY_MASTERS: CategoryMaster[] = [
   {
     id: "RetailAggressive",
@@ -161,10 +165,6 @@ function baseTypography(
     },
   };
 }
-
-const OVERLAY = "absolute inset-0 flex flex-col pointer-events-none";
-const TOP_ZONE = "flex-1 flex flex-col justify-start px-14 pt-16 gap-6";
-const BOTTOM_ZONE = "flex flex-col justify-end px-14 pb-16 gap-6 min-h-[30%]";
 
 function layoutRetailFlashDiagonal(): CompositionLayout {
   return {

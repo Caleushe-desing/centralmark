@@ -40,6 +40,7 @@ export function DesignEnginePreview({
   const [loading, setLoading] = useState(false);
   const [phaseLabel, setPhaseLabel] = useState<string | null>(null);
   const [preview, setPreview] = useState<DesignPreviewState | null>(null);
+  const [localError, setLocalError] = useState<string | null>(null);
 
   const setLoad = useCallback(
     (v: boolean) => {
@@ -84,7 +85,9 @@ export function DesignEnginePreview({
 
       if (!res.ok) {
         setLoad(false);
-        onError(data.error ?? "Error al consultar generación");
+        const msg = data.error ?? "Error al consultar generación";
+        setLocalError(msg);
+        onError(msg);
         return;
       }
 
@@ -107,7 +110,9 @@ export function DesignEnginePreview({
 
       if (data.status === "FAILED") {
         setLoad(false);
-        onError(data.error ?? "La generación falló");
+        const msg = data.error ?? "La generación falló";
+        setLocalError(msg);
+        onError(msg);
         return;
       }
 
@@ -117,6 +122,7 @@ export function DesignEnginePreview({
     async function start() {
       setLoad(true);
       setPreview(null);
+      setLocalError(null);
       onExportReady(null);
       setPhaseLabel("Iniciando…");
 
@@ -137,7 +143,9 @@ export function DesignEnginePreview({
       } catch (err) {
         if (!cancelled) {
           setLoad(false);
-          onError(err instanceof Error ? err.message : "Error desconocido");
+          const msg = err instanceof Error ? err.message : "Error desconocido";
+          setLocalError(msg);
+          onError(msg);
         }
       }
     }
@@ -150,10 +158,20 @@ export function DesignEnginePreview({
     };
   }, [trigger, brief, onReady, onExportReady, onError, setLoad]);
 
-  if (!preview && !loading) return null;
+  if (!preview && !loading && !localError) return null;
 
   return (
     <div className="space-y-3">
+      {localError && (
+        <div className="rounded-xl border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+          {localError}
+          {localError.includes("OPENAI") && (
+            <p className="mt-2 text-xs text-red-200/80">
+              Configura <code className="text-red-100">OPENAI_API_KEY</code> en el entorno del agente.
+            </p>
+          )}
+        </div>
+      )}
       {loading && (
         <div className="flex items-center gap-2 text-sm text-mm-neon/90">
           <Loader2 className="w-4 h-4 animate-spin" />

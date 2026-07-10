@@ -4,10 +4,10 @@ import { CaptionEditor } from "@/components/CaptionEditor";
 import { CensoredInput, CensoredTextarea } from "@/components/CensoredField";
 import { OfferPreview } from "@/components/OfferPreview";
 import { DesignEnginePreview } from "@/components/design-engine/DesignEnginePreview";
-import { DesignModePicker } from "@/components/design-engine/DesignModePicker";
+import { ArchetypeSelector } from "@/components/design-engine/ArchetypeSelector";
 import type { DesignPreviewState } from "@/components/design-engine/DesignEnginePreview";
-import type { CopyMode } from "@/lib/design-engine/copy-modes";
-import { DEFAULT_COPY_MODE } from "@/lib/design-engine/copy-modes";
+import type { VisualArchetype } from "@/lib/design-engine/archetypes";
+import { DEFAULT_ARCHETYPE } from "@/lib/design-engine/archetypes";
 import { buildDefaultHashtags } from "@/lib/offer/default-copy";
 import type { ImageCreationMode } from "@/lib/ai/image-generator";
 import type { TextLayer } from "@/lib/image/text-layers";
@@ -56,7 +56,7 @@ export function OfferCreator({
   const [captionSuggestLoading, setCaptionSuggestLoading] = useState(false);
   const [campaignImagePrompt, setCampaignImagePrompt] = useState<string | null>(null);
   const [designTrigger, setDesignTrigger] = useState(0);
-  const [copyMode, setCopyMode] = useState<CopyMode>(DEFAULT_COPY_MODE);
+  const [archetype, setArchetype] = useState<VisualArchetype>(DEFAULT_ARCHETYPE);
   const [designPreview, setDesignPreview] = useState<DesignPreviewState | null>(null);
   const [generationPhase, setGenerationPhase] = useState<string | null>(null);
 
@@ -392,6 +392,18 @@ type UploadMode = "default" | "enhance" | "removeBg";
           </div>
         ) : (
           <div className="space-y-3">
+            <ArchetypeSelector
+              value={archetype}
+              onChange={(next) => {
+                setArchetype(next);
+                if (designPreview) {
+                  setDesignPreview(null);
+                  setExportImage(null);
+                }
+              }}
+              disabled={previewLoading || loading}
+            />
+
             <div>
               <label className="block text-sm text-neutral-400 mb-1">
                 Idea para tu publicación *
@@ -416,20 +428,8 @@ type UploadMode = "default" | "enhance" | "removeBg";
               />
             </div>
 
-            <DesignModePicker
-              value={copyMode}
-              onChange={(mode) => {
-                setCopyMode(mode);
-                if (designPreview) {
-                  setDesignPreview(null);
-                  setExportImage(null);
-                }
-              }}
-              disabled={previewLoading || loading}
-            />
-
             <p className="text-xs text-neutral-600">
-              El Design Engine genera imagen IA + textos según el estilo elegido.
+              El Design Engine aplica las reglas del arquetipo elegido a imagen y textos.
             </p>
 
             <button
@@ -506,7 +506,7 @@ type UploadMode = "default" | "enhance" | "removeBg";
           <div className="space-y-4">
             <DesignEnginePreview
               brief={brief}
-              copyMode={copyMode}
+              archetype={archetype}
               trigger={designTrigger}
               onReady={handleDesignReady}
               onExportReady={handleRegisterExport}

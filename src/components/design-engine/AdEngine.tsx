@@ -18,9 +18,9 @@ export const AdEngine = forwardRef<HTMLDivElement, AdEngineProps>(function AdEng
 ) {
   const topSlots = layout.slots.filter((s) => s.zone === "top");
   const bottomSlots = layout.slots.filter((s) => s.zone === "bottom");
-  const isImpact = layout.category === "ImpactBold";
-  const topScrim = zoneScrimStylePlain("top", isImpact ? 0.32 : 0.52);
-  const bottomScrim = zoneScrimStylePlain("bottom", isImpact ? 0.22 : 0.58);
+  const isDrop = layout.archetype === "drop";
+  const topScrim = zoneScrimStylePlain("top", isDrop ? 0.32 : layout.archetype === "spotlight" ? 0.2 : 0.48);
+  const bottomScrim = zoneScrimStylePlain("bottom", isDrop ? 0.22 : layout.archetype === "spotlight" ? 0.15 : 0.5);
 
   return (
     <div

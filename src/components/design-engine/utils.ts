@@ -15,6 +15,7 @@ export function buildSlotStyle(
     fontWeight: token.fontWeight,
     fontSize: fontSizePx ? `${fontSizePx}px` : token.fontSize,
     letterSpacing: token.letterSpacing,
+    fontStyle: token.fontStyle,
     textTransform: token.uppercase ? "uppercase" : undefined,
     color: token.color?.includes("var(") ? undefined : token.color,
     lineHeight: 1.12,

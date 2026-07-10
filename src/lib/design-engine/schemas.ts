@@ -73,7 +73,7 @@ export const PRO_AD_JSON_SCHEMA = {
     caption: { type: "string" },
     compositionCategory: {
       type: "string",
-      enum: ["ImpactBold", "RetailAggressive", "EditorialPremium", "TechModern"],
+      enum: ["drop", "spotlight", "editorial", "promo"],
     },
     compositionLayoutId: { type: "string", enum: [...ALL_LAYOUT_IDS] },
     hook: { type: "string" },

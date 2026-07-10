@@ -194,7 +194,7 @@ model DesignGenerationJob {
   storeId       String
   store         Store            @relation(fields: [storeId], references: [id], onDelete: Cascade)
   brief         String
-  copyMode      String           @default("retail")
+  archetype       String           @default("drop")
   status        DesignJobStatus  @default(QUEUED)
   phase         String           @default("queued")
   errorMessage  String?

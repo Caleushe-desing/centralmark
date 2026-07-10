@@ -1,5 +1,5 @@
 import { createDesignJob, updateJobPhase, getDesignJobRecord, tryClaimDesignJob } from "./job-store";
-import { parseCopyMode } from "../copy-modes";
+import { parseArchetype } from "../archetypes";
 import type { DesignGenerationResult } from "../schemas";
 
 export type JobPhase = "queued" | "brief" | "composition" | "render" | "persist" | "done" | "failed";
@@ -33,7 +33,7 @@ export async function processDesignJob(jobId: string): Promise<void> {
       await updateJobPhase(jobId, "brief", "PROCESSING");
 
       const result = await runDesignEngine(
-        { brief: fullJob.brief, copyMode: parseCopyMode(fullJob.copyMode) },
+        { brief: fullJob.brief, archetype: parseArchetype(fullJob.archetype) },
         {
           storeId: fullJob.storeId,
           jobId,

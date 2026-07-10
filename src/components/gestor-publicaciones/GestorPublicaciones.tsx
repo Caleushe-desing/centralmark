@@ -13,8 +13,8 @@ import {
 import type { DesignDocument } from "@/lib/design-engine/schemas";
 import type { CompositionLayout } from "@/lib/design-engine/composition/rules";
 import { AdEngine } from "@/components/design-engine";
-import { DesignModePicker } from "@/components/design-engine/DesignModePicker";
-import { DEFAULT_COPY_MODE, type CopyMode } from "@/lib/design-engine/copy-modes";
+import { ArchetypeSelector } from "@/components/design-engine/ArchetypeSelector";
+import { DEFAULT_ARCHETYPE, type VisualArchetype } from "@/lib/design-engine/archetypes";
 import { downloadDataUrl, exportProAdToPng } from "@/lib/gestor-publicaciones/export-ad";
 
 type GenerationPhase = "idle" | "queued" | "processing" | "done";
@@ -49,7 +49,7 @@ export function GestorPublicaciones() {
   const [costoEstimado, setCostoEstimado] = useState<number | null>(null);
   const [exporting, setExporting] = useState(false);
   const [captionCopied, setCaptionCopied] = useState(false);
-  const [copyMode, setCopyMode] = useState<CopyMode>(DEFAULT_COPY_MODE);
+  const [archetype, setArchetype] = useState<VisualArchetype>(DEFAULT_ARCHETYPE);
 
   const pollJob = useCallback(async (jobId: string): Promise<void> => {
     const res = await fetch(`/api/campaign/generate/${jobId}`);
@@ -101,7 +101,7 @@ export function GestorPublicaciones() {
       const res = await fetch("/api/campaign/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ brief: trimmed, copyMode }),
+        body: JSON.stringify({ brief: trimmed, archetype }),
       });
 
       const data = await res.json();
@@ -148,25 +148,20 @@ export function GestorPublicaciones() {
           <h1 className="text-2xl font-bold text-white">Gestor de Publicaciones</h1>
         </div>
         <p className="text-neutral-400 text-sm max-w-2xl">
-          Motor de diseño editorial unificado — misma calidad que la Tienda. Generación asíncrona con
-          control de costos (~$0.17/imagen).
+          Motor de diseño con arquetipos visuales — generación asíncrona (~$0.17/imagen).
         </p>
       </header>
 
       <div className="grid lg:grid-cols-2 gap-8 items-start">
         <div className="space-y-4">
+          <ArchetypeSelector value={archetype} onChange={setArchetype} disabled={loading} />
           <label className="block text-sm text-neutral-400">Brief creativo</label>
           <textarea
             value={brief}
             onChange={(e) => setBrief(e.target.value)}
             rows={6}
-            placeholder="Ej: Colección verano sneakers premium, 30% solo fin de semana, tono editorial urbano…"
+            placeholder="Ej: Colección invierno urbano, 50% solo fin de semana…"
             className="w-full bg-mm-surface border border-white/10 rounded-xl px-4 py-3 text-white resize-none"
-          />
-          <DesignModePicker
-            value={copyMode}
-            onChange={setCopyMode}
-            disabled={loading}
           />
           <button
             type="button"

@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/db";
 import { assertStoreAiRateLimit, StoreAiRateLimitError } from "@/lib/ai/rate-limit/store-ai-limiter";
-import { parseCopyMode, type CopyMode } from "../copy-modes";
+import { parseArchetype, type VisualArchetype } from "../archetypes";
 import { DesignEngineError } from "../errors";
 
 const STALE_PROCESSING_MS = 8 * 60 * 1000;
@@ -95,7 +95,7 @@ export async function tryClaimDesignJob(jobId: string): Promise<boolean> {
 export async function createDesignJob(
   storeId: string,
   brief: string,
-  copyMode: CopyMode = "retail"
+  archetype: VisualArchetype = "drop"
 ): Promise<string> {
   try {
     assertStoreAiRateLimit(storeId, "premium");
@@ -115,7 +115,7 @@ export async function createDesignJob(
     data: {
       storeId,
       brief,
-      copyMode: parseCopyMode(copyMode),
+      archetype: parseArchetype(archetype),
       status: "QUEUED",
       phase: "queued",
     },

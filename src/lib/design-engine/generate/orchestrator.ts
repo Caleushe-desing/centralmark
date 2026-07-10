@@ -5,10 +5,11 @@ import {
   getLayoutById,
   resolveLayout,
   type CompositionLayout,
+  type VisualArchetype,
 } from "../composition/rules";
 import { buildProAdUserPrompt, getDesignerSystemPrompt } from "./prompts";
 import { clampImageConcept } from "./clamp-concept";
-import { getCopyModeDefinition, parseCopyMode, type CopyMode } from "../copy-modes";
+import { getArchetypeDefinition, parseArchetype } from "../archetypes";
 import {
   proAdDesignSchema,
   proAdInputSchema,
@@ -30,8 +31,8 @@ function trimHook(hook: string, maxWords: number): string {
   return words.length > maxWords ? words.slice(0, maxWords).join(" ") : hook.trim();
 }
 
-function sanitizeDesign(raw: DesignDocument, copyMode: CopyMode): DesignDocument {
-  const maxHookWords = getCopyModeDefinition(copyMode).maxHookWords;
+function sanitizeDesign(raw: DesignDocument, archetype: VisualArchetype): DesignDocument {
+  const maxHookWords = getArchetypeDefinition(archetype).maxHookWords;
   return {
     ...raw,
     imagePrompt: clampImageConcept(raw.imagePrompt.trim()),
@@ -43,43 +44,33 @@ function sanitizeDesign(raw: DesignDocument, copyMode: CopyMode): DesignDocument
   };
 }
 
-function enforceCopyModeCategory(design: DesignDocument, copyMode: CopyMode): DesignDocument {
-  const def = getCopyModeDefinition(copyMode);
-  if (copyMode === "impact") {
-    const layoutId = design.compositionLayoutId.startsWith("impact-")
-      ? design.compositionLayoutId
-      : "impact-urban-blast";
-    return { ...design, compositionCategory: "ImpactBold", compositionLayoutId: layoutId };
-  }
-  if (design.compositionCategory !== def.preferredCategory) {
-    const fallbackLayout = getLayoutById(design.compositionLayoutId);
-    if (!fallbackLayout || fallbackLayout.category !== def.preferredCategory) {
-      const master = def.preferredCategory;
-      return {
-        ...design,
-        compositionCategory: master,
-        compositionLayoutId:
-          master === "RetailAggressive"
-            ? "retail-impact-banner"
-            : master === "EditorialPremium"
-              ? "editorial-serif-frame"
-              : design.compositionLayoutId,
-      };
-    }
-  }
-  return design;
+/** Fuerza arquetipo y layout por defecto si la IA se desvía */
+function enforceArchetype(design: DesignDocument, archetype: VisualArchetype): DesignDocument {
+  const def = getArchetypeDefinition(archetype);
+  const layout = getLayoutById(design.compositionLayoutId);
+  const layoutId =
+    layout && layout.archetype === archetype ? design.compositionLayoutId : def.defaultLayoutId;
+
+  return {
+    ...design,
+    compositionCategory: archetype,
+    compositionLayoutId: layoutId,
+  };
 }
 
-async function generateDesignFromBrief(brief: string, copyMode: CopyMode) {
+async function generateDesignFromBrief(brief: string, archetype: VisualArchetype) {
   const client = getOpenAIClient();
   const model = getCampaignModel();
 
+  const temperature =
+    archetype === "drop" ? 0.82 : archetype === "promo" ? 0.7 : archetype === "spotlight" ? 0.65 : 0.78;
+
   const response = await client.chat.completions.create({
     model,
-    temperature: copyMode === "impact" ? 0.82 : copyMode === "retail" ? 0.72 : 0.78,
+    temperature,
     messages: [
-      { role: "system", content: getDesignerSystemPrompt(copyMode) },
-      { role: "user", content: buildProAdUserPrompt(brief, copyMode) },
+      { role: "system", content: getDesignerSystemPrompt(archetype) },
+      { role: "user", content: buildProAdUserPrompt(brief, archetype) },
     ],
     response_format: {
       type: "json_schema",
@@ -97,10 +88,10 @@ async function generateDesignFromBrief(brief: string, copyMode: CopyMode) {
   }
 
   const parsed = proAdDesignSchema.parse(JSON.parse(raw));
-  let design = sanitizeDesign(parsed, copyMode);
-  design = enforceCopyModeCategory(design, copyMode);
+  let design = sanitizeDesign(parsed, archetype);
+  design = enforceArchetype(design, archetype);
 
-  const maxHookWords = getCopyModeDefinition(copyMode).maxHookWords;
+  const maxHookWords = getArchetypeDefinition(archetype).maxHookWords;
   if (countWords(design.hook) > maxHookWords) {
     design.hook = trimHook(design.hook, maxHookWords);
   }
@@ -116,7 +107,7 @@ async function generateDesignFromBrief(brief: string, copyMode: CopyMode) {
 }
 
 export function resolveCompositionLayout(design: DesignDocument): CompositionLayout {
-  return resolveLayout(design.compositionCategory, design.compositionLayoutId);
+  return resolveLayout(design.compositionCategory as VisualArchetype, design.compositionLayoutId);
 }
 
 export function getStyleName(design: DesignDocument): string {
@@ -132,18 +123,14 @@ export interface RunDesignEngineOptions {
   onPhase?: (phase: OrchestratorPhase) => Promise<void>;
 }
 
-/**
- * Brief → Composición (IA) → Imagen → Persistencia atómica.
- * Aborta si la persistencia falla.
- */
 export async function runDesignEngine(
   input: ProAdInput,
   options: RunDesignEngineOptions
 ): Promise<DesignGenerationResult> {
   const startedAt = Date.now();
   const parsed = proAdInputSchema.parse(input);
-  const { brief, copyMode: rawMode } = parsed;
-  const copyMode = parseCopyMode(rawMode);
+  const { brief, archetype: rawArchetype } = parsed;
+  const archetype = parseArchetype(rawArchetype);
   const { storeId, jobId, onPhase } = options;
 
   try {
@@ -159,7 +146,7 @@ export async function runDesignEngine(
     await onPhase?.("brief");
     const { design, model, promptTokens, completionTokens } = await generateDesignFromBrief(
       brief,
-      copyMode
+      archetype
     );
 
     await onPhase?.("composition");

@@ -23,7 +23,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const jobId = await createDesignJob(session.storeId, parsed.data.brief, parsed.data.copyMode);
+    const jobId = await createDesignJob(session.storeId, parsed.data.brief, parsed.data.archetype);
     after(() => {
       void processDesignJob(jobId);
     });

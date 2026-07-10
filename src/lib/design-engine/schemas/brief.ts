@@ -1,9 +1,9 @@
 import { z } from "zod";
-import { COPY_MODE_IDS, DEFAULT_COPY_MODE } from "../copy-modes";
+import { ARCHETYPE_IDS, DEFAULT_ARCHETYPE } from "../archetypes";
 
 export const campaignBriefSchema = z.object({
   brief: z.string().min(3, "Escribe qué quieres promocionar").max(500),
-  copyMode: z.enum(COPY_MODE_IDS).optional().default(DEFAULT_COPY_MODE),
+  archetype: z.enum(ARCHETYPE_IDS).optional().default(DEFAULT_ARCHETYPE),
 });
 
 export type CampaignBriefInput = z.infer<typeof campaignBriefSchema>;

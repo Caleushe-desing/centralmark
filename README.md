@@ -59,6 +59,20 @@ npm run work:end -- -m "tu mensaje" --merge
 
 Sin OpenAI, el sistema usa contenido y fondos de respaldo (menos impresionante en demo).
 
+#### Cloud Agents de Cursor (no reconfigurar en cada sesión)
+
+El archivo `.env` **no se sube a Git** (por seguridad). Cada sesión nueva del agente en la nube empieza sin tus keys.
+
+**Configúralo una sola vez:**
+
+1. Abre [cursor.com/dashboard/cloud-agents](https://cursor.com/dashboard/cloud-agents)
+2. Pestaña **Secrets** → agrega `OPENAI_API_KEY` como **Runtime Secret**
+3. Reinicia el Cloud Agent (o ejecuta `/iniciar-jornada`)
+
+El script `npm run env:sync` (también en `npm run dev` y `/iniciar-jornada`) copia los Secrets del dashboard a `.env` local de la sesión.
+
+En tu **PC local** (fuera de Cloud Agents), basta con tener `OPENAI_API_KEY` en `.env` — ahí sí persiste en disco.
+
 ### Meta — Instagram + Facebook (para publicación real)
 
 1. Crea una app en [developers.facebook.com](https://developers.facebook.com)

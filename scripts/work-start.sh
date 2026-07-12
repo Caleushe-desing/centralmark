@@ -85,6 +85,9 @@ if [ -f prisma/schema.prisma ]; then
 fi
 
 echo ""
+bash scripts/sync-env.sh
+
+echo ""
 echo "── Estado del repositorio ──"
 git status -sb
 echo ""

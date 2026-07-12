@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "prisma generate && next dev",
+    "dev": "bash scripts/sync-env.sh && prisma generate && next dev",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
@@ -11,6 +11,7 @@
     "db:seed": "tsx prisma/seed.ts",
     "work:start": "bash scripts/work-start.sh",
     "work:end": "bash scripts/work-end.sh",
+    "env:sync": "bash scripts/sync-env.sh",
     "postinstall": "prisma generate"
   },
   "dependencies": {

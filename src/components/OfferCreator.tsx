@@ -303,9 +303,18 @@ type UploadMode = "default" | "enhance" | "removeBg";
             <div className="space-y-1">
               <p className="font-medium text-amber-50">Generación con IA no disponible</p>
               <p className="text-xs text-amber-200/90 leading-relaxed">
-                Falta configurar <code className="text-amber-100">OPENAI_API_KEY</code> en el servidor.
-                Mientras tanto puedes crear publicaciones subiendo tu propia imagen en la pestaña
-                &quot;Subir foto&quot;.
+                Falta configurar <code className="text-amber-100">OPENAI_API_KEY</code>. En Cloud
+                Agents: una sola vez en{" "}
+                <a
+                  href="https://cursor.com/dashboard/cloud-agents"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-amber-100 underline hover:text-white"
+                >
+                  cursor.com/dashboard/cloud-agents
+                </a>{" "}
+                → Secrets. Luego ejecuta <code className="text-amber-100">/iniciar-jornada</code>{" "}
+                o reinicia el servidor. Mientras tanto puedes usar &quot;Subir foto&quot;.
               </p>
             </div>
           </div>

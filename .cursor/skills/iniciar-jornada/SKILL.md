@@ -31,3 +31,4 @@ bash scripts/work-start.sh
 - Funciona igual en notebook y PC de escritorio.
 - La última rama se guarda en `.cursor/last-branch` al ejecutar `/cerrar-jornada`. No hace falta recordar el nombre: `/iniciar-jornada` siempre vuelve ahí.
 - No hagas merge ni push en este skill.
+- **API keys (OpenAI, Meta):** en Cloud Agents no persisten en `.env` entre sesiones. Configúralas **una vez** en [cursor.com/dashboard/cloud-agents](https://cursor.com/dashboard/cloud-agents) → **Secrets** (`OPENAI_API_KEY` como Runtime Secret). El script `sync-env.sh` las aplica al arrancar.

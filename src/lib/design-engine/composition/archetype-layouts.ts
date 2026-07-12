@@ -86,29 +86,48 @@ export interface AdCopySlots {
 
 const OVERLAY = "absolute inset-0 flex flex-col pointer-events-none";
 
-/** DROP — Urbano/Hype: sans ultra-bold, cajas que rompen grilla */
+/** DROP — Urbano/Hype: sans ultra-bold, cajas que rompen grilla (micro-maqueta SVG) */
 function layoutDropGridBreak(): CompositionLayout {
   return {
     id: "drop-grid-break",
     name: "Grid Break",
     archetype: "drop",
-    description: "Cajas tipográficas masivas rompiendo la grilla de la foto",
+    description: "Titular arriba-izquierda, producto visible centro-derecha, CTA abajo-derecha",
     containerClass: "bg-black",
     overlayClass: OVERLAY,
-    topZoneClass: "flex flex-col justify-start px-8 pt-10 gap-1 items-start z-10 max-w-[96%]",
+    topZoneClass:
+      "relative z-10 flex flex-col justify-start items-start gap-1.5 px-8 pt-9 max-w-[50%] min-w-0 shrink-0",
     bottomZoneClass:
-      "absolute bottom-6 right-[-2%] z-20 flex flex-col items-end gap-0.5 p-5 rounded-none border-l-4 border-mm-neon bg-black/80 max-w-[62%]",
+      "absolute bottom-7 right-6 z-20 flex flex-col items-end justify-end gap-1 min-w-0 w-[52%] max-w-[52%] overflow-hidden box-border px-4 py-3 border-l-[3px] border-[var(--ad-accent)] bg-black/72",
     slots: [
-      { slotKey: "badge", zone: "top", align: "left", className: "leading-tight", accent: "grid-break-box" },
-      { slotKey: "hook", zone: "top", align: "left", className: "max-w-full leading-[0.9] -ml-2", accent: "impact-italic" },
-      { slotKey: "subtext", zone: "bottom", align: "right", className: "leading-none w-full", accent: "mega-discount" },
-      { slotKey: "cta", zone: "bottom", align: "right", className: "text-right w-full mt-1", accent: "glass-urgency" },
+      { slotKey: "badge", zone: "top", align: "left", className: "w-full min-w-0 max-w-full leading-tight", accent: "grid-break-box" },
+      {
+        slotKey: "hook",
+        zone: "top",
+        align: "left",
+        className: "w-full min-w-0 max-w-full leading-[0.92]",
+        accent: "impact-italic",
+      },
+      {
+        slotKey: "subtext",
+        zone: "bottom",
+        align: "right",
+        className: "w-full min-w-0 max-w-full leading-none",
+        accent: "mega-discount",
+      },
+      {
+        slotKey: "cta",
+        zone: "bottom",
+        align: "right",
+        className: "w-full min-w-0 max-w-full text-right mt-0.5",
+        accent: "glass-urgency",
+      },
     ],
     typography: {
-      badge: { fontFamily: "'Montserrat', sans-serif", fontWeight: "900", fontSize: "1.5rem", letterSpacing: "0.06em", uppercase: true, color: "#C8FF00" },
-      hook: { fontFamily: "'Montserrat', sans-serif", fontWeight: "900", fontSize: "5.5rem", letterSpacing: "-0.04em", uppercase: true, color: "#FFFFFF" },
-      subtext: { fontFamily: "'Montserrat', sans-serif", fontWeight: "900", fontSize: "7rem", uppercase: true, color: "#FF2332" },
-      cta: { fontFamily: "'Montserrat', sans-serif", fontWeight: "700", fontSize: "1rem", letterSpacing: "0.16em", uppercase: true, color: "#FFFFFF" },
+      badge: { fontFamily: "'Montserrat', sans-serif", fontWeight: "900", fontSize: "1.35rem", letterSpacing: "0.06em", uppercase: true, color: "#C8FF00" },
+      hook: { fontFamily: "'Montserrat', sans-serif", fontWeight: "900", fontSize: "4.25rem", letterSpacing: "-0.03em", uppercase: true, color: "#FFFFFF" },
+      subtext: { fontFamily: "'Montserrat', sans-serif", fontWeight: "900", fontSize: "4.75rem", uppercase: true, color: "#FF2332" },
+      cta: { fontFamily: "'Montserrat', sans-serif", fontWeight: "700", fontSize: "0.9rem", letterSpacing: "0.12em", uppercase: true, color: "#FFFFFF" },
     },
     palette: { accent: "#C8FF00", contrast: "#FF2332", surface: "#050505", muted: "#94A3B8" },
     decorative: { type: "light-streaks", className: "pointer-events-none" },
@@ -258,7 +277,7 @@ export const ARCHETYPE_MASTERS: ArchetypeMaster[] = [
     label: "Drop",
     description: "Urbano / Hype — tipografía masiva que rompe la grilla",
     compositionRules:
-      "Sans-serif ultra-bold masivas, alto contraste, cajas tipográficas que rompen la grilla de la imagen.",
+      "Titular y badge arriba-izquierda (≤50% ancho), producto visible centro-derecha sin scrim global, bloque inferior-derecha (≤52% ancho) con descuento masivo y CTA contenidos.",
     keywords: ["drop", "hype", "streetwear", "urbano", "lanzamiento", "flash"],
     layouts: [layoutDropGridBreak(), layoutDropEdgeCut()],
   },

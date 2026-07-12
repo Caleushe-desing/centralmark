@@ -1,5 +1,5 @@
 import type { CSSProperties } from "react";
-import type { AdCopySlots, SlotKey, SlotRule, TypographyToken } from "@/lib/design-engine/composition/rules";
+import type { AdCopySlots, CompositionLayout, SlotKey, SlotRule, TypographyToken } from "@/lib/design-engine/composition/rules";
 
 export function slotText(copy: AdCopySlots, slotKey: SlotKey): string {
   return copy[slotKey]?.trim() ?? "";
@@ -43,7 +43,13 @@ export function paletteCssVars(palette: {
 }
 
 /** Ancho máximo útil por zona (1080 canvas − padding) */
-export function slotMaxWidthPx(rule: SlotRule): number {
+export function slotMaxWidthPx(rule: SlotRule, layout?: Pick<CompositionLayout, "id">): number {
+  if (layout?.id === "drop-grid-break") {
+    const pad = 40;
+    if (rule.zone === "top") return Math.floor(1080 * 0.5) - pad;
+    if (rule.zone === "bottom") return Math.floor(1080 * 0.52) - pad;
+  }
+
   const base = 1080 - 112; // px-14 × 2
   if (rule.className.includes("max-w-")) {
     if (rule.className.includes("max-w-[90%]")) return base * 0.9;
@@ -54,6 +60,9 @@ export function slotMaxWidthPx(rule: SlotRule): number {
     if (rule.className.includes("max-w-[78%]")) return base * 0.78;
     if (rule.className.includes("max-w-[75%]")) return base * 0.75;
     if (rule.className.includes("max-w-[72%]")) return base * 0.72;
+  }
+  if (rule.className.includes("max-w-full") && layout?.id === "drop-grid-break") {
+    return rule.zone === "top" ? 500 : 520;
   }
   return base;
 }

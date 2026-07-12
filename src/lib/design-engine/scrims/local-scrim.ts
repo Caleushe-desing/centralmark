@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import type { ZoneAnchor } from "../composition/rules";
 
 export type ScrimStyle = {
@@ -29,6 +30,32 @@ export function zoneScrimStylePlain(zone: ZoneAnchor, intensity = 0.55): ScrimSt
     background: top
       ? `linear-gradient(to bottom, rgba(0,0,0,${start}) 0%, rgba(0,0,0,${mid}) 45%, transparent 100%)`
       : `linear-gradient(to top, rgba(0,0,0,${start}) 0%, rgba(0,0,0,${mid}) 50%, transparent 100%)`,
+  };
+}
+
+/** Drop: scrim solo arriba-izquierda — la foto centro-derecha queda visible */
+export function dropTopLeftScrimStyle(): CSSProperties {
+  return {
+    pointerEvents: "none",
+    position: "absolute",
+    left: 0,
+    top: 0,
+    width: "48%",
+    height: "40%",
+    background: "linear-gradient(145deg, rgba(0,0,0,0.48) 0%, transparent 72%)",
+  };
+}
+
+/** Drop: scrim suave solo detrás del bloque inferior-derecho */
+export function dropBottomRightScrimStyle(): CSSProperties {
+  return {
+    pointerEvents: "none",
+    position: "absolute",
+    right: 0,
+    bottom: 0,
+    width: "54%",
+    height: "30%",
+    background: "linear-gradient(320deg, rgba(0,0,0,0.42) 0%, transparent 70%)",
   };
 }
 

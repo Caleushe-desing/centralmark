@@ -63,9 +63,9 @@ function AccentWrapper({
 
   if (accent === "mega-discount") {
     return (
-      <div className={`w-full ${alignClass(rule.align)}`}>
+      <div className={`w-full min-w-0 max-w-full overflow-hidden ${alignClass(rule.align)}`}>
         <div
-          className="inline-block leading-[0.88] tracking-tight"
+          className="block w-full min-w-0 max-w-full leading-[0.88] tracking-tight overflow-hidden"
           style={{ color: layout.palette.contrast, textShadow: "0 4px 0 rgba(0,0,0,0.9)" }}
         >
           {children}
@@ -75,7 +75,9 @@ function AccentWrapper({
   }
 
   if (accent === "glass-urgency") {
-    return <div className={`w-full ${alignClass(rule.align)}`}>{children}</div>;
+    return (
+      <div className={`w-full min-w-0 max-w-full overflow-hidden ${alignClass(rule.align)}`}>{children}</div>
+    );
   }
 
   if (accent === "ultra-light") {
@@ -191,7 +193,7 @@ export function TextSlot({ slotKey, rule, copy, layout }: TextSlotProps) {
 
   const token = layout.typography[slotKey];
   const basePx = parseFontSizePx(token.fontSize);
-  const maxWidth = slotMaxWidthPx(rule);
+  const maxWidth = slotMaxWidthPx(rule, layout);
   const accent = rule.accent ?? "none";
   const maxLines =
     accent === "mega-discount" || accent === "promo-numeral"
@@ -213,12 +215,22 @@ export function TextSlot({ slotKey, rule, copy, layout }: TextSlotProps) {
 
   useLayoutEffect(() => {
     if (!text) return;
-    if (accent === "mega-discount" || accent === "promo-numeral") {
+    if (accent === "promo-numeral") {
       setFitPx(basePx);
       return;
     }
     const minRatio =
-      accent === "impact-italic" ? 0.62 : accent === "ultra-light" ? 0.8 : accent === "grid-break-box" ? 0.75 : 0.45;
+      accent === "mega-discount"
+        ? 0.32
+        : accent === "impact-italic"
+          ? 0.62
+          : accent === "ultra-light"
+            ? 0.8
+            : accent === "grid-break-box"
+              ? 0.75
+              : accent === "glass-urgency"
+                ? 0.5
+                : 0.45;
     const fitted = computeFitFontSizePx({
       text,
       baseFontSizePx: basePx,
@@ -230,7 +242,7 @@ export function TextSlot({ slotKey, rule, copy, layout }: TextSlotProps) {
       letterSpacingPx: token.letterSpacing ? parseFontSizePx(token.letterSpacing, 1) : 0,
     });
     setFitPx(fitted);
-  }, [text, basePx, maxWidth, maxLines, token.fontFamily, token.fontWeight, token.letterSpacing, accent]);
+  }, [text, basePx, maxWidth, maxLines, token.fontFamily, token.fontWeight, token.letterSpacing, accent, layout.id]);
 
   if (!text) return null;
 
@@ -245,6 +257,10 @@ export function TextSlot({ slotKey, rule, copy, layout }: TextSlotProps) {
         style={{
           ...buildSlotStyle(token, layout.palette.accent, fitPx ?? basePx),
           fontStyle: token.fontStyle,
+          width: "100%",
+          maxWidth: "100%",
+          wordBreak: "break-word",
+          overflowWrap: "anywhere",
           WebkitLineClamp: maxLines,
           display: "-webkit-box",
           WebkitBoxOrient: "vertical",

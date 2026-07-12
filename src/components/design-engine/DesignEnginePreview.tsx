@@ -182,7 +182,9 @@ export function DesignEnginePreview({
           {localError}
           {localError.includes("OPENAI") && (
             <p className="mt-2 text-xs text-red-200/80">
-              Configura <code className="text-red-100">OPENAI_API_KEY</code> en el entorno del agente.
+              El administrador del mall debe agregar una API key válida de OpenAI en el archivo{" "}
+              <code className="text-red-100">.env</code> del servidor (
+              <code className="text-red-100">OPENAI_API_KEY</code>).
             </p>
           )}
         </div>

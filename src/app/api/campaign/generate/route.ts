@@ -4,6 +4,7 @@ import { campaignBriefSchema } from "@/lib/design-engine/schemas/brief";
 import { createDesignJob, processDesignJob } from "@/lib/design-engine/jobs/process-job";
 import { DesignEngineError } from "@/lib/design-engine/errors";
 import { requireStoreSession } from "@/lib/auth/session";
+import { isOpenAIConfigured } from "@/lib/openai/client";
 
 /**
  * POST /api/campaign/generate
@@ -20,6 +21,17 @@ export async function POST(request: Request) {
       return NextResponse.json(
         { error: "Brief inválido", details: parsed.error.flatten().fieldErrors },
         { status: 400 }
+      );
+    }
+
+    if (!isOpenAIConfigured()) {
+      return NextResponse.json(
+        {
+          error:
+            "La generación con IA no está disponible. El administrador del mall debe configurar OPENAI_API_KEY en el servidor.",
+          code: "OPENAI_CONFIG_ERROR",
+        },
+        { status: 503 }
       );
     }
 

@@ -11,7 +11,7 @@ import { DEFAULT_ARCHETYPE } from "@/lib/design-engine/archetypes";
 import { buildDefaultHashtags } from "@/lib/offer/default-copy";
 import type { ImageCreationMode } from "@/lib/ai/image-generator";
 import type { TextLayer } from "@/lib/image/text-layers";
-import { ImagePlus, Scissors, Sparkles, Upload, Wand2 } from "lucide-react";
+import { ImagePlus, Scissors, Sparkles, Upload, Wand2, AlertTriangle } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { CampaignApplyPayload } from "@/components/CampaignStudio";
 
@@ -62,6 +62,14 @@ export function OfferCreator({
   const [archetype, setArchetype] = useState<VisualArchetype>(DEFAULT_ARCHETYPE);
   const [designPreview, setDesignPreview] = useState<DesignPreviewState | null>(null);
   const [generationPhase, setGenerationPhase] = useState<string | null>(null);
+  const [aiConfigured, setAiConfigured] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    fetch("/api/config")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => setAiConfigured(Boolean(data?.hasOpenAI)))
+      .catch(() => setAiConfigured(false));
+  }, []);
 
   useEffect(() => {
     if (!campaignSeed?.applyId) return;
@@ -153,6 +161,12 @@ export function OfferCreator({
   function generatePreview() {
     if (!brief.trim()) {
       setError("Escribe qué quieres publicar");
+      return;
+    }
+    if (aiConfigured === false) {
+      setError(
+        "La generación con IA no está disponible. Pide al administrador del mall que configure OPENAI_API_KEY en el servidor."
+      );
       return;
     }
     setError(null);
@@ -280,6 +294,22 @@ type UploadMode = "default" | "enhance" | "removeBg";
   return (
     <div className="grid lg:grid-cols-2 gap-6 items-start">
       <form onSubmit={handleSubmit} className="space-y-4">
+        {aiConfigured === false && (
+          <div
+            role="alert"
+            className="flex gap-3 p-4 rounded-xl bg-amber-500/15 border border-amber-500/35 text-amber-100 text-sm"
+          >
+            <AlertTriangle className="w-5 h-5 shrink-0 text-amber-300 mt-0.5" />
+            <div className="space-y-1">
+              <p className="font-medium text-amber-50">Generación con IA no disponible</p>
+              <p className="text-xs text-amber-200/90 leading-relaxed">
+                Falta configurar <code className="text-amber-100">OPENAI_API_KEY</code> en el servidor.
+                Mientras tanto puedes crear publicaciones subiendo tu propia imagen en la pestaña
+                &quot;Subir foto&quot;.
+              </p>
+            </div>
+          </div>
+        )}
         <div className="flex items-center gap-2">
           <Sparkles className="w-5 h-5 text-mm-neon" />
           <h2 className="text-lg font-semibold text-white">Nueva publicación</h2>
@@ -443,7 +473,7 @@ type UploadMode = "default" | "enhance" | "removeBg";
 
             <button
               type="button"
-              disabled={previewLoading || loading}
+              disabled={previewLoading || loading || aiConfigured === false}
               onClick={generatePreview}
               className="w-full py-2.5 rounded-xl bg-mm-neon/90 text-black text-sm hover:bg-mm-neon-dim disabled:opacity-50"
             >

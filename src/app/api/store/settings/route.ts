@@ -36,6 +36,7 @@ export async function PATCH(request: NextRequest) {
     let previewImageUrl: string | undefined;
     const logo = formData.get("logo") as File | null;
     const previewImage = formData.get("previewImage") as File | null;
+    const hasNewPreviewImage = Boolean(previewImage && previewImage.size > 0);
 
     const fs = await import("fs/promises");
     const path = await import("path");
@@ -79,14 +80,18 @@ export async function PATCH(request: NextRequest) {
         ...(previewImageUrl ? { previewImageUrl } : {}),
         ...(removePreview ? { previewImageUrl: null } : {}),
         // Al cambiar rubro sin nueva foto, usar imagen por defecto del rubro
-        ...(rubroChanged && !previewImage ? { previewImageUrl: null } : {}),
+        ...(rubroChanged && !hasNewPreviewImage ? { previewImageUrl: null } : {}),
       },
       include: { mall: true },
     });
 
     const { passwordHash: _, ...safe } = store;
     return NextResponse.json(safe);
-  } catch {
-    return NextResponse.json({ error: "No autenticado" }, { status: 401 });
+  } catch (err) {
+    console.error("[PATCH /api/store/settings]", err);
+    if (err instanceof Error && err.message === "UNAUTHORIZED") {
+      return NextResponse.json({ error: "No autenticado" }, { status: 401 });
+    }
+    return NextResponse.json({ error: "No se pudo guardar la configuración" }, { status: 500 });
   }
 }

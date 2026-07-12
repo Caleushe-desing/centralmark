@@ -48,6 +48,8 @@ function ConfiguracionContent() {
   const [removePreview, setRemovePreview] = useState(false);
   const [loading, setLoading] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [saveNotice, setSaveNotice] = useState<string | null>(null);
   const [metaMessage, setMetaMessage] = useState<string | null>(null);
   const [pagePicker, setPagePicker] = useState<{
     pendingId: string;
@@ -103,23 +105,46 @@ function ConfiguracionContent() {
     e.preventDefault();
     setLoading(true);
     setSaved(false);
+    setSaveError(null);
+    setSaveNotice(null);
 
-    const formData = new FormData(e.currentTarget);
+    const form = e.currentTarget;
+    const formData = new FormData(form);
     formData.set("name", name);
     formData.set("rubro", rubro);
     if (removePreview) formData.set("removePreviewImage", "true");
 
-    const res = await fetch("/api/store/settings", { method: "PATCH", body: formData });
+    const previousRubro = store?.rubro ?? "fashion";
 
-    if (res.ok) {
-      const data = await res.json();
+    try {
+      const res = await fetch("/api/store/settings", { method: "PATCH", body: formData });
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        setSaveError(
+          typeof data.error === "string"
+            ? data.error
+            : "No se pudo guardar. Intenta de nuevo."
+        );
+        return;
+      }
+
       setStore(data);
       setName(data.name);
       setRubro(data.rubro ?? "fashion");
       setRemovePreview(false);
       setSaved(true);
+
+      if (previousRubro !== (data.rubro ?? "fashion")) {
+        setSaveNotice(
+          `Rubro guardado: ${getStoreRubroDefinition(data.rubro).label}. Las muestras en Mis Ofertas ya usan este rubro.`
+        );
+      }
+    } catch {
+      setSaveError("Error de conexión. Revisa tu red e intenta de nuevo.");
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }
 
   async function disconnectMeta() {
@@ -372,6 +397,8 @@ function ConfiguracionContent() {
               setRubro(e.target.value);
               setRemovePreview(true);
               setSaved(false);
+              setSaveError(null);
+              setSaveNotice(null);
             }}
             className={`w-full bg-slate-900 border rounded-xl px-4 py-3 text-white ${
               rubroUnsaved ? "border-amber-400/60 ring-1 ring-amber-400/30" : "border-white/10"
@@ -470,6 +497,25 @@ function ConfiguracionContent() {
           </p>
         </section>
 
+        {saveNotice && (
+          <div
+            role="status"
+            className="p-4 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-200 text-sm"
+          >
+            {saveNotice}
+          </div>
+        )}
+
+        {saveError && (
+          <div
+            role="alert"
+            className="flex gap-3 p-4 rounded-xl bg-red-500/15 border border-red-500/35 text-red-200 text-sm"
+          >
+            <AlertTriangle className="w-5 h-5 shrink-0 text-red-300" />
+            <p>{saveError}</p>
+          </div>
+        )}
+
         {rubroUnsaved && (
           <p className="text-sm text-amber-300/90 flex items-center gap-2">
             <AlertTriangle className="w-4 h-4 shrink-0" />
@@ -479,8 +525,8 @@ function ConfiguracionContent() {
         <button
           type="submit"
           disabled={loading}
-          className={`flex items-center gap-2 px-6 py-3 rounded-xl mm-btn-primary disabled:opacity-50 ${
-            rubroUnsaved ? "mm-glow-neon ring-2 ring-amber-400/50 animate-pulse" : "mm-glow-neon"
+          className={`flex items-center gap-2 px-6 py-3 rounded-xl mm-btn-primary disabled:opacity-50 transition ${
+            rubroUnsaved ? "mm-glow-neon ring-2 ring-amber-400/50" : "mm-glow-neon"
           }`}
         >
           <Save className="w-5 h-5" />
@@ -492,6 +538,11 @@ function ConfiguracionContent() {
                 ? "Guardar rubro"
                 : "Guardar"}
         </button>
+        {rubroUnsaved && (
+          <p className="text-xs text-slate-500">
+            Pulsa <strong className="text-amber-200/90">Guardar rubro</strong> para aplicar el cambio en Mis Ofertas.
+          </p>
+        )}
       </form>
     </main>
   );

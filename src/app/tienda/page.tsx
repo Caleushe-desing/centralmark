@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import { OfferCard } from "@/components/OfferCard";
 import { OfferCreator } from "@/components/OfferCreator";
 import { CampaignStudio, type CampaignApplyPayload } from "@/components/CampaignStudio";
@@ -16,14 +17,15 @@ interface StoreSettings {
 }
 
 export default function TiendaPage() {
+  const pathname = usePathname();
   const [offers, setOffers] = useState<never[]>([]);
   const [store, setStore] = useState<StoreSettings | null>(null);
   const [campaignSeed, setCampaignSeed] = useState<CampaignApplyPayload | null>(null);
 
   const loadData = useCallback(async () => {
     const [offersRes, settingsRes] = await Promise.all([
-      fetch("/api/store/offers"),
-      fetch("/api/store/settings"),
+      fetch("/api/store/offers", { cache: "no-store" }),
+      fetch("/api/store/settings", { cache: "no-store" }),
     ]);
     if (offersRes.ok) setOffers(await offersRes.json());
     if (settingsRes.ok) setStore(await settingsRes.json());
@@ -31,6 +33,14 @@ export default function TiendaPage() {
 
   useEffect(() => {
     loadData();
+  }, [loadData, pathname]);
+
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.visibilityState === "visible") void loadData();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => document.removeEventListener("visibilitychange", onVisible);
   }, [loadData]);
 
   return (
@@ -51,6 +61,7 @@ export default function TiendaPage() {
             />
             <div className="p-6 mm-card">
               <OfferCreator
+                key={`${store.rubro}-${store.previewImageUrl ?? "default"}`}
                 mallHashtags={store.mall.fixedHashtags}
                 storeBranding={{
                   name: store.name,

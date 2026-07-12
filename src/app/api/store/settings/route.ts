@@ -64,6 +64,10 @@ export async function PATCH(request: NextRequest) {
 
     const removePreview = formData.get("removePreviewImage") === "true";
 
+    const existing = await prisma.store.findUnique({ where: { id: session.storeId } });
+    const rubroChanged =
+      rubroDef && existing && rubroDef.id !== parseStoreRubro(existing.rubro);
+
     const store = await prisma.store.update({
       where: { id: session.storeId },
       data: {
@@ -74,6 +78,8 @@ export async function PATCH(request: NextRequest) {
         ...(logoUrl ? { logoUrl } : {}),
         ...(previewImageUrl ? { previewImageUrl } : {}),
         ...(removePreview ? { previewImageUrl: null } : {}),
+        // Al cambiar rubro sin nueva foto, usar imagen por defecto del rubro
+        ...(rubroChanged && !previewImage ? { previewImageUrl: null } : {}),
       },
       include: { mall: true },
     });

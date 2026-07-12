@@ -1,3 +1,4 @@
+import { useId } from "react";
 import type { VisualArchetype } from "@/lib/design-engine/archetypes";
 
 const INK = "#f4f4f5";
@@ -34,6 +35,7 @@ export function ArchetypeMicroPreview({ archetype, photoUrl }: Props) {
 function PhotoLayer({ photoUrl, clipId }: { photoUrl: string; clipId: string }) {
   return (
     <image
+      key={photoUrl}
       href={photoUrl}
       x="16"
       y="28"
@@ -46,7 +48,7 @@ function PhotoLayer({ photoUrl, clipId }: { photoUrl: string; clipId: string }) 
 }
 
 function DropPreview({ photoUrl }: { photoUrl: string }) {
-  const clipId = "drop-photo-clip";
+  const clipId = useId();
   return (
     <svg viewBox="0 0 200 200" className="w-full h-full" aria-hidden>
       <defs>
@@ -70,7 +72,7 @@ function DropPreview({ photoUrl }: { photoUrl: string }) {
 }
 
 function SpotlightPreview({ photoUrl }: { photoUrl: string }) {
-  const clipId = "spot-photo-clip";
+  const clipId = useId();
   return (
     <svg viewBox="0 0 200 200" className="w-full h-full" aria-hidden>
       <defs>
@@ -84,6 +86,7 @@ function SpotlightPreview({ photoUrl }: { photoUrl: string }) {
       <line x1="100" y1="40" x2="100" y2="160" stroke={INK} strokeWidth="0.5" opacity="0.2" />
       <ellipse cx="100" cy="98" rx="52" ry="58" fill="#252530" />
       <image
+        key={photoUrl}
         href={photoUrl}
         x="48"
         y="40"
@@ -99,7 +102,7 @@ function SpotlightPreview({ photoUrl }: { photoUrl: string }) {
 }
 
 function EditorialPreview({ photoUrl }: { photoUrl: string }) {
-  const clipId = "ed-photo-clip";
+  const clipId = useId();
   return (
     <svg viewBox="0 0 200 200" className="w-full h-full" aria-hidden>
       <defs>
@@ -111,6 +114,7 @@ function EditorialPreview({ photoUrl }: { photoUrl: string }) {
       <rect x="14" y="14" width="172" height="172" fill="none" stroke={INK} strokeWidth="0.6" opacity="0.2" />
       <rect x="20" y="62" width="160" height="88" fill="#252530" rx="2" />
       <image
+        key={photoUrl}
         href={photoUrl}
         x="20"
         y="62"
@@ -137,7 +141,7 @@ function EditorialPreview({ photoUrl }: { photoUrl: string }) {
 }
 
 function PromoPreview({ photoUrl }: { photoUrl: string }) {
-  const clipId = "promo-photo-clip";
+  const clipId = useId();
   return (
     <svg viewBox="0 0 200 200" className="w-full h-full" aria-hidden>
       <defs>
@@ -148,6 +152,7 @@ function PromoPreview({ photoUrl }: { photoUrl: string }) {
       <rect width="200" height="200" fill={FRAME} rx="8" />
       <rect x="88" y="24" width="92" height="152" fill="#252530" rx="6" />
       <image
+        key={photoUrl}
         href={photoUrl}
         x="88"
         y="24"

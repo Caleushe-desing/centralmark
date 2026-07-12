@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState, Suspense } from "react";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import { Link2, Save, Share2, Unlink, Store } from "lucide-react";
-import { STORE_RUBROS } from "@/lib/store/rubros";
+import { STORE_RUBROS, getStoreRubroDefinition } from "@/lib/store/rubros";
 
 interface StoreSettings {
   name: string;
@@ -115,6 +115,8 @@ function ConfiguracionContent() {
       const data = await res.json();
       setStore(data);
       setName(data.name);
+      setRubro(data.rubro ?? "fashion");
+      setRemovePreview(false);
       setSaved(true);
     }
     setLoading(false);
@@ -177,6 +179,10 @@ function ConfiguracionContent() {
       </main>
     );
   }
+
+  const rubroDefaultImage = getStoreRubroDefinition(rubro).defaultSampleImageUrl;
+  const previewDisplayUrl =
+    store.previewImageUrl && !removePreview ? store.previewImageUrl : rubroDefaultImage;
 
   return (
     <main className="max-w-lg mx-auto px-6 py-10">
@@ -360,7 +366,10 @@ function ConfiguracionContent() {
           <select
             name="rubro"
             value={rubro}
-            onChange={(e) => setRubro(e.target.value)}
+            onChange={(e) => {
+              setRubro(e.target.value);
+              setRemovePreview(true);
+            }}
             className="w-full bg-slate-900 border border-white/10 rounded-xl px-4 py-3 text-white"
           >
             {STORE_RUBROS.map((r) => (
@@ -378,21 +387,21 @@ function ConfiguracionContent() {
             por defecto del rubro en las tarjetas de arquetipo. Sin costo de IA.
           </p>
           <div className="flex items-center gap-6 flex-wrap">
-            {store.previewImageUrl && !removePreview ? (
-              <div className="relative w-28 h-28 rounded-xl overflow-hidden bg-slate-900 border border-white/10">
-                <Image
-                  src={store.previewImageUrl}
-                  alt="Muestra"
-                  fill
-                  className="object-cover"
-                />
-              </div>
-            ) : (
-              <div className="w-28 h-28 rounded-xl bg-slate-900 border border-dashed border-white/20 flex items-center justify-center text-slate-600 text-xs text-center px-2">
-                Imagen del rubro por defecto
-              </div>
-            )}
-            <div className="space-y-2">
+            <div className="relative w-28 h-28 rounded-xl overflow-hidden bg-slate-900 border border-white/10">
+              <Image
+                key={previewDisplayUrl}
+                src={previewDisplayUrl}
+                alt="Vista previa del rubro"
+                fill
+                className="object-cover"
+              />
+            </div>
+            <div className="space-y-2 text-xs text-slate-500">
+              <p>
+                {store.previewImageUrl && !removePreview
+                  ? "Foto personalizada activa"
+                  : `Vista previa del rubro: ${getStoreRubroDefinition(rubro).label}`}
+              </p>
               <input
                 name="previewImage"
                 type="file"
@@ -400,13 +409,13 @@ function ConfiguracionContent() {
                 onChange={() => setRemovePreview(false)}
                 className="text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-mm-neon/20 file:text-mm-neon"
               />
-              {store.previewImageUrl && (
+              {store.previewImageUrl && !removePreview && (
                 <button
                   type="button"
                   onClick={() => setRemovePreview(true)}
-                  className="text-xs text-red-400 hover:text-red-300"
+                  className="block text-xs text-red-400 hover:text-red-300"
                 >
-                  Quitar foto personalizada
+                  Quitar foto personalizada (usar imagen del rubro)
                 </button>
               )}
             </div>

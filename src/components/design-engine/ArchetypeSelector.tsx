@@ -52,7 +52,11 @@ export function ArchetypeSelector({
                 </span>
               )}
               <div className="aspect-square p-2 bg-black/40">
-                <ArchetypeMicroPreview archetype={archetype.id} photoUrl={photoUrl} />
+                <ArchetypeMicroPreview
+                  key={photoUrl}
+                  archetype={archetype.id}
+                  photoUrl={photoUrl}
+                />
               </div>
               <div className="p-3 border-t border-white/10 space-y-1">
                 <p className="text-sm font-semibold text-white">{archetype.label}</p>

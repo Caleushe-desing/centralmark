@@ -24,8 +24,13 @@ function resolveRubro(ctx: StoreSampleContext): StoreRubro {
 
 /** Foto del rubro o subida en configuración. Cero OpenAI. */
 export function resolveArchetypeSampleImage(_archetype: VisualArchetype, ctx: StoreSampleContext): string {
-  if (ctx.previewImageUrl?.trim()) return ctx.previewImageUrl.trim();
-  return getStoreRubroDefinition(resolveRubro(ctx)).defaultSampleImageUrl;
+  const rubro = resolveRubro(ctx);
+  if (ctx.previewImageUrl?.trim()) {
+    const url = ctx.previewImageUrl.trim();
+    return url.includes("?") ? url : `${url}?rubro=${rubro}`;
+  }
+  const base = getStoreRubroDefinition(rubro).defaultSampleImageUrl;
+  return `${base}?rubro=${rubro}`;
 }
 
 /** Copy desde presets por arquetipo × rubro (múltiples variantes disponibles) */

@@ -62,7 +62,7 @@ if [ -n "${OPENAI_API_KEY:-}" ] && [ "${OPENAI_API_KEY}" != "sk-..." ]; then
   has_openai=true
 elif grep -q '^OPENAI_API_KEY=.' "$ENV_FILE" 2>/dev/null; then
   key_line="$(grep '^OPENAI_API_KEY=' "$ENV_FILE" | head -1)"
-  if ! echo "$key_line" | grep -qE '=(\"?sk-\.\.\.|\"?$|\'?$)'; then
+  if ! echo "$key_line" | grep -q 'sk-\.\.\.' && ! echo "$key_line" | grep -qE '^OPENAI_API_KEY=$'; then
     has_openai=true
   fi
 fi

@@ -3,11 +3,15 @@
 import { useCallback, useEffect, useState, Suspense } from "react";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
-import { Link2, Save, Share2, Unlink } from "lucide-react";
+import { Link2, Save, Share2, Unlink, Store } from "lucide-react";
+import { STORE_RUBROS } from "@/lib/store/rubros";
 
 interface StoreSettings {
   name: string;
   logoUrl: string | null;
+  rubro: string;
+  category: string;
+  previewImageUrl: string | null;
   mall: { name: string; fixedHashtags: string };
 }
 
@@ -40,6 +44,8 @@ function ConfiguracionContent() {
   const [store, setStore] = useState<StoreSettings | null>(null);
   const [social, setSocial] = useState<SocialStatus | null>(null);
   const [name, setName] = useState("");
+  const [rubro, setRubro] = useState("fashion");
+  const [removePreview, setRemovePreview] = useState(false);
   const [loading, setLoading] = useState(false);
   const [saved, setSaved] = useState(false);
   const [metaMessage, setMetaMessage] = useState<string | null>(null);
@@ -65,6 +71,8 @@ function ConfiguracionContent() {
       const data = await res.json();
       setStore(data);
       setName(data.name);
+      setRubro(data.rubro ?? "fashion");
+      setRemovePreview(false);
     }
     await loadSocial();
   }, [loadSocial]);
@@ -98,6 +106,8 @@ function ConfiguracionContent() {
 
     const formData = new FormData(e.currentTarget);
     formData.set("name", name);
+    formData.set("rubro", rubro);
+    if (removePreview) formData.set("removePreviewImage", "true");
 
     const res = await fetch("/api/store/settings", { method: "PATCH", body: formData });
 
@@ -336,6 +346,71 @@ function ConfiguracionContent() {
             className="w-full bg-slate-900 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-slate-600"
           />
           <p className="text-xs text-slate-500">Aparece en tus publicaciones junto al mall {store.mall.name}</p>
+        </section>
+
+        <section className="p-6 rounded-2xl border border-white/10 bg-white/5 space-y-4">
+          <h2 className="text-lg font-semibold text-white flex items-center gap-2">
+            <Store className="w-5 h-5 text-mm-neon" />
+            Rubro de tu tienda
+          </h2>
+          <p className="text-xs text-slate-500">
+            Define el tipo de negocio. Las muestras de arquetipos usarán fotos y textos acordes a este
+            rubro (sin gastar crédito de IA).
+          </p>
+          <select
+            name="rubro"
+            value={rubro}
+            onChange={(e) => setRubro(e.target.value)}
+            className="w-full bg-slate-900 border border-white/10 rounded-xl px-4 py-3 text-white"
+          >
+            {STORE_RUBROS.map((r) => (
+              <option key={r.id} value={r.id}>
+                {r.label}
+              </option>
+            ))}
+          </select>
+        </section>
+
+        <section className="p-6 rounded-2xl border border-white/10 bg-white/5 space-y-4">
+          <h2 className="text-lg font-semibold text-white">Foto de muestra (opcional)</h2>
+          <p className="text-xs text-slate-500">
+            Sube una foto representativa de tu rubro (producto estrella). Se usa en las tarjetas de
+            arquetipo antes de generar. Si no subes, usamos una imagen por defecto del rubro.
+          </p>
+          <div className="flex items-center gap-6 flex-wrap">
+            {store.previewImageUrl && !removePreview ? (
+              <div className="relative w-28 h-28 rounded-xl overflow-hidden bg-slate-900 border border-white/10">
+                <Image
+                  src={store.previewImageUrl}
+                  alt="Muestra"
+                  fill
+                  className="object-cover"
+                />
+              </div>
+            ) : (
+              <div className="w-28 h-28 rounded-xl bg-slate-900 border border-dashed border-white/20 flex items-center justify-center text-slate-600 text-xs text-center px-2">
+                Imagen del rubro por defecto
+              </div>
+            )}
+            <div className="space-y-2">
+              <input
+                name="previewImage"
+                type="file"
+                accept="image/*"
+                onChange={() => setRemovePreview(false)}
+                className="text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-mm-neon/20 file:text-mm-neon"
+              />
+              {store.previewImageUrl && (
+                <button
+                  type="button"
+                  onClick={() => setRemovePreview(true)}
+                  className="text-xs text-red-400 hover:text-red-300"
+                >
+                  Quitar foto personalizada
+                </button>
+              )}
+            </div>
+          </div>
         </section>
 
         <section className="p-6 rounded-2xl border border-white/10 bg-white/5 space-y-4">

@@ -20,6 +20,9 @@ interface StoreBranding {
   mallName: string;
   logoUrl?: string | null;
   customHashtags?: string | null;
+  rubro?: string | null;
+  category?: string | null;
+  previewImageUrl?: string | null;
 }
 
 type ImageSource = "ai" | "upload";
@@ -402,6 +405,12 @@ type UploadMode = "default" | "enhance" | "removeBg";
                 }
               }}
               disabled={previewLoading || loading}
+              storeContext={{
+                storeName: storeBranding?.name ?? "Tu tienda",
+                rubro: storeBranding?.rubro,
+                category: storeBranding?.category,
+                previewImageUrl: storeBranding?.previewImageUrl,
+              }}
             />
 
             <div>

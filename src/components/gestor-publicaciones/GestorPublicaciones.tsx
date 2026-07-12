@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useCallback } from "react";
+import { useRef, useState, useCallback, useEffect } from "react";
 import {
   Copy,
   Download,
@@ -50,6 +50,27 @@ export function GestorPublicaciones() {
   const [exporting, setExporting] = useState(false);
   const [captionCopied, setCaptionCopied] = useState(false);
   const [archetype, setArchetype] = useState<VisualArchetype>(DEFAULT_ARCHETYPE);
+  const [storeContext, setStoreContext] = useState({
+    storeName: "Tu tienda",
+    rubro: "fashion" as string,
+    category: null as string | null,
+    previewImageUrl: null as string | null,
+  });
+
+  useEffect(() => {
+    fetch("/api/store/settings")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (data) {
+          setStoreContext({
+            storeName: data.name,
+            rubro: data.rubro,
+            category: data.category,
+            previewImageUrl: data.previewImageUrl,
+          });
+        }
+      });
+  }, []);
 
   const pollJob = useCallback(async (jobId: string): Promise<void> => {
     const res = await fetch(`/api/campaign/generate/${jobId}`);
@@ -154,7 +175,12 @@ export function GestorPublicaciones() {
 
       <div className="grid lg:grid-cols-2 gap-8 items-start">
         <div className="space-y-4">
-          <ArchetypeSelector value={archetype} onChange={setArchetype} disabled={loading} />
+          <ArchetypeSelector
+            value={archetype}
+            onChange={setArchetype}
+            disabled={loading}
+            storeContext={storeContext}
+          />
           <label className="block text-sm text-neutral-400">Brief creativo</label>
           <textarea
             value={brief}

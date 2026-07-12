@@ -1,37 +1,47 @@
 "use client";
 
 import { AdEngine } from "@/components/design-engine";
+import { ARCHETYPE_DEFINITIONS, type VisualArchetype } from "@/lib/design-engine/archetypes";
 import {
-  ARCHETYPE_DEFINITIONS,
-  buildArchetypeSampleCopy,
+  buildArchetypeSampleCopyForStore,
   getArchetypeSampleLayout,
-  type VisualArchetype,
-} from "@/lib/design-engine/archetypes";
+  resolveArchetypeSampleImage,
+  type StoreSampleContext,
+} from "@/lib/design-engine/archetype-store-samples";
 import { Check } from "lucide-react";
 
 interface ArchetypeSelectorProps {
   value: VisualArchetype;
   onChange: (archetype: VisualArchetype) => void;
   disabled?: boolean;
+  /** Rubro e imagen desde Configuración de la tienda */
+  storeContext: StoreSampleContext;
 }
 
 /**
- * Preview estática con AdEngine + fotos reales en /public/design-modes/.
- * No llama a OpenAI — solo render en el navegador.
+ * Preview estática AdEngine + foto del rubro (o subida en configuración).
+ * No llama a OpenAI.
  */
-export function ArchetypeSelector({ value, onChange, disabled }: ArchetypeSelectorProps) {
+export function ArchetypeSelector({
+  value,
+  onChange,
+  disabled,
+  storeContext,
+}: ArchetypeSelectorProps) {
   return (
     <div className="space-y-2">
       <label className="block text-sm text-neutral-400">Arquetipo visual</label>
       <p className="text-xs text-neutral-600 leading-relaxed">
-        Elige la intención de marketing antes de generar. Cada tarjeta muestra un ejemplo real del
-        motor (foto + textos), sin costo de IA.
+        Ejemplos con el rubro de tu tienda
+        {storeContext.previewImageUrl ? " (tu foto de muestra)" : ""}. Sin costo de IA hasta
+        pulsar Generar.
       </p>
       <div className="grid grid-cols-2 gap-3">
         {ARCHETYPE_DEFINITIONS.map((archetype) => {
           const selected = value === archetype.id;
           const layout = getArchetypeSampleLayout(archetype.id);
-          const copy = buildArchetypeSampleCopy(archetype.id);
+          const copy = buildArchetypeSampleCopyForStore(archetype.id, storeContext);
+          const imageUrl = resolveArchetypeSampleImage(archetype.id, storeContext);
 
           return (
             <button
@@ -51,13 +61,9 @@ export function ArchetypeSelector({ value, onChange, disabled }: ArchetypeSelect
                 </span>
               )}
 
-              <div className="bg-black flex justify-center overflow-hidden aspect-square">
-                <div className="scale-[0.155] origin-top pointer-events-none select-none">
-                  <AdEngine
-                    imageUrl={archetype.sampleImageUrl}
-                    copy={copy}
-                    layout={layout}
-                  />
+              <div className="bg-black flex justify-center items-start overflow-hidden aspect-square">
+                <div className="scale-[0.168] origin-top pointer-events-none select-none">
+                  <AdEngine imageUrl={imageUrl} copy={copy} layout={layout} />
                 </div>
               </div>
 

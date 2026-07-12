@@ -9,6 +9,9 @@ interface StoreSettings {
   name: string;
   logoUrl: string | null;
   customHashtags: string | null;
+  rubro: string;
+  category: string;
+  previewImageUrl: string | null;
   mall: { name: string; fixedHashtags: string };
 }
 
@@ -54,6 +57,9 @@ export default function TiendaPage() {
                   mallName: store.mall.name,
                   logoUrl: store.logoUrl,
                   customHashtags: store.customHashtags,
+                  rubro: store.rubro,
+                  category: store.category,
+                  previewImageUrl: store.previewImageUrl,
                 }}
                 campaignSeed={campaignSeed}
                 onCreated={loadData}

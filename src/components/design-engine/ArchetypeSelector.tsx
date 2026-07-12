@@ -1,25 +1,19 @@
 "use client";
 
-import { AdEngine } from "@/components/design-engine";
 import { ARCHETYPE_DEFINITIONS, type VisualArchetype } from "@/lib/design-engine/archetypes";
-import {
-  buildArchetypeSampleCopyForStore,
-  getArchetypeSampleLayout,
-  resolveArchetypeSampleImage,
-  type StoreSampleContext,
-} from "@/lib/design-engine/archetype-store-samples";
+import { resolveArchetypeSampleImage, type StoreSampleContext } from "@/lib/design-engine/archetype-store-samples";
+import { ArchetypeMicroPreview } from "./archetype-previews/ArchetypeMicroPreview";
 import { Check } from "lucide-react";
 
 interface ArchetypeSelectorProps {
   value: VisualArchetype;
   onChange: (archetype: VisualArchetype) => void;
   disabled?: boolean;
-  /** Rubro e imagen desde Configuración de la tienda */
   storeContext: StoreSampleContext;
 }
 
 /**
- * Preview estática AdEngine + foto del rubro (o subida en configuración).
+ * Selector 2×2: micro-maqueta SVG (layout) + foto real del rubro de la tienda.
  * No llama a OpenAI.
  */
 export function ArchetypeSelector({
@@ -28,21 +22,18 @@ export function ArchetypeSelector({
   disabled,
   storeContext,
 }: ArchetypeSelectorProps) {
+  const photoUrl = resolveArchetypeSampleImage("drop", storeContext);
+
   return (
     <div className="space-y-2">
       <label className="block text-sm text-neutral-400">Arquetipo visual</label>
       <p className="text-xs text-neutral-600 leading-relaxed">
-        Ejemplos con el rubro de tu tienda
-        {storeContext.previewImageUrl ? " (tu foto de muestra)" : ""}. Sin costo de IA hasta
-        pulsar Generar.
+        La micro-maqueta muestra el peso tipográfico de cada estilo sobre una foto de tu rubro
+        {storeContext.previewImageUrl ? " (tu imagen)" : ""}. Sin costo de IA hasta pulsar Generar.
       </p>
       <div className="grid grid-cols-2 gap-3">
         {ARCHETYPE_DEFINITIONS.map((archetype) => {
           const selected = value === archetype.id;
-          const layout = getArchetypeSampleLayout(archetype.id);
-          const copy = buildArchetypeSampleCopyForStore(archetype.id, storeContext);
-          const imageUrl = resolveArchetypeSampleImage(archetype.id, storeContext);
-
           return (
             <button
               key={archetype.id}
@@ -60,13 +51,9 @@ export function ArchetypeSelector({
                   <Check className="w-3 h-3" />
                 </span>
               )}
-
-              <div className="bg-black flex justify-center items-start overflow-hidden aspect-square">
-                <div className="scale-[0.168] origin-top pointer-events-none select-none">
-                  <AdEngine imageUrl={imageUrl} copy={copy} layout={layout} />
-                </div>
+              <div className="aspect-square p-2 bg-black/40">
+                <ArchetypeMicroPreview archetype={archetype.id} photoUrl={photoUrl} />
               </div>
-
               <div className="p-3 border-t border-white/10 space-y-1">
                 <p className="text-sm font-semibold text-white">{archetype.label}</p>
                 <p className="text-xs text-neutral-500 leading-snug">{archetype.marketingPurpose}</p>

@@ -8,6 +8,10 @@ import { ArchetypeSelector } from "@/components/design-engine/ArchetypeSelector"
 import type { DesignPreviewState } from "@/components/design-engine/DesignEnginePreview";
 import type { VisualArchetype } from "@/lib/design-engine/archetypes";
 import { DEFAULT_ARCHETYPE } from "@/lib/design-engine/archetypes";
+import {
+  archetypeBriefPlaceholder,
+  BRIEF_STRUCTURE_HINT,
+} from "@/lib/design-engine/archetype-brief-placeholders";
 import { buildDefaultHashtags } from "@/lib/offer/default-copy";
 import type { ImageCreationMode } from "@/lib/ai/image-generator";
 import type { TextLayer } from "@/lib/image/text-layers";
@@ -463,9 +467,10 @@ type UploadMode = "default" | "enhance" | "removeBg";
                   if (designPreview || previewImageUrl) resetPreview();
                 }}
                 rows={5}
-                placeholder="Ej: Zapatillas Nike outlet 30%, estética editorial premium, urgencia fin de semana…"
+                placeholder={archetypeBriefPlaceholder(archetype)}
                 className="w-full bg-mm-surface border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-neutral-600 resize-none"
               />
+              <p className="text-xs text-neutral-500 mt-1.5 leading-relaxed">{BRIEF_STRUCTURE_HINT}</p>
             </div>
 
             <p className="text-xs text-neutral-600">

@@ -63,13 +63,18 @@ Sin OpenAI, el sistema usa contenido y fondos de respaldo (menos impresionante e
 
 El archivo `.env` **no se sube a Git** (por seguridad). Cada sesión nueva del agente en la nube empieza sin tus keys.
 
-**Configúralo una sola vez:**
+**Configúralo una sola vez** (no hay pestaña global «Secretos»):
 
-1. Abre [cursor.com/dashboard/cloud-agents](https://cursor.com/dashboard/cloud-agents)
-2. Pestaña **Secrets** → agrega `OPENAI_API_KEY` como **Runtime Secret**
-3. Reinicia el Cloud Agent (o ejecuta `/iniciar-jornada`)
+1. Abre [cursor.com/dashboard/cloud-agents](https://cursor.com/dashboard/cloud-agents) → **Agentes en la nube**
+2. Haz clic en el entorno de tu repo (ej. `caleushe-desing/centralmark`)
+3. Si dice **Sin configurar**, pulsa **Nueva ejecución de configuración** y completa el asistente
+4. Dentro del entorno, busca **Secretos de ejecución** (barra lateral o sección del entorno)
+5. Agrega `OPENAI_API_KEY` con tu key `sk-...` (tipo: **Secreto de ejecución**)
+6. Reinicia el Cloud Agent o ejecuta `/iniciar-jornada`
 
-El script `npm run env:sync` (también en `npm run dev` y `/iniciar-jornada`) copia los Secrets del dashboard a `.env` local de la sesión.
+> **No uses «Claves API»** del menú lateral: eso es para la API de Cursor (`crsr_...`), no para OpenAI.
+
+El script `npm run env:sync` (también en `npm run dev` y `/iniciar-jornada`) copia los secretos del entorno a `.env` local de la sesión.
 
 En tu **PC local** (fuera de Cloud Agents), basta con tener `OPENAI_API_KEY` en `.env` — ahí sí persiste en disco.
 

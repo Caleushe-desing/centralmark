@@ -72,8 +72,9 @@ if [ "$has_openai" = true ]; then
   echo "✅ OpenAI: configurada"
 else
   echo "⚠ OpenAI: NO configurada"
-  echo "  → Una sola vez: cursor.com/dashboard/cloud-agents → Secrets"
-  echo "    Agrega OPENAI_API_KEY (Runtime Secret) y reinicia el agente."
+  echo "  → Una sola vez: cursor.com/dashboard/cloud-agents"
+  echo "    → clic en tu entorno (ej. centralmark) → Secretos de ejecución"
+  echo "    Agrega OPENAI_API_KEY y reinicia el agente."
   echo "  → O edita .env local (solo persiste en tu PC, no en Cloud Agents)."
 fi
 

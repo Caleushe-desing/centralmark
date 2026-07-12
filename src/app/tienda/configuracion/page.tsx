@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState, Suspense } from "react";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
-import { Link2, Save, Share2, Unlink, Store } from "lucide-react";
+import { AlertTriangle, Link2, Save, Share2, Unlink, Store } from "lucide-react";
 import { STORE_RUBROS, getStoreRubroDefinition } from "@/lib/store/rubros";
 
 interface StoreSettings {
@@ -180,6 +180,8 @@ function ConfiguracionContent() {
     );
   }
 
+  const savedRubro = store.rubro ?? "fashion";
+  const rubroUnsaved = savedRubro !== rubro;
   const rubroDefaultImage = getStoreRubroDefinition(rubro).defaultSampleImageUrl;
   const previewDisplayUrl =
     store.previewImageUrl && !removePreview ? store.previewImageUrl : rubroDefaultImage;
@@ -369,8 +371,11 @@ function ConfiguracionContent() {
             onChange={(e) => {
               setRubro(e.target.value);
               setRemovePreview(true);
+              setSaved(false);
             }}
-            className="w-full bg-slate-900 border border-white/10 rounded-xl px-4 py-3 text-white"
+            className={`w-full bg-slate-900 border rounded-xl px-4 py-3 text-white ${
+              rubroUnsaved ? "border-amber-400/60 ring-1 ring-amber-400/30" : "border-white/10"
+            }`}
           >
             {STORE_RUBROS.map((r) => (
               <option key={r.id} value={r.id}>
@@ -378,6 +383,25 @@ function ConfiguracionContent() {
               </option>
             ))}
           </select>
+          {rubroUnsaved && (
+            <div
+              role="status"
+              className="flex gap-3 p-4 rounded-xl bg-amber-500/15 border border-amber-500/35 text-amber-100"
+            >
+              <AlertTriangle className="w-5 h-5 shrink-0 text-amber-300 mt-0.5" />
+              <div className="space-y-1 text-sm">
+                <p className="font-medium text-amber-50">
+                  Cambiaste el rubro a{" "}
+                  <strong>{getStoreRubroDefinition(rubro).label}</strong>
+                </p>
+                <p className="text-amber-200/90 text-xs leading-relaxed">
+                  La vista previa ya se actualizó aquí, pero{" "}
+                  <strong className="text-amber-100">debes pulsar Guardar</strong> para que las
+                  muestras de arquetipo en <em>Mis Ofertas</em> usen el nuevo rubro.
+                </p>
+              </div>
+            </div>
+          )}
         </section>
 
         <section className="p-6 rounded-2xl border border-white/10 bg-white/5 space-y-4">
@@ -446,13 +470,27 @@ function ConfiguracionContent() {
           </p>
         </section>
 
+        {rubroUnsaved && (
+          <p className="text-sm text-amber-300/90 flex items-center gap-2">
+            <AlertTriangle className="w-4 h-4 shrink-0" />
+            Tienes un cambio de rubro sin guardar.
+          </p>
+        )}
         <button
           type="submit"
           disabled={loading}
-          className="flex items-center gap-2 px-6 py-3 rounded-xl mm-btn-primary mm-glow-neon disabled:opacity-50"
+          className={`flex items-center gap-2 px-6 py-3 rounded-xl mm-btn-primary disabled:opacity-50 ${
+            rubroUnsaved ? "mm-glow-neon ring-2 ring-amber-400/50 animate-pulse" : "mm-glow-neon"
+          }`}
         >
           <Save className="w-5 h-5" />
-          {loading ? "Guardando..." : saved ? "¡Guardado!" : "Guardar"}
+          {loading
+            ? "Guardando..."
+            : saved && !rubroUnsaved
+              ? "¡Guardado!"
+              : rubroUnsaved
+                ? "Guardar rubro"
+                : "Guardar"}
         </button>
       </form>
     </main>

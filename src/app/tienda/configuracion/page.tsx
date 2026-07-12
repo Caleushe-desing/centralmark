@@ -374,8 +374,8 @@ function ConfiguracionContent() {
         <section className="p-6 rounded-2xl border border-white/10 bg-white/5 space-y-4">
           <h2 className="text-lg font-semibold text-white">Foto de muestra (opcional)</h2>
           <p className="text-xs text-slate-500">
-            Sube una foto representativa de tu rubro (producto estrella). Se usa en las tarjetas de
-            arquetipo antes de generar. Si no subes, usamos una imagen por defecto del rubro.
+            Sube una foto de tu producto (ej. par de zapatillas si vendes calzado). Reemplaza la imagen
+            por defecto del rubro en las tarjetas de arquetipo. Sin costo de IA.
           </p>
           <div className="flex items-center gap-6 flex-wrap">
             {store.previewImageUrl && !removePreview ? (

@@ -1,5 +1,5 @@
 import type { VisualArchetype } from "./archetypes";
-import { getArchetypeDefinition, getArchetypeSampleLayout } from "./archetypes";
+import { getArchetypeSampleLayout } from "./archetypes";
 import type { DesignDocument } from "./schemas";
 import {
   getStoreRubroDefinition,
@@ -28,25 +28,13 @@ function shortStoreLabel(name: string): string {
   return trimmed.split(/\s+/).slice(0, 2).join(" ").toUpperCase();
 }
 
-/** Imagen de muestra — custom de la tienda o por rubro. Cero OpenAI. */
+/** Imagen de muestra — custom de la tienda o foto del rubro. Cero OpenAI. */
 export function resolveArchetypeSampleImage(
-  archetype: VisualArchetype,
+  _archetype: VisualArchetype,
   ctx: StoreSampleContext
 ): string {
   if (ctx.previewImageUrl?.trim()) return ctx.previewImageUrl.trim();
-
-  const rubroDef = getStoreRubroDefinition(resolveRubro(ctx));
-  const archetypeDef = getArchetypeDefinition(archetype);
-
-  // Promo/retail usa imagen más comercial si el rubro es tech/footwear
-  if (archetype === "promo" && rubroDef.id !== "fashion" && rubroDef.id !== "food") {
-    return "/design-modes/retail-sample.png";
-  }
-  if (archetype === "drop" && rubroDef.id === "footwear") {
-    return "/design-modes/impact-sample.png";
-  }
-
-  return rubroDef.defaultSampleImageUrl || archetypeDef.sampleImageUrl;
+  return getStoreRubroDefinition(resolveRubro(ctx)).defaultSampleImageUrl;
 }
 
 /** Copy corto y legible en mini-preview — adaptado al rubro y nombre de tienda */

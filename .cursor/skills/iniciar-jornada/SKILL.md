@@ -12,8 +12,8 @@ Ejecuta el flujo de inicio de sesión de trabajo. **No modifiques código**; sol
 
 ## Pasos
 
-1. Si el usuario indica una rama concreta y no está en ella, haz `git checkout <rama>` primero.
-2. Ejecuta:
+1. Si el usuario indica una rama concreta distinta a la guardada, actualiza `.cursor/last-branch` con ese nombre antes de sincronizar.
+2. Ejecuta (el script lee `.cursor/last-branch` y cambia automáticamente a la **última rama trabajada** al cerrar jornada):
 
 ```bash
 bash scripts/work-start.sh
@@ -29,5 +29,5 @@ bash scripts/work-start.sh
 ## Notas
 
 - Funciona igual en notebook y PC de escritorio.
-- Si el usuario continúa trabajo de ayer, debe estar en la misma rama (o indicarla).
+- La última rama se guarda en `.cursor/last-branch` al ejecutar `/cerrar-jornada`. No hace falta recordar el nombre: `/iniciar-jornada` siempre vuelve ahí.
 - No hagas merge ni push en este skill.

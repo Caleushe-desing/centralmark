@@ -12,14 +12,17 @@ echo ""
 
 git fetch origin
 
+LAST_BRANCH_FILE=".cursor/last-branch"
+TARGET_BRANCH=""
+if [ -f "$LAST_BRANCH_FILE" ]; then
+  TARGET_BRANCH="$(tr -d '[:space:]' < "$LAST_BRANCH_FILE")"
+fi
+
 BRANCH="$(git branch --show-current)"
 if [ -z "$BRANCH" ]; then
   echo "❌ No hay rama activa. Haz checkout a la rama en la que quieres trabajar."
   exit 1
 fi
-
-echo "→ Rama actual: $BRANCH"
-echo ""
 
 STASHED=false
 if ! git diff --quiet || ! git diff --cached --quiet; then
@@ -27,6 +30,21 @@ if ! git diff --quiet || ! git diff --cached --quiet; then
   git stash push -u -m "iniciar-jornada auto-stash $(date +%s)"
   STASHED=true
 fi
+
+# Cambiar a la última rama de trabajo guardada al cerrar jornada
+if [ -n "$TARGET_BRANCH" ] && [ "$BRANCH" != "$TARGET_BRANCH" ]; then
+  if git show-ref --verify --quiet "refs/heads/$TARGET_BRANCH" || \
+     git ls-remote --heads origin "$TARGET_BRANCH" | grep -q "$TARGET_BRANCH"; then
+    echo "→ Última rama trabajada: $TARGET_BRANCH (estabas en $BRANCH)"
+    git checkout "$TARGET_BRANCH" 2>/dev/null || git checkout -b "$TARGET_BRANCH" "origin/$TARGET_BRANCH"
+    BRANCH="$TARGET_BRANCH"
+  else
+    echo "⚠ Rama guardada '$TARGET_BRANCH' no existe. Continuando en $BRANCH."
+  fi
+fi
+
+echo "→ Rama activa: $BRANCH"
+echo ""
 
 pull_branch() {
   local target="$1"

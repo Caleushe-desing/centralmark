@@ -23,6 +23,14 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  async rewrites() {
+    return [
+      {
+        source: "/generated/ad-images/:filename",
+        destination: "/api/generated/ad-images/:filename",
+      },
+    ];
+  },
 };
 
 export default nextConfig;

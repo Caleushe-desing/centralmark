@@ -11,7 +11,7 @@ export async function persistAdImageBuffer(buffer: Buffer): Promise<{
   const absolutePath = path.join(dir, filename);
   await fs.writeFile(absolutePath, buffer);
   return {
-    publicUrl: `/generated/ad-images/${filename}`,
+    publicUrl: `/api/generated/ad-images/${filename}`,
     absolutePath,
   };
 }

@@ -1,7 +1,12 @@
 "use client";
 
-import { ARCHETYPE_DEFINITIONS, type VisualArchetype } from "@/lib/design-engine/archetypes";
-import { ArchetypeMicroPreview } from "./archetype-previews/ArchetypeMicroPreview";
+import { AdEngine } from "@/components/design-engine";
+import {
+  ARCHETYPE_DEFINITIONS,
+  buildArchetypeSampleCopy,
+  getArchetypeSampleLayout,
+  type VisualArchetype,
+} from "@/lib/design-engine/archetypes";
 import { Check } from "lucide-react";
 
 interface ArchetypeSelectorProps {
@@ -10,17 +15,24 @@ interface ArchetypeSelectorProps {
   disabled?: boolean;
 }
 
+/**
+ * Preview estática con AdEngine + fotos reales en /public/design-modes/.
+ * No llama a OpenAI — solo render en el navegador.
+ */
 export function ArchetypeSelector({ value, onChange, disabled }: ArchetypeSelectorProps) {
   return (
     <div className="space-y-2">
       <label className="block text-sm text-neutral-400">Arquetipo visual</label>
       <p className="text-xs text-neutral-600 leading-relaxed">
-        Elige la intención de marketing antes de generar. La micro-maqueta muestra el peso tipográfico real
-        de cada estilo.
+        Elige la intención de marketing antes de generar. Cada tarjeta muestra un ejemplo real del
+        motor (foto + textos), sin costo de IA.
       </p>
       <div className="grid grid-cols-2 gap-3">
         {ARCHETYPE_DEFINITIONS.map((archetype) => {
           const selected = value === archetype.id;
+          const layout = getArchetypeSampleLayout(archetype.id);
+          const copy = buildArchetypeSampleCopy(archetype.id);
+
           return (
             <button
               key={archetype.id}
@@ -38,9 +50,17 @@ export function ArchetypeSelector({ value, onChange, disabled }: ArchetypeSelect
                   <Check className="w-3 h-3" />
                 </span>
               )}
-              <div className="aspect-square p-2 bg-black/40">
-                <ArchetypeMicroPreview archetype={archetype.id} />
+
+              <div className="bg-black flex justify-center overflow-hidden aspect-square">
+                <div className="scale-[0.155] origin-top pointer-events-none select-none">
+                  <AdEngine
+                    imageUrl={archetype.sampleImageUrl}
+                    copy={copy}
+                    layout={layout}
+                  />
+                </div>
               </div>
+
               <div className="p-3 border-t border-white/10 space-y-1">
                 <p className="text-sm font-semibold text-white">{archetype.label}</p>
                 <p className="text-xs text-neutral-500 leading-snug">{archetype.marketingPurpose}</p>

@@ -44,6 +44,8 @@ prisma/dev.db
 /public/generated/*
 !/public/generated/.gitkeep
 !/public/generated/previews/.gitkeep
+!/public/design-modes/
+!/public/design-modes/**
 
 # vercel
 .vercel

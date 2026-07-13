@@ -51,10 +51,10 @@ export function StoreAuthGuard({ children }: { children: React.ReactNode }) {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-mm-black flex flex-col items-center justify-center gap-4 px-6 text-center">
-        <div className="w-8 h-8 border-2 border-mm-neon border-t-transparent rounded-full animate-spin" />
-        <p className="text-neutral-400 text-sm">Cargando tu tienda…</p>
-        <p className="text-neutral-600 text-xs max-w-xs">
+      <div className="cm-app-bg flex flex-col items-center justify-center gap-4 px-6 text-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#2563EB] border-t-transparent" />
+        <p className="text-sm text-slate-600">Cargando tu tienda…</p>
+        <p className="max-w-xs text-xs text-slate-500">
           La primera vez puede tardar hasta 1 minuto. No cierres la pestaña.
         </p>
       </div>
@@ -64,7 +64,7 @@ export function StoreAuthGuard({ children }: { children: React.ReactNode }) {
   if (!store) return null;
 
   return (
-    <div className="min-h-screen bg-mm-black">
+    <div className="cm-app-bg">
       <StoreNav storeName={store.name} mallName={store.mall.name} />
       {children}
     </div>

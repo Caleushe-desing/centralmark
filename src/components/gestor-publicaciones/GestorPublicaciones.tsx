@@ -162,13 +162,13 @@ export function GestorPublicaciones() {
     : null;
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8 space-y-8">
+    <div className="mx-auto max-w-6xl space-y-8 px-4 py-8">
       <header className="space-y-2">
-        <div className="flex items-center gap-2 text-mm-neon">
-          <Megaphone className="w-6 h-6" />
-          <h1 className="text-2xl font-bold text-white">Gestor de Publicaciones</h1>
+        <div className="flex items-center gap-2 text-[#2563EB]">
+          <Megaphone className="h-6 w-6" />
+          <h1 className="text-2xl font-bold text-[#0F2B5B]">Gestor de Publicaciones</h1>
         </div>
-        <p className="text-neutral-400 text-sm max-w-2xl">
+        <p className="max-w-2xl text-sm text-slate-600">
           Motor de diseño con arquetipos visuales — generación asíncrona (~$0.17/imagen).
         </p>
       </header>
@@ -181,13 +181,13 @@ export function GestorPublicaciones() {
             disabled={loading}
             storeContext={storeContext}
           />
-          <label className="block text-sm text-neutral-400">Brief creativo</label>
+          <label className="block text-sm text-slate-600">Brief creativo</label>
           <textarea
             value={brief}
             onChange={(e) => setBrief(e.target.value)}
             rows={6}
             placeholder="Ej: Colección invierno urbano, 50% solo fin de semana…"
-            className="w-full bg-mm-surface border border-white/10 rounded-xl px-4 py-3 text-white resize-none"
+            className="cm-input resize-none"
           />
           <button
             type="button"

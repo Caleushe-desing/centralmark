@@ -58,10 +58,10 @@ export function OfferCard({ offer, mode, onUpdate }: OfferCardProps) {
   }
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/5 overflow-hidden">
-      <div className="grid md:grid-cols-2 gap-0">
+    <div className="cm-card overflow-hidden">
+      <div className="grid gap-0 md:grid-cols-2">
         {offer.content?.imagePath && (
-          <div className="relative aspect-square bg-slate-900">
+          <div className="relative aspect-square bg-slate-100">
             <Image
               src={offer.content.imagePath}
               alt={offer.productName}
@@ -73,9 +73,9 @@ export function OfferCard({ offer, mode, onUpdate }: OfferCardProps) {
         <div className="p-6 flex flex-col gap-4">
           <div className="flex items-start justify-between gap-3">
             <div>
-              <p className="text-sm text-mm-neon font-medium">{offer.store.name}</p>
-              <h3 className="text-xl font-bold text-white mt-1">{offer.productName}</h3>
-              <p className="text-3xl font-black text-mm-neon mt-2">
+              <p className="text-sm font-medium text-[#2563EB]">{offer.store.name}</p>
+              <h3 className="mt-1 text-xl font-bold text-[#0F2B5B]">{offer.productName}</h3>
+              <p className="mt-2 text-3xl font-black text-[#2563EB]">
                 {offer.discountPercent}% OFF
               </p>
             </div>
@@ -88,9 +88,9 @@ export function OfferCard({ offer, mode, onUpdate }: OfferCardProps) {
           </p>
 
           {offer.content && (
-            <div className="bg-slate-900/50 rounded-xl p-4 text-sm text-slate-300 whitespace-pre-wrap max-h-40 overflow-y-auto">
+            <div className="max-h-40 overflow-y-auto whitespace-pre-wrap rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
               {offer.content.captionInstagram}
-              <p className="text-mm-neon/80 mt-2 text-xs">{offer.content.hashtags}</p>
+              <p className="mt-2 text-xs text-[#2563EB]">{offer.content.hashtags}</p>
             </div>
           )}
 
@@ -101,8 +101,8 @@ export function OfferCard({ offer, mode, onUpdate }: OfferCardProps) {
                   key={pub.platform}
                   className={`text-xs px-2 py-1 rounded ${
                     pub.status === "SUCCESS"
-                      ? "bg-emerald-500/20 text-emerald-300"
-                      : "bg-red-500/20 text-red-300"
+                      ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                      : "bg-red-50 text-red-700 border border-red-200"
                   }`}
                 >
                   {pub.platform}: {pub.status === "SUCCESS" ? "✓" : pub.errorMessage ?? "Error"}
@@ -137,7 +137,7 @@ export function OfferCard({ offer, mode, onUpdate }: OfferCardProps) {
                 <button
                   onClick={() => handleAction("publish")}
                   disabled={!!loading}
-                  className="flex items-center gap-2 px-4 py-2 rounded-lg bg-mm-neon text-black text-sm hover:brightness-110 disabled:opacity-50"
+                  className="flex items-center gap-2 rounded-lg bg-[#0F2B5B] px-4 py-2 text-sm text-white hover:bg-[#1E3A6E] disabled:opacity-50"
                 >
                   <Send className="w-4 h-4" />
                   {loading === "publish" ? "Publicando..." : "Publicar en redes"}
@@ -146,7 +146,7 @@ export function OfferCard({ offer, mode, onUpdate }: OfferCardProps) {
             <button
               onClick={() => handleAction("generate")}
               disabled={!!loading || offer.status === "GENERATING"}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg border border-white/10 text-slate-300 text-sm hover:bg-white/5 disabled:opacity-50"
+              className="cm-btn-secondary flex items-center gap-2 disabled:opacity-50"
             >
               <RefreshCw className={`w-4 h-4 ${offer.status === "GENERATING" ? "animate-spin" : ""}`} />
               Regenerar IA

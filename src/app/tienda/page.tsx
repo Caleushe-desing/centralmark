@@ -46,10 +46,10 @@ export default function TiendaPage() {
   }, [loadData]);
 
   return (
-    <main className="max-w-7xl mx-auto px-6 py-10">
+    <main className="mx-auto max-w-7xl px-6 py-10">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-white">Mis Ofertas</h1>
-        <p className="text-neutral-400 mt-1">
+        <h1 className="cm-page-title">Mis Ofertas</h1>
+        <p className="cm-page-subtitle">
           Describe tu publicación en una sola instrucción. La IA crea imagen, textos y caption en español.
         </p>
       </div>
@@ -85,7 +85,7 @@ export default function TiendaPage() {
       </div>
 
       <div className="space-y-6">
-        <h2 className="text-lg font-semibold text-white">Ofertas creadas</h2>
+        <h2 className="text-lg font-semibold text-[#0F2B5B]">Ofertas creadas</h2>
         {offers.length === 0 ? (
           <p className="text-slate-500">Aún no hay ofertas publicadas.</p>
         ) : (

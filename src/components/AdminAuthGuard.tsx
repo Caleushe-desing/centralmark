@@ -35,8 +35,8 @@ export function AdminAuthGuard({ children }: { children: React.ReactNode }) {
 
   if (authed === null) {
     return (
-      <div className="min-h-screen bg-mm-black flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-mm-neon border-t-transparent rounded-full animate-spin" />
+      <div className="cm-app-bg flex items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#2563EB] border-t-transparent" />
       </div>
     );
   }

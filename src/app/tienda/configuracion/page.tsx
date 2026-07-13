@@ -3,8 +3,11 @@
 import { useCallback, useEffect, useState, Suspense } from "react";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
-import { AlertTriangle, Link2, Save, Share2, Unlink, Store } from "lucide-react";
-import { STORE_RUBROS, getStoreRubroDefinition } from "@/lib/store/rubros";
+import { AlertTriangle, Link2, Save, Share2, Unlink } from "lucide-react";
+import { ColorPalettePicker } from "@/components/settings/ColorPalettePicker";
+import { LogoUploader } from "@/components/settings/LogoUploader";
+import { RubroGridPicker } from "@/components/settings/RubroGridPicker";
+import { getStoreRubroDefinition } from "@/lib/store/rubros";
 
 interface StoreSettings {
   name: string;
@@ -49,6 +52,7 @@ function ConfiguracionContent() {
   const [rubro, setRubro] = useState("fashion");
   const [primaryColor, setPrimaryColor] = useState("#E11D48");
   const [secondaryColor, setSecondaryColor] = useState("#1E1B4B");
+  const [logoFile, setLogoFile] = useState<File | null>(null);
   const [removePreview, setRemovePreview] = useState(false);
   const [loading, setLoading] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -81,6 +85,7 @@ function ConfiguracionContent() {
       setPrimaryColor(data.primaryColor ?? "#E11D48");
       setSecondaryColor(data.secondaryColor ?? "#1E1B4B");
       setRemovePreview(false);
+      setLogoFile(null);
     }
     await loadSocial();
   }, [loadSocial]);
@@ -121,6 +126,7 @@ function ConfiguracionContent() {
     formData.set("primaryColor", primaryColor);
     formData.set("secondaryColor", secondaryColor);
     if (removePreview) formData.set("removePreviewImage", "true");
+    if (logoFile) formData.set("logo", logoFile);
 
     const previousRubro = store?.rubro ?? "fashion";
 
@@ -143,6 +149,7 @@ function ConfiguracionContent() {
       setPrimaryColor(data.primaryColor ?? "#E11D48");
       setSecondaryColor(data.secondaryColor ?? "#1E1B4B");
       setRemovePreview(false);
+      setLogoFile(null);
       setSaved(true);
 
       if (previousRubro !== (data.rubro ?? "fashion")) {
@@ -209,8 +216,8 @@ function ConfiguracionContent() {
 
   if (!store) {
     return (
-      <main className="max-w-lg mx-auto px-6 py-10">
-        <div className="w-8 h-8 border-2 border-mm-neon border-t-transparent rounded-full animate-spin" />
+      <main className="mx-auto max-w-5xl px-6 py-10">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#2563EB] border-t-transparent" />
       </main>
     );
   }
@@ -222,20 +229,24 @@ function ConfiguracionContent() {
     store.previewImageUrl && !removePreview ? store.previewImageUrl : rubroDefaultImage;
 
   return (
-    <main className="max-w-lg mx-auto px-6 py-10">
+    <main className="mx-auto max-w-5xl px-6 py-10">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-white">Configuración</h1>
-        <p className="text-slate-400 mt-1">
-          Datos de tu tienda y conexión a redes para publicar ofertas.
+        <p className="text-xs font-semibold uppercase tracking-wider text-[#2563EB]">
+          Identidad de marca
+        </p>
+        <h1 className="cm-page-title mt-1">Configuración de tu tienda</h1>
+        <p className="cm-page-subtitle">
+          Define logo, colores y rubro. La IA usará esta información en cada publicación para
+          {store.mall.name}.
         </p>
       </div>
 
       {metaMessage && (
         <div
-          className={`mb-6 p-4 rounded-xl text-sm ${
+          className={`mb-6 rounded-xl border p-4 text-sm ${
             metaMessage.includes("conectad") || metaMessage.includes("¡")
-              ? "bg-emerald-500/15 text-emerald-300 border border-emerald-500/30"
-              : "bg-amber-500/15 text-amber-200 border border-amber-500/30"
+              ? "border-emerald-200 bg-emerald-50 text-emerald-800"
+              : "border-amber-200 bg-amber-50 text-amber-900"
           }`}
         >
           {metaMessage}
@@ -243,9 +254,9 @@ function ConfiguracionContent() {
       )}
 
       {pagePicker && (
-        <section className="mb-6 p-6 rounded-2xl border border-mm-neon/40 bg-mm-neon/10 space-y-3">
-          <h2 className="text-lg font-semibold text-white">Elige tu página de Facebook</h2>
-          <p className="text-xs text-slate-400">
+        <section className="cm-card mb-6 space-y-3 p-6 border-blue-200 bg-blue-50/30">
+          <h2 className="text-lg font-semibold text-[#0F2B5B]">Elige tu página de Facebook</h2>
+          <p className="text-xs text-slate-600">
             Selecciona la página vinculada a tu Instagram Business.
           </p>
           {pagePicker.pages.map((p) => (
@@ -254,10 +265,10 @@ function ConfiguracionContent() {
               type="button"
               disabled={picking}
               onClick={() => selectPage(p.pageId)}
-              className="w-full text-left p-4 rounded-xl border border-white/10 hover:border-mm-neon/50 bg-slate-900/80 transition"
+              className="w-full rounded-xl border border-slate-200 bg-white p-4 text-left transition hover:border-[#2563EB] hover:shadow-sm"
             >
-              <p className="font-medium text-white">{p.pageName}</p>
-              <p className="text-xs text-slate-500 mt-1">
+              <p className="font-medium text-[#0F2B5B]">{p.pageName}</p>
+              <p className="mt-1 text-xs text-slate-500">
                 {p.hasInstagram
                   ? `Instagram: @${p.igUsername ?? "vinculado"}`
                   : "Sin Instagram Business — puedes publicar solo en Facebook"}
@@ -267,188 +278,75 @@ function ConfiguracionContent() {
         </section>
       )}
 
-      <section className="mb-6 p-6 rounded-2xl border border-white/10 bg-white/5 space-y-4">
-        <h2 className="text-lg font-semibold text-white flex items-center gap-2">
-          <Link2 className="w-5 h-5 text-mm-neon" />
-          Redes sociales
-        </h2>
-        <p className="text-xs text-slate-500">{social?.redirectHint}</p>
-
-        <div className="p-4 rounded-xl bg-slate-900/80 border border-white/10 space-y-3">
-          <div className="flex items-center gap-2 text-sm text-white font-medium">
-            <Share2 className="w-4 h-4 text-mm-neon" />
-            Facebook + Instagram
-          </div>
-
-          {social?.meta.connected ? (
-            <div className="space-y-2">
-              <p className="text-sm text-emerald-300">Conectado</p>
-              <p className="text-xs text-slate-400">
-                Página: {social.meta.pageName}
-                {social.meta.igUsername && (
-                  <> · Instagram @{social.meta.igUsername}</>
-                )}
-              </p>
-              <button
-                type="button"
-                onClick={disconnectMeta}
-                className="flex items-center gap-2 text-xs text-red-400 hover:text-red-300"
-              >
-                <Unlink className="w-3.5 h-3.5" />
-                Desconectar
-              </button>
-            </div>
-          ) : social?.oauthAvailable ? (
-            <a
-              href="/api/meta/connect"
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 text-white text-sm font-medium hover:bg-blue-500"
-            >
-              <Share2 className="w-4 h-4" />
-              Conectar con Facebook
-            </a>
-          ) : (
-            <p className="text-xs text-amber-400">
-              OAuth no disponible — contacta al administrador del mall.
-            </p>
-          )}
-
-          {!social?.meta.connected && (
-            <div className="pt-2 border-t border-white/10">
-              <button
-                type="button"
-                onClick={() => setManualOpen((v) => !v)}
-                className="text-xs text-slate-400 hover:text-slate-300 underline"
-              >
-                {manualOpen
-                  ? "Ocultar conexión manual"
-                  : "OAuth no funciona — conectar página vigente manualmente"}
-              </button>
-
-              {manualOpen && (
-                <form onSubmit={connectManual} className="mt-3 space-y-3">
-                  <p className="text-xs text-slate-500">
-                    Temporal hasta App Review de Meta. Obtén el token en{" "}
-                    <a
-                      href="https://developers.facebook.com/tools/explorer/"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-mm-neon hover:underline"
-                    >
-                      Explorador Graph API
-                    </a>{" "}
-                    → Usuario o página → token de tu página.
-                  </p>
-                  <input
-                    value={manualPageId}
-                    onChange={(e) => setManualPageId(e.target.value)}
-                    placeholder="ID de página Facebook"
-                    className="w-full bg-mm-surface border border-white/10 rounded-lg px-3 py-2 text-sm text-white"
-                  />
-                  <input
-                    value={manualIgId}
-                    onChange={(e) => setManualIgId(e.target.value)}
-                    placeholder="ID cuenta Instagram (opcional si está vinculada)"
-                    className="w-full bg-mm-surface border border-white/10 rounded-lg px-3 py-2 text-sm text-white"
-                  />
-                  <textarea
-                    value={manualToken}
-                    onChange={(e) => setManualToken(e.target.value)}
-                    required
-                    rows={3}
-                    placeholder="Token de acceso de la página (EAAG...)"
-                    className="w-full bg-mm-surface border border-white/10 rounded-lg px-3 py-2 text-sm text-white font-mono"
-                  />
-                  <button
-                    type="submit"
-                    disabled={manualLoading || !manualToken.trim()}
-                    className="px-4 py-2 rounded-lg bg-mm-neon text-black text-sm font-medium hover:brightness-110 disabled:opacity-50"
-                  >
-                    {manualLoading ? "Validando..." : "Guardar conexión"}
-                  </button>
-                </form>
-              )}
-            </div>
-          )}
-        </div>
-
-        <div className="p-4 rounded-xl bg-slate-900/50 border border-dashed border-white/10 opacity-70">
-          <p className="text-sm text-slate-400 font-medium">TikTok</p>
-          <p className="text-xs text-slate-600 mt-1">{social?.tiktok.message}</p>
-        </div>
-      </section>
-
       <form onSubmit={handleSubmit} className="space-y-6">
-        <section className="p-6 rounded-2xl border border-white/10 bg-white/5 space-y-4">
-          <h2 className="text-lg font-semibold text-white">Nombre de la tienda</h2>
+        <section className="cm-card p-6">
+          <LogoUploader currentLogoUrl={store.logoUrl} onFileChange={setLogoFile} />
+        </section>
+
+        <section className="cm-card p-6 space-y-4">
+          <h2 className="text-lg font-semibold text-[#0F2B5B]">Nombre de la tienda</h2>
           <input
             name="name"
             value={name}
             onChange={(e) => setName(e.target.value)}
             required
             placeholder="Ej: Sneaker Zone"
-            className="w-full bg-slate-900 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-slate-600"
+            className="cm-input"
           />
-          <p className="text-xs text-slate-500">Aparece en tus publicaciones junto al mall {store.mall.name}</p>
+          <p className="text-xs text-slate-500">
+            Aparece en tus publicaciones junto al mall {store.mall.name}
+          </p>
         </section>
 
-        <section className="p-6 rounded-2xl border border-white/10 bg-white/5 space-y-4">
-          <h2 className="text-lg font-semibold text-white flex items-center gap-2">
-            <Store className="w-5 h-5 text-mm-neon" />
-            Rubro de tu tienda
-          </h2>
-          <p className="text-xs text-slate-500">
-            Define el tipo de negocio. Las muestras de arquetipos usarán fotos y textos acordes a este
-            rubro (sin gastar crédito de IA).
-          </p>
-          <select
-            name="rubro"
+        <section className="cm-card p-6">
+          <ColorPalettePicker
+            primaryColor={primaryColor}
+            secondaryColor={secondaryColor}
+            onPrimaryChange={setPrimaryColor}
+            onSecondaryChange={setSecondaryColor}
+          />
+          <input type="hidden" name="primaryColor" value={primaryColor} />
+          <input type="hidden" name="secondaryColor" value={secondaryColor} />
+        </section>
+
+        <section className="cm-card p-6 space-y-4">
+          <RubroGridPicker
             value={rubro}
-            onChange={(e) => {
-              setRubro(e.target.value);
+            onChange={(id) => {
+              setRubro(id);
               setRemovePreview(true);
               setSaved(false);
               setSaveError(null);
               setSaveNotice(null);
             }}
-            className={`w-full bg-slate-900 border rounded-xl px-4 py-3 text-white ${
-              rubroUnsaved ? "border-amber-400/60 ring-1 ring-amber-400/30" : "border-white/10"
-            }`}
-          >
-            {STORE_RUBROS.map((r) => (
-              <option key={r.id} value={r.id}>
-                {r.label}
-              </option>
-            ))}
-          </select>
+          />
+          <input type="hidden" name="rubro" value={rubro} />
           {rubroUnsaved && (
             <div
               role="status"
-              className="flex gap-3 p-4 rounded-xl bg-amber-500/15 border border-amber-500/35 text-amber-100"
+              className="flex gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4 text-amber-900"
             >
-              <AlertTriangle className="w-5 h-5 shrink-0 text-amber-300 mt-0.5" />
+              <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
               <div className="space-y-1 text-sm">
-                <p className="font-medium text-amber-50">
-                  Cambiaste el rubro a{" "}
-                  <strong>{getStoreRubroDefinition(rubro).label}</strong>
+                <p className="font-medium">
+                  Cambiaste el rubro a <strong>{getStoreRubroDefinition(rubro).label}</strong>
                 </p>
-                <p className="text-amber-200/90 text-xs leading-relaxed">
-                  La vista previa ya se actualizó aquí, pero{" "}
-                  <strong className="text-amber-100">debes pulsar Guardar</strong> para que las
-                  muestras de arquetipo en <em>Mis Ofertas</em> usen el nuevo rubro.
+                <p className="text-xs leading-relaxed text-amber-800">
+                  Pulsa <strong>Guardar cambios</strong> para aplicarlo en Mis Ofertas.
                 </p>
               </div>
             </div>
           )}
         </section>
 
-        <section className="p-6 rounded-2xl border border-white/10 bg-white/5 space-y-4">
-          <h2 className="text-lg font-semibold text-white">Foto de muestra (opcional)</h2>
-          <p className="text-xs text-slate-500">
-            Sube una foto de tu producto (ej. par de zapatillas si vendes calzado). Reemplaza la imagen
-            por defecto del rubro en las tarjetas de arquetipo. Sin costo de IA.
+        <section className="cm-card p-6 space-y-4">
+          <h2 className="text-lg font-semibold text-[#0F2B5B]">Foto de producto de referencia</h2>
+          <p className="text-sm text-slate-600">
+            Opcional. Sube una foto representativa de tu negocio para las vistas previas. Sin costo
+            de IA.
           </p>
-          <div className="flex items-center gap-6 flex-wrap">
-            <div className="relative w-28 h-28 rounded-xl overflow-hidden bg-slate-900 border border-white/10">
+          <div className="flex flex-wrap items-center gap-6">
+            <div className="relative h-32 w-32 overflow-hidden rounded-xl border border-slate-200 bg-slate-100">
               <Image
                 key={previewDisplayUrl}
                 src={previewDisplayUrl}
@@ -457,147 +355,160 @@ function ConfiguracionContent() {
                 className="object-cover"
               />
             </div>
-            <div className="space-y-2 text-xs text-slate-500">
-              <p>
+            <div className="space-y-2">
+              <p className="text-xs text-slate-500">
                 {store.previewImageUrl && !removePreview
                   ? "Foto personalizada activa"
-                  : `Vista previa del rubro: ${getStoreRubroDefinition(rubro).label}`}
+                  : `Imagen del rubro: ${getStoreRubroDefinition(rubro).label}`}
               </p>
               <input
                 name="previewImage"
                 type="file"
                 accept="image/*"
                 onChange={() => setRemovePreview(false)}
-                className="text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-mm-neon/20 file:text-mm-neon"
+                className="text-sm text-slate-600 file:mr-4 file:rounded-lg file:border-0 file:bg-blue-50 file:px-4 file:py-2 file:text-sm file:font-medium file:text-[#2563EB]"
               />
               {store.previewImageUrl && !removePreview && (
                 <button
                   type="button"
                   onClick={() => setRemovePreview(true)}
-                  className="block text-xs text-red-400 hover:text-red-300"
+                  className="block text-xs text-red-600 hover:text-red-700"
                 >
-                  Quitar foto personalizada (usar imagen del rubro)
+                  Quitar foto personalizada
                 </button>
               )}
             </div>
           </div>
         </section>
 
-        <section className="p-6 rounded-2xl border border-white/10 bg-white/5 space-y-4">
-          <h2 className="text-lg font-semibold text-white">Paleta de marca</h2>
-          <p className="text-xs text-slate-500">
-            La IA usa estos colores como acentos en tus publicaciones (textos y composición).
-          </p>
-          <div className="grid sm:grid-cols-2 gap-4">
-            <label className="block space-y-2">
-              <span className="text-sm text-slate-400">Color primario</span>
-              <div className="flex items-center gap-3">
-                <input
-                  type="color"
-                  name="primaryColor"
-                  value={primaryColor}
-                  onChange={(e) => setPrimaryColor(e.target.value)}
-                  className="w-12 h-10 rounded cursor-pointer bg-transparent"
-                />
-                <input
-                  type="text"
-                  value={primaryColor}
-                  onChange={(e) => setPrimaryColor(e.target.value)}
-                  className="flex-1 bg-slate-900 border border-white/10 rounded-lg px-3 py-2 text-white text-sm font-mono"
-                />
-              </div>
-            </label>
-            <label className="block space-y-2">
-              <span className="text-sm text-slate-400">Color secundario</span>
-              <div className="flex items-center gap-3">
-                <input
-                  type="color"
-                  name="secondaryColor"
-                  value={secondaryColor}
-                  onChange={(e) => setSecondaryColor(e.target.value)}
-                  className="w-12 h-10 rounded cursor-pointer bg-transparent"
-                />
-                <input
-                  type="text"
-                  value={secondaryColor}
-                  onChange={(e) => setSecondaryColor(e.target.value)}
-                  className="flex-1 bg-slate-900 border border-white/10 rounded-lg px-3 py-2 text-white text-sm font-mono"
-                />
-              </div>
-            </label>
-          </div>
-        </section>
+        <section className="cm-card space-y-4 p-6">
+          <h2 className="flex items-center gap-2 text-lg font-semibold text-[#0F2B5B]">
+            <Link2 className="h-5 w-5 text-[#2563EB]" />
+            Redes sociales
+          </h2>
+          <p className="text-xs text-slate-500">{social?.redirectHint}</p>
 
-        <section className="p-6 rounded-2xl border border-white/10 bg-white/5 space-y-4">
-          <h2 className="text-lg font-semibold text-white">Logo</h2>
-          <div className="flex items-center gap-6">
-            {store.logoUrl ? (
-              <div className="relative w-24 h-24 rounded-xl overflow-hidden bg-slate-900 border border-white/10">
-                <Image src={store.logoUrl} alt="Logo" fill className="object-contain p-2" />
+          <div className="space-y-3 rounded-xl border border-slate-200 bg-slate-50 p-4">
+            <div className="flex items-center gap-2 text-sm font-medium text-[#0F2B5B]">
+              <Share2 className="h-4 w-4 text-[#2563EB]" />
+              Facebook + Instagram
+            </div>
+
+            {social?.meta.connected ? (
+              <div className="space-y-2">
+                <p className="text-sm font-medium text-emerald-700">Conectado</p>
+                <p className="text-xs text-slate-600">
+                  Página: {social.meta.pageName}
+                  {social.meta.igUsername && <> · Instagram @{social.meta.igUsername}</>}
+                </p>
+                <button
+                  type="button"
+                  onClick={disconnectMeta}
+                  className="flex items-center gap-2 text-xs text-red-600 hover:text-red-700"
+                >
+                  <Unlink className="h-3.5 w-3.5" />
+                  Desconectar
+                </button>
               </div>
+            ) : social?.oauthAvailable ? (
+              <a
+                href="/api/meta/connect"
+                className="inline-flex items-center gap-2 rounded-lg bg-[#2563EB] px-4 py-2.5 text-sm font-medium text-white hover:bg-[#1D4ED8]"
+              >
+                <Share2 className="h-4 w-4" />
+                Conectar con Facebook
+              </a>
             ) : (
-              <div className="w-24 h-24 rounded-xl bg-slate-900 border border-dashed border-white/20 flex items-center justify-center text-slate-600 text-xs text-center px-2">
-                Sin logo
+              <p className="text-xs text-amber-700">
+                OAuth no disponible — contacta al administrador del mall.
+              </p>
+            )}
+
+            {!social?.meta.connected && (
+              <div className="border-t border-slate-200 pt-3">
+                <button
+                  type="button"
+                  onClick={() => setManualOpen((v) => !v)}
+                  className="text-xs text-slate-500 underline hover:text-slate-700"
+                >
+                  {manualOpen ? "Ocultar conexión manual" : "Conectar página manualmente"}
+                </button>
+
+                {manualOpen && (
+                  <form onSubmit={connectManual} className="mt-3 space-y-3">
+                    <input
+                      value={manualPageId}
+                      onChange={(e) => setManualPageId(e.target.value)}
+                      placeholder="ID de página Facebook"
+                      className="cm-input text-sm"
+                    />
+                    <input
+                      value={manualIgId}
+                      onChange={(e) => setManualIgId(e.target.value)}
+                      placeholder="ID cuenta Instagram (opcional)"
+                      className="cm-input text-sm"
+                    />
+                    <textarea
+                      value={manualToken}
+                      onChange={(e) => setManualToken(e.target.value)}
+                      required
+                      rows={3}
+                      placeholder="Token de acceso (EAAG...)"
+                      className="cm-input font-mono text-sm"
+                    />
+                    <button
+                      type="submit"
+                      disabled={manualLoading || !manualToken.trim()}
+                      className="cm-btn-primary disabled:opacity-50"
+                    >
+                      {manualLoading ? "Validando..." : "Guardar conexión"}
+                    </button>
+                  </form>
+                )}
               </div>
             )}
-            <input
-              name="logo"
-              type="file"
-              accept="image/*"
-              className="text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-mm-neon/20 file:text-mm-neon"
-            />
           </div>
-          <p className="text-xs text-slate-500">
-            Se superpone automáticamente en la esquina superior derecha de cada publicación.
-          </p>
+
+          <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-4 opacity-80">
+            <p className="text-sm font-medium text-slate-600">TikTok</p>
+            <p className="mt-1 text-xs text-slate-500">{social?.tiktok.message}</p>
+          </div>
         </section>
 
         {saveNotice && (
-          <div
-            role="status"
-            className="p-4 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-200 text-sm"
-          >
+          <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">
             {saveNotice}
           </div>
         )}
 
         {saveError && (
-          <div
-            role="alert"
-            className="flex gap-3 p-4 rounded-xl bg-red-500/15 border border-red-500/35 text-red-200 text-sm"
-          >
-            <AlertTriangle className="w-5 h-5 shrink-0 text-red-300" />
+          <div className="flex gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+            <AlertTriangle className="h-5 w-5 shrink-0" />
             <p>{saveError}</p>
           </div>
         )}
 
-        {rubroUnsaved && (
-          <p className="text-sm text-amber-300/90 flex items-center gap-2">
-            <AlertTriangle className="w-4 h-4 shrink-0" />
-            Tienes un cambio de rubro sin guardar.
-          </p>
-        )}
-        <button
-          type="submit"
-          disabled={loading}
-          className={`flex items-center gap-2 px-6 py-3 rounded-xl mm-btn-primary disabled:opacity-50 transition ${
-            rubroUnsaved ? "mm-glow-neon ring-2 ring-amber-400/50" : "mm-glow-neon"
-          }`}
-        >
-          <Save className="w-5 h-5" />
-          {loading
-            ? "Guardando..."
-            : saved && !rubroUnsaved
-              ? "¡Guardado!"
-              : rubroUnsaved
-                ? "Guardar rubro"
-                : "Guardar"}
-        </button>
-        {rubroUnsaved && (
-          <p className="text-xs text-slate-500">
-            Pulsa <strong className="text-amber-200/90">Guardar rubro</strong> para aplicar el cambio en Mis Ofertas.
-          </p>
-        )}
+        <div className="sticky bottom-4 z-10 flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white/95 p-4 shadow-lg backdrop-blur sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            {rubroUnsaved && (
+              <p className="flex items-center gap-2 text-sm text-amber-700">
+                <AlertTriangle className="h-4 w-4" />
+                Tienes cambios sin guardar
+              </p>
+            )}
+            {saved && !rubroUnsaved && (
+              <p className="text-sm text-emerald-700">Configuración guardada correctamente</p>
+            )}
+          </div>
+          <button
+            type="submit"
+            disabled={loading}
+            className="cm-btn-primary inline-flex items-center justify-center gap-2 px-8 py-3"
+          >
+            <Save className="h-5 w-5" />
+            {loading ? "Guardando..." : saved && !rubroUnsaved ? "¡Guardado!" : "Guardar cambios"}
+          </button>
+        </div>
       </form>
     </main>
   );
@@ -607,8 +518,8 @@ export default function ConfiguracionPage() {
   return (
     <Suspense
       fallback={
-        <main className="max-w-lg mx-auto px-6 py-10">
-          <div className="w-8 h-8 border-2 border-mm-neon border-t-transparent rounded-full animate-spin" />
+        <main className="mx-auto max-w-5xl px-6 py-10">
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#2563EB] border-t-transparent" />
         </main>
       }
     >

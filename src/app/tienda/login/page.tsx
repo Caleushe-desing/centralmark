@@ -3,7 +3,7 @@
 import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { Sparkles, Store } from "lucide-react";
+import { Building2, Store } from "lucide-react";
 
 function LoginForm() {
   const router = useRouter();
@@ -62,60 +62,57 @@ function LoginForm() {
   }
 
   return (
-    <div className="min-h-screen bg-mm-black flex items-center justify-center px-6">
+    <div className="cm-app-bg flex min-h-screen items-center justify-center px-6">
       <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <Link href="/" className="inline-flex items-center gap-2 mb-6">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-mm-neon to-mm-yellow flex items-center justify-center mm-glow-neon">
-              <Sparkles className="w-6 h-6 text-black" />
+        <div className="mb-8 text-center">
+          <Link href="/" className="mb-6 inline-flex items-center gap-2">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-[#0F2B5B] to-[#1E4A8C] shadow-sm">
+              <Building2 className="h-6 w-6 text-white" />
             </div>
           </Link>
-          <h1 className="text-2xl font-bold text-white">Acceso de Tienda</h1>
-          <p className="text-neutral-400 mt-2">Ingresa con tu usuario y contraseña</p>
+          <h1 className="text-2xl font-bold text-[#0F2B5B]">Acceso de Tienda</h1>
+          <p className="mt-2 text-slate-600">Ingresa con tu usuario y contraseña</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="mm-card p-8 space-y-5">
+        <form onSubmit={handleSubmit} className="cm-card space-y-5 p-8">
           <div>
-            <label className="block text-sm text-neutral-400 mb-1">Usuario</label>
+            <label className="mb-1 block text-sm text-slate-600">Usuario</label>
             <input
               name="username"
               required
               autoComplete="username"
               defaultValue={defaultUsername}
               placeholder="ej: sneakerzone"
-              className="mm-input"
+              className="cm-input"
             />
           </div>
           <div>
-            <label className="block text-sm text-neutral-400 mb-1">Contraseña</label>
+            <label className="mb-1 block text-sm text-slate-600">Contraseña</label>
             <input
               name="password"
               type="password"
               required
               autoComplete="current-password"
               defaultValue={defaultPassword}
-              className="mm-input"
+              className="cm-input"
             />
           </div>
 
-          {status && <p className="text-mm-yellow text-sm">{status}</p>}
-          {error && <p className="text-red-400 text-sm">{error}</p>}
+          {status && <p className="text-sm text-[#2563EB]">{status}</p>}
+          {error && <p className="text-sm text-red-600">{error}</p>}
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full flex items-center justify-center gap-2 py-3 rounded-xl mm-btn-primary disabled:opacity-50"
+            className="cm-btn-primary flex w-full items-center justify-center gap-2 py-3 disabled:opacity-50"
           >
-            <Store className="w-5 h-5" />
+            <Store className="h-5 w-5" />
             {loading ? "Ingresando..." : "Entrar a mi tienda"}
           </button>
         </form>
 
-        <p className="text-center text-xs text-neutral-600 mt-6">
-          Demo: sneakerzone / tienda123 — usa{" "}
-          <a href="http://localhost:3000/tienda/login" className="text-mm-neon/90 hover:underline">
-            localhost:3000
-          </a>
+        <p className="mt-6 text-center text-xs text-slate-500">
+          Demo: sneakerzone / tienda123
         </p>
       </div>
     </div>
@@ -126,7 +123,7 @@ export default function TiendaLoginPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-mm-black flex items-center justify-center text-neutral-400">
+        <div className="cm-app-bg flex min-h-screen items-center justify-center text-slate-600">
           Cargando…
         </div>
       }

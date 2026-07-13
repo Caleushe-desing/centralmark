@@ -69,17 +69,17 @@ export default function ProductosPage() {
   }
 
   return (
-    <main className="max-w-7xl mx-auto px-6 py-10">
-      <div className="flex items-center justify-between mb-8">
+    <main className="mx-auto max-w-7xl px-6 py-10">
+      <div className="mb-8 flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-white">Catálogo de Productos</h1>
-          <p className="text-slate-400 mt-1">
+          <h1 className="cm-page-title">Catálogo de Productos</h1>
+          <p className="cm-page-subtitle">
             Sube fotos de tus productos — quitamos el fondo automáticamente para las publicaciones
           </p>
         </div>
         <button
           onClick={() => setShowForm(!showForm)}
-          className="flex items-center gap-2 px-4 py-2 rounded-xl bg-mm-neon text-black text-sm hover:brightness-110 transition"
+          className="cm-btn-primary flex items-center gap-2"
         >
           <Plus className="w-4 h-4" />
           Nuevo producto
@@ -89,34 +89,25 @@ export default function ProductosPage() {
       {showForm && (
         <form
           onSubmit={handleSubmit}
-          className="mb-8 p-6 rounded-2xl border border-white/10 bg-white/5 space-y-4"
+          className="cm-card mb-8 space-y-4 p-6"
         >
-          <h2 className="text-lg font-semibold text-white">Agregar producto</h2>
-          <div className="grid sm:grid-cols-2 gap-4">
+          <h2 className="text-lg font-semibold text-[#0F2B5B]">Agregar producto</h2>
+          <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <label className="block text-sm text-slate-400 mb-1">Nombre *</label>
-              <input
-                name="name"
-                required
-                className="w-full bg-slate-900 border border-white/10 rounded-xl px-4 py-3 text-white"
-              />
+              <label className="mb-1 block text-sm text-slate-600">Nombre *</label>
+              <input name="name" required className="cm-input" />
             </div>
             <div>
-              <label className="block text-sm text-slate-400 mb-1">Categoría</label>
+              <label className="mb-1 block text-sm text-slate-600">Categoría</label>
               <input
                 name="category"
                 placeholder="Ej: Calzado, Ropa"
-                className="w-full bg-slate-900 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-slate-600"
+                className="cm-input"
               />
             </div>
             <div>
-              <label className="block text-sm text-slate-400 mb-1">Precio (opcional)</label>
-              <input
-                name="price"
-                type="number"
-                step="0.01"
-                className="w-full bg-slate-900 border border-white/10 rounded-xl px-4 py-3 text-white"
-              />
+              <label className="mb-1 block text-sm text-slate-600">Precio (opcional)</label>
+              <input name="price" type="number" step="0.01" className="cm-input" />
             </div>
             <div className="sm:col-span-2">
               <ProductPhotoInput
@@ -128,30 +119,22 @@ export default function ProductosPage() {
             </div>
           </div>
           <div>
-            <label className="block text-sm text-slate-400 mb-1">Descripción</label>
-            <textarea
-              name="description"
-              rows={2}
-              className="w-full bg-slate-900 border border-white/10 rounded-xl px-4 py-3 text-white resize-none"
-            />
+            <label className="mb-1 block text-sm text-slate-600">Descripción</label>
+            <textarea name="description" rows={2} className="cm-input resize-none" />
           </div>
           <p className="text-xs text-slate-500 flex items-center gap-1">
             <Scissors className="w-3.5 h-3.5" />
             El fondo se quita al instante al tomar o subir la foto
           </p>
-          {error && <p className="text-red-400 text-sm">{error}</p>}
+          {error && <p className="text-sm text-red-600">{error}</p>}
           <div className="flex gap-3">
-            <button
-              type="submit"
-              disabled={loading}
-              className="px-5 py-2 rounded-xl bg-mm-neon text-black text-sm hover:brightness-110 disabled:opacity-50"
-            >
+            <button type="submit" disabled={loading} className="cm-btn-primary disabled:opacity-50">
               {loading ? "Procesando imagen..." : "Guardar producto"}
             </button>
             <button
               type="button"
               onClick={() => setShowForm(false)}
-              className="px-5 py-2 rounded-xl border border-white/10 text-slate-400 text-sm hover:bg-white/5"
+              className="cm-btn-secondary"
             >
               Cancelar
             </button>
@@ -169,9 +152,9 @@ export default function ProductosPage() {
           {products.map((p) => (
             <div
               key={p.id}
-              className="rounded-2xl border border-white/10 bg-white/5 overflow-hidden group"
+              className="cm-card group overflow-hidden"
             >
-              <div className="relative aspect-square bg-slate-900">
+              <div className="relative aspect-square bg-slate-100">
                 <Image
                   src={p.imageNoBgUrl ?? p.imageUrl}
                   alt={p.name}
@@ -179,21 +162,21 @@ export default function ProductosPage() {
                   className="object-contain p-4"
                 />
                 {p.imageNoBgUrl && (
-                  <span className="absolute top-2 left-2 text-xs px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 flex items-center gap-1">
+                  <span className="absolute left-2 top-2 flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-xs text-emerald-700">
                     <Scissors className="w-3 h-3" />
                     Sin fondo
                   </span>
                 )}
               </div>
               <div className="p-4">
-                <h3 className="font-semibold text-white truncate">{p.name}</h3>
+                <h3 className="truncate font-semibold text-[#0F2B5B]">{p.name}</h3>
                 {p.category && <p className="text-xs text-slate-500">{p.category}</p>}
                 {p.price != null && (
-                  <p className="text-mm-neon font-medium mt-1">${p.price.toLocaleString("es-CL")}</p>
+                  <p className="mt-1 font-medium text-[#2563EB]">${p.price.toLocaleString("es-CL")}</p>
                 )}
                 <button
                   onClick={() => deleteProduct(p.id)}
-                  className="mt-3 flex items-center gap-1 text-xs text-red-400 hover:text-red-300 opacity-0 group-hover:opacity-100 transition"
+                  className="mt-3 flex items-center gap-1 text-xs text-red-600 opacity-0 transition hover:text-red-700 group-hover:opacity-100"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
                   Eliminar

@@ -170,7 +170,7 @@ export function CampaignStudio({ storeName, category, onApply }: CampaignStudioP
   const selectedVariant = campaign?.adVariants.find((v) => v.id === selectedVariantId);
 
   return (
-    <section className="mm-card p-6 mb-8 border-mm-yellow/20">
+    <section className="mm-card mb-8 border-blue-100 p-6">
       <button
         type="button"
         onClick={() => setExpanded((e) => !e)}
@@ -178,19 +178,19 @@ export function CampaignStudio({ storeName, category, onApply }: CampaignStudioP
       >
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-mm-yellow/30 to-mm-neon/20 flex items-center justify-center">
-            <Megaphone className="w-5 h-5 text-mm-yellow" />
+            <Megaphone className="w-5 h-5 text-[#2563EB]" />
           </div>
           <div>
-            <h2 className="text-lg font-semibold text-white">Campaña con IA (AIDA)</h2>
-            <p className="text-xs text-neutral-500">
+            <h2 className="text-lg font-semibold text-[#0F2B5B]">Campaña con IA (AIDA)</h2>
+            <p className="text-xs text-slate-500">
               Copy de agencia + prompts de imagen · modelo gpt-4o
             </p>
           </div>
         </div>
         {expanded ? (
-          <ChevronUp className="w-5 h-5 text-neutral-500" />
+          <ChevronUp className="w-5 h-5 text-slate-500" />
         ) : (
-          <ChevronDown className="w-5 h-5 text-neutral-500" />
+          <ChevronDown className="w-5 h-5 text-slate-500" />
         )}
       </button>
 
@@ -198,7 +198,7 @@ export function CampaignStudio({ storeName, category, onApply }: CampaignStudioP
         <div className="mt-6 space-y-6">
           <div className="grid md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm text-neutral-400 mb-1">Producto / servicio *</label>
+              <label className="block text-sm text-slate-600 mb-1">Producto / servicio *</label>
               <input
                 value={product}
                 onChange={(e) => setProduct(e.target.value)}
@@ -207,7 +207,7 @@ export function CampaignStudio({ storeName, category, onApply }: CampaignStudioP
               />
             </div>
             <div>
-              <label className="block text-sm text-neutral-400 mb-1">Público objetivo *</label>
+              <label className="block text-sm text-slate-600 mb-1">Público objetivo *</label>
               <input
                 value={targetAudience}
                 onChange={(e) => setTargetAudience(e.target.value)}
@@ -216,7 +216,7 @@ export function CampaignStudio({ storeName, category, onApply }: CampaignStudioP
               />
             </div>
             <div>
-              <label className="block text-sm text-neutral-400 mb-1">Tono de marca</label>
+              <label className="block text-sm text-slate-600 mb-1">Tono de marca</label>
               <select
                 value={brandTone}
                 onChange={(e) => setBrandTone(e.target.value)}
@@ -230,7 +230,7 @@ export function CampaignStudio({ storeName, category, onApply }: CampaignStudioP
               </select>
             </div>
             <div>
-              <label className="block text-sm text-neutral-400 mb-1">Plataforma</label>
+              <label className="block text-sm text-slate-600 mb-1">Plataforma</label>
               <select
                 value={platform}
                 onChange={(e) =>
@@ -244,7 +244,7 @@ export function CampaignStudio({ storeName, category, onApply }: CampaignStudioP
               </select>
             </div>
             <div className="md:col-span-2">
-              <label className="block text-sm text-neutral-400 mb-1">
+              <label className="block text-sm text-slate-600 mb-1">
                 Objetivos de campaña *
               </label>
               <textarea
@@ -286,8 +286,8 @@ export function CampaignStudio({ storeName, category, onApply }: CampaignStudioP
             <div className="space-y-4 border-t border-mm-neon/10 pt-6">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
-                  <h3 className="text-white font-semibold">{campaign.campaignName}</h3>
-                  <p className="text-xs text-neutral-500 mt-0.5">
+                  <h3 className="text-[#0F2B5B] font-semibold">{campaign.campaignName}</h3>
+                  <p className="text-xs text-slate-500 mt-0.5">
                     {campaign.metadata.model} · {(campaign.metadata.durationMs / 1000).toFixed(1)}s
                   </p>
                 </div>
@@ -295,7 +295,7 @@ export function CampaignStudio({ storeName, category, onApply }: CampaignStudioP
                   type="button"
                   onClick={applySelectedVariant}
                   disabled={!selectedVariant}
-                  className="px-4 py-2 rounded-xl bg-mm-neon text-black text-sm font-semibold hover:bg-mm-neon-dim disabled:opacity-50 flex items-center gap-2"
+                  className="cm-btn-primary flex items-center gap-2 px-4 py-2 text-sm disabled:opacity-50"
                 >
                   <Zap className="w-4 h-4" />
                   Usar en publicación
@@ -317,8 +317,8 @@ export function CampaignStudio({ storeName, category, onApply }: CampaignStudioP
                     onClick={() => setTab(id)}
                     className={`px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1.5 transition ${
                       tab === id
-                        ? "bg-mm-yellow/15 text-mm-yellow border border-mm-yellow/30"
-                        : "text-neutral-400 border border-white/10 hover:border-mm-neon/20"
+                        ? "bg-blue-50 border border-blue-200"
+                        : "text-slate-600 border border-slate-200 hover:border-mm-neon/20"
                     }`}
                   >
                     <Icon className="w-3.5 h-3.5" />
@@ -344,11 +344,11 @@ export function CampaignStudio({ storeName, category, onApply }: CampaignStudioP
                       className={`text-left p-4 rounded-xl border transition cursor-pointer ${
                         selectedVariantId === variant.id
                           ? "border-mm-neon/50 bg-mm-neon/5 mm-glow-neon"
-                          : "border-white/10 hover:border-mm-neon/25 bg-mm-surface/50"
+                          : "border-slate-200 hover:border-mm-neon/25 bg-slate-50/50"
                       }`}
                     >
                       <div className="flex items-start justify-between gap-2">
-                        <span className="text-[10px] uppercase tracking-wide text-mm-yellow font-medium">
+                        <span className="text-[10px] uppercase tracking-wide text-[#2563EB] font-medium">
                           {variant.platform} · {variant.id}
                         </span>
                         <button
@@ -357,14 +357,14 @@ export function CampaignStudio({ storeName, category, onApply }: CampaignStudioP
                             e.stopPropagation();
                             copyText(`${variant.hook}\n\n${variant.body}\n\n${variant.cta}`);
                           }}
-                          className="text-neutral-500 hover:text-mm-neon p-1"
+                          className="text-slate-500 hover:text-mm-neon p-1"
                           title="Copiar"
                         >
                           <Copy className="w-3.5 h-3.5" />
                         </button>
                       </div>
-                      <p className="text-white font-semibold mt-2">{variant.hook}</p>
-                      <p className="text-neutral-300 text-sm mt-2 whitespace-pre-wrap leading-relaxed">
+                      <p className="text-[#0F2B5B] font-semibold mt-2">{variant.hook}</p>
+                      <p className="text-slate-700 text-sm mt-2 whitespace-pre-wrap leading-relaxed">
                         {variant.body}
                       </p>
                       <p className="text-mm-neon text-sm font-medium mt-3">{variant.cta}</p>
@@ -378,26 +378,26 @@ export function CampaignStudio({ storeName, category, onApply }: CampaignStudioP
                   <AidaBlock
                     title="Atención — Hooks"
                     items={campaign.aida.attention.hooks}
-                    color="text-mm-yellow"
+                    color="text-[#2563EB]"
                   />
-                  <div className="p-4 rounded-xl bg-mm-surface border border-white/10">
+                  <div className="p-4 rounded-xl bg-slate-50 border border-slate-200">
                     <p className="text-mm-neon text-xs font-semibold uppercase mb-2">Interés</p>
-                    <p className="text-neutral-200 leading-relaxed">{campaign.aida.interest.body}</p>
-                    <ul className="mt-3 space-y-1 text-neutral-400">
+                    <p className="text-slate-800 leading-relaxed">{campaign.aida.interest.body}</p>
+                    <ul className="mt-3 space-y-1 text-slate-600">
                       {campaign.aida.interest.keyPoints.map((p) => (
                         <li key={p}>• {p}</li>
                       ))}
                     </ul>
                   </div>
-                  <div className="p-4 rounded-xl bg-mm-surface border border-white/10">
+                  <div className="p-4 rounded-xl bg-slate-50 border border-slate-200">
                     <p className="text-amber-400 text-xs font-semibold uppercase mb-2">Deseo</p>
-                    <ul className="space-y-1 text-neutral-300">
+                    <ul className="space-y-1 text-slate-700">
                       {campaign.aida.desire.emotionalTriggers.map((t) => (
                         <li key={t}>• {t}</li>
                       ))}
                     </ul>
                     {campaign.aida.desire.socialProof && (
-                      <p className="text-neutral-500 text-xs mt-3 italic">
+                      <p className="text-slate-500 text-xs mt-3 italic">
                         {campaign.aida.desire.socialProof}
                       </p>
                     )}
@@ -411,22 +411,22 @@ export function CampaignStudio({ storeName, category, onApply }: CampaignStudioP
                   {campaign.imagePrompts.map((img) => (
                     <div
                       key={img.id}
-                      className="p-4 rounded-xl bg-mm-surface border border-white/10"
+                      className="p-4 rounded-xl bg-slate-50 border border-slate-200"
                     >
                       <div className="flex items-center justify-between gap-2 mb-2">
-                        <p className="text-white font-medium">{img.title}</p>
+                        <p className="text-[#0F2B5B] font-medium">{img.title}</p>
                         <button
                           type="button"
                           onClick={() => copyText(img.prompt)}
-                          className="text-neutral-500 hover:text-mm-neon p-1"
+                          className="text-slate-500 hover:text-mm-neon p-1"
                         >
                           <Copy className="w-3.5 h-3.5" />
                         </button>
                       </div>
-                      <p className="text-xs text-neutral-500 mb-2">
+                      <p className="text-xs text-slate-500 mb-2">
                         {img.style} · {img.mood} · {img.aspectRatio}
                       </p>
-                      <p className="text-sm text-neutral-300 leading-relaxed font-mono text-[13px]">
+                      <p className="text-sm text-slate-700 leading-relaxed font-mono text-[13px]">
                         {img.prompt}
                       </p>
                       <p className="text-xs text-red-400/70 mt-2">Avoid: {img.negativePrompt}</p>
@@ -435,7 +435,7 @@ export function CampaignStudio({ storeName, category, onApply }: CampaignStudioP
                           type="button"
                           disabled={imageLoadingId !== null}
                           onClick={() => generateHdImage(img.id, img.prompt)}
-                          className="px-3 py-1.5 rounded-lg text-xs font-medium bg-mm-yellow/15 text-mm-yellow border border-mm-yellow/30 hover:bg-mm-yellow/25 disabled:opacity-50 flex items-center gap-1.5"
+                          className="px-3 py-1.5 rounded-lg text-xs font-medium bg-blue-50 border border-blue-200 hover:bg-mm-yellow/25 disabled:opacity-50 flex items-center gap-1.5"
                         >
                           {imageLoadingId === img.id ? (
                             <>
@@ -451,17 +451,17 @@ export function CampaignStudio({ storeName, category, onApply }: CampaignStudioP
                         </button>
                       </div>
                       {generatedImages[img.id] && (
-                        <div className="mt-4 space-y-2 border-t border-white/10 pt-4">
+                        <div className="mt-4 space-y-2 border-t border-slate-200 pt-4">
                           <img
                             src={generatedImages[img.id].imageUrl}
                             alt={img.title}
                             className="w-full max-w-sm rounded-xl border border-mm-neon/20"
                           />
                           <details className="text-xs">
-                            <summary className="text-neutral-500 cursor-pointer hover:text-mm-neon">
+                            <summary className="text-slate-500 cursor-pointer hover:text-mm-neon">
                               Prompt final (auditoría)
                             </summary>
-                            <p className="mt-2 text-neutral-400 font-mono leading-relaxed whitespace-pre-wrap">
+                            <p className="mt-2 text-slate-600 font-mono leading-relaxed whitespace-pre-wrap">
                               {generatedImages[img.id].revisedPrompt}
                             </p>
                           </details>
@@ -473,7 +473,7 @@ export function CampaignStudio({ storeName, category, onApply }: CampaignStudioP
               )}
 
               {tab === "hashtags" && (
-                <div className="p-4 rounded-xl bg-mm-surface border border-white/10">
+                <div className="p-4 rounded-xl bg-slate-50 border border-slate-200">
                   <div className="flex flex-wrap gap-2">
                     {campaign.hashtags.map((tag) => (
                       <span
@@ -491,7 +491,7 @@ export function CampaignStudio({ storeName, category, onApply }: CampaignStudioP
                         campaign.hashtags.map((h) => `#${h.replace(/^#/, "")}`).join(" ")
                       )
                     }
-                    className="mt-4 text-xs text-neutral-400 hover:text-mm-yellow flex items-center gap-1"
+                    className="mt-4 text-xs text-slate-600 hover:text-[#2563EB] flex items-center gap-1"
                   >
                     <Copy className="w-3 h-3" />
                     Copiar todos
@@ -516,9 +516,9 @@ function AidaBlock({
   color: string;
 }) {
   return (
-    <div className="p-4 rounded-xl bg-mm-surface border border-white/10">
+    <div className="p-4 rounded-xl bg-slate-50 border border-slate-200">
       <p className={`text-xs font-semibold uppercase mb-2 ${color}`}>{title}</p>
-      <ul className="space-y-2 text-neutral-200">
+      <ul className="space-y-2 text-slate-800">
         {items.map((item) => (
           <li key={item} className="leading-snug">
             {item}

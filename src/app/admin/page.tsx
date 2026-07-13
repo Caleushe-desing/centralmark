@@ -47,13 +47,13 @@ export default function AdminPage() {
     : [];
 
   return (
-    <div className="min-h-screen bg-mm-black">
+    <div className="cm-app-bg">
       <Navbar />
-      <main className="max-w-7xl mx-auto px-6 py-10">
+      <main className="mx-auto max-w-7xl px-6 py-10">
         <div className="mb-8 flex items-start justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-white">Panel Admin del Mall</h1>
-            <p className="text-slate-400 mt-1">
+            <h1 className="cm-page-title">Panel Admin del Mall</h1>
+            <p className="cm-page-subtitle">
               Aprueba ofertas y publícalas en las redes del mall
             </p>
           </div>
@@ -62,23 +62,23 @@ export default function AdminPage() {
               await fetch("/api/auth/admin/logout", { method: "POST" });
               window.location.href = "/admin/login";
             }}
-            className="text-sm text-slate-400 hover:text-white px-3 py-2 rounded-lg hover:bg-white/5"
+            className="rounded-lg px-3 py-2 text-sm text-slate-600 transition hover:bg-slate-100 hover:text-[#0F2B5B]"
           >
             Cerrar sesión
           </button>
         </div>
 
         {config && (
-          <div className="mb-8 p-4 rounded-xl border border-white/10 bg-white/5">
-            <h3 className="text-sm font-medium text-slate-300 mb-3">Estado de integraciones</h3>
+          <div className="mb-8 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+            <h3 className="mb-3 text-sm font-medium text-[#0F2B5B]">Estado de integraciones</h3>
             <div className="flex flex-wrap gap-3">
               {configItems.map((item) => (
                 <span
                   key={item.label}
                   className={`flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full ${
                     item.ok
-                      ? "bg-emerald-500/20 text-emerald-300"
-                      : "bg-amber-500/20 text-amber-300"
+                      ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                      : "bg-amber-50 text-amber-800 border border-amber-200"
                   }`}
                 >
                   {item.ok ? (
@@ -98,10 +98,10 @@ export default function AdminPage() {
             <button
               key={s}
               onClick={() => setFilter(s)}
-              className={`px-4 py-2 rounded-lg text-sm transition ${
+              className={`rounded-lg px-4 py-2 text-sm transition ${
                 filter === s
-                  ? "bg-mm-neon text-black font-semibold"
-                  : "text-slate-400 hover:bg-white/5"
+                  ? "bg-[#0F2B5B] text-white font-semibold shadow-sm"
+                  : "text-slate-600 hover:bg-slate-100 border border-transparent hover:border-slate-200"
               }`}
             >
               {s === "PENDING" && "Pendientes"}

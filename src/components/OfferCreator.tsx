@@ -218,13 +218,13 @@ export function OfferCreator({
         {aiConfigured === false && (
           <div
             role="alert"
-            className="flex gap-3 p-4 rounded-xl bg-amber-500/15 border border-amber-500/35 text-amber-100 text-sm"
+            className="flex gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900"
           >
-            <AlertTriangle className="w-5 h-5 shrink-0 text-amber-300 mt-0.5" />
+            <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
             <div className="space-y-1">
-              <p className="font-medium text-amber-50">Generación con IA no disponible</p>
-              <p className="text-xs text-amber-200/90 leading-relaxed">
-                Configura <code className="text-amber-100">OPENAI_API_KEY</code> en el servidor para
+              <p className="font-medium text-amber-900">Generación con IA no disponible</p>
+              <p className="text-xs leading-relaxed text-amber-800">
+                Configura <code className="text-amber-900">OPENAI_API_KEY</code> en el servidor para
                 crear publicaciones con IA.
               </p>
             </div>
@@ -232,19 +232,21 @@ export function OfferCreator({
         )}
 
         <div className="flex items-center gap-2">
-          <Sparkles className="w-5 h-5 text-mm-neon" />
-          <h2 className="text-lg font-semibold text-white">Nueva publicación</h2>
+          <Sparkles className="w-5 h-5 text-[#2563EB]" />
+          <h2 className="text-lg font-semibold text-[#0F2B5B]">Nueva publicación</h2>
         </div>
 
-        <div className="grid grid-cols-2 gap-2 p-1 rounded-xl bg-mm-surface border border-mm-neon/10">
+        <div className="grid grid-cols-2 gap-2 rounded-xl border border-slate-200 bg-slate-50 p-1">
           <button
             type="button"
             onClick={() => {
               setImageSource("ai");
               resetPreview();
             }}
-            className={`flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium transition ${
-              imageSource === "ai" ? "bg-mm-neon text-black" : "text-neutral-400 hover:text-white"
+            className={`flex items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-medium transition ${
+              imageSource === "ai"
+                ? "bg-[#0F2B5B] text-white shadow-sm"
+                : "text-slate-600 hover:text-[#0F2B5B]"
             }`}
           >
             <Sparkles className="w-4 h-4" />
@@ -256,10 +258,10 @@ export function OfferCreator({
               setImageSource("upload");
               resetPreview();
             }}
-            className={`flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium transition ${
+            className={`flex items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-medium transition ${
               imageSource === "upload"
-                ? "bg-mm-neon text-black"
-                : "text-neutral-400 hover:text-white"
+                ? "bg-[#0F2B5B] text-white shadow-sm"
+                : "text-slate-600 hover:text-[#0F2B5B]"
             }`}
           >
             <Upload className="w-4 h-4" />
@@ -284,24 +286,24 @@ export function OfferCreator({
                 e.preventDefault();
                 handleFileSelect(e.dataTransfer.files?.[0] ?? null);
               }}
-              className="w-full py-6 rounded-xl border-2 border-dashed border-white/15 hover:border-mm-neon/50 hover:bg-mm-neon/5 transition flex flex-col items-center gap-2"
+              className="flex w-full flex-col items-center gap-2 rounded-xl border-2 border-dashed border-slate-300 py-6 transition hover:border-[#2563EB] hover:bg-blue-50/50"
             >
-              <ImagePlus className="w-7 h-7 text-mm-neon" />
-              <span className="text-sm text-white font-medium">
+              <ImagePlus className="h-7 w-7 text-[#2563EB]" />
+              <span className="text-sm font-medium text-[#0F2B5B]">
                 {uploadedFile ? uploadedFile.name : "Arrastra o elige tu foto de producto"}
               </span>
-              <span className="text-xs text-neutral-500">Sin costo de imagen IA · JPG, PNG o WebP</span>
+              <span className="text-xs text-slate-500">Sin costo de imagen IA · JPG, PNG o WebP</span>
             </button>
           </>
         )}
 
         <div>
-          <label className="block text-sm text-neutral-400 mb-1">
+          <label className="mb-1 block text-sm text-slate-600">
             Describe tu publicación *
           </label>
           {campaignImagePrompt && (
-            <p className="text-xs text-mm-yellow/90 bg-mm-yellow/5 border border-mm-yellow/20 rounded-lg px-3 py-2 mb-2 leading-relaxed">
-              <strong className="text-mm-yellow">Sugerencia de campaña:</strong>{" "}
+            <p className="mb-2 rounded-lg border border-blue-100 bg-blue-50 px-3 py-2 text-xs leading-relaxed text-blue-900">
+              <strong className="text-[#0F2B5B]">Sugerencia de campaña:</strong>{" "}
               {campaignImagePrompt.slice(0, 220)}
               {campaignImagePrompt.length > 220 ? "…" : ""}
             </p>
@@ -315,22 +317,22 @@ export function OfferCreator({
             }}
             rows={6}
             placeholder={PUBLICATION_INSTRUCTION_PLACEHOLDER}
-            className="w-full bg-mm-surface border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-neutral-600 resize-none"
+            className="cm-input resize-none"
           />
-          <p className="text-xs text-neutral-500 mt-1.5 leading-relaxed">{PUBLICATION_INSTRUCTION_HINT}</p>
+          <p className="mt-1.5 text-xs leading-relaxed text-slate-500">{PUBLICATION_INSTRUCTION_HINT}</p>
         </div>
 
         {storeBranding && (
-          <div className="flex items-center gap-3 text-xs text-neutral-500">
+          <div className="flex items-center gap-3 text-xs text-slate-500">
             <span
-              className="w-4 h-4 rounded-full border border-white/20 shrink-0"
+              className="h-4 w-4 shrink-0 rounded-full border border-slate-200"
               style={{ backgroundColor: brandSwatch }}
               aria-hidden
             />
             <span>
               La IA usará los colores de tu marca
               {storeBranding.logoUrl ? " y tu logo" : ""}. Configúralos en{" "}
-              <a href="/tienda/configuracion" className="text-mm-neon/80 underline">
+              <a href="/tienda/configuracion" className="text-[#2563EB] underline">
                 Configuración
               </a>
               .
@@ -342,52 +344,52 @@ export function OfferCreator({
           type="button"
           disabled={previewLoading || loading || aiConfigured === false}
           onClick={handleGenerate}
-          className="w-full py-2.5 rounded-xl bg-mm-neon/90 text-black text-sm font-medium hover:bg-mm-neon-dim disabled:opacity-50"
+          className="cm-btn-primary w-full py-2.5 text-sm disabled:opacity-50"
         >
           {previewLoading ? "Creando publicación…" : "✨ Generar publicación"}
         </button>
 
         {designPreview && (
-          <div className="space-y-4 pt-2 border-t border-white/10">
+          <div className="space-y-4 border-t border-slate-200 pt-2">
             <div>
-              <label className="block text-sm text-neutral-400 mb-1">
+              <label className="mb-1 block text-sm text-slate-600">
                 Texto para Instagram / Facebook (fuera de la foto) *
               </label>
               <CaptionEditor
                 value={caption}
                 onChange={setCaption}
                 placeholder="La IA generará un caption profesional en español…"
-                className="w-full bg-mm-surface border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-neutral-600 resize-none"
+                className="cm-input resize-none"
               />
-              <p className="text-xs text-neutral-600 mt-1">
+              <p className="mt-1 text-xs text-slate-500">
                 Generado por IA en español. Puedes editarlo antes de publicar.
               </p>
             </div>
 
             <div>
-              <label className="block text-sm text-neutral-400 mb-1">Hashtags *</label>
+              <label className="mb-1 block text-sm text-slate-600">Hashtags *</label>
               <CensoredInput
                 name="offerHashtags"
                 value={offerHashtags}
                 onChange={setOfferHashtags}
                 placeholder="#Oferta #TuTienda"
-                className="w-full bg-mm-surface border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-neutral-600"
+                className="cm-input"
               />
               {mallHashtags && (
-                <p className="text-xs text-neutral-500 mt-1">
-                  + mall al publicar: <span className="text-mm-neon/70">{mallHashtags}</span>
+                <p className="mt-1 text-xs text-slate-500">
+                  + mall al publicar: <span className="text-[#2563EB]">{mallHashtags}</span>
                 </p>
               )}
             </div>
           </div>
         )}
 
-        {error && <p className="text-red-400 text-sm whitespace-pre-wrap">{error}</p>}
+        {error && <p className="whitespace-pre-wrap text-sm text-red-600">{error}</p>}
 
         {storeBranding && !storeBranding.logoUrl && (
-          <p className="text-xs text-amber-400/80">
+          <p className="text-xs text-amber-700">
             Sube el logo en{" "}
-            <a href="/tienda/configuracion" className="underline hover:text-amber-300">
+            <a href="/tienda/configuracion" className="underline hover:text-amber-900">
               Configuración
             </a>{" "}
             para que aparezca en tus publicaciones.
@@ -397,7 +399,7 @@ export function OfferCreator({
         <button
           type="submit"
           disabled={loading || previewLoading || !exportImage}
-          className="w-full py-3 rounded-xl mm-btn-primary mm-glow-neon disabled:opacity-50"
+          className="cm-btn-primary mm-glow-neon w-full py-3 disabled:opacity-50"
         >
           {loading ? "Publicando…" : "Publicar en vitrina"}
         </button>
@@ -415,7 +417,7 @@ export function OfferCreator({
           onLoadingChange={handlePreviewLoadingChange}
         />
         {!designPreview && !previewLoading && (
-          <p className="text-neutral-600 text-sm text-center py-12">
+          <p className="py-12 text-center text-sm text-slate-500">
             Escribe tu instrucción y pulsa Generar. La vista previa aparecerá aquí.
           </p>
         )}

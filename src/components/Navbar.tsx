@@ -3,40 +3,46 @@ import { Building2, Store, Shield, Monitor } from "lucide-react";
 
 export function Navbar() {
   return (
-    <nav className="border-b border-mm-neon/10 bg-mm-black/90 backdrop-blur-md sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-2">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-mm-neon to-mm-yellow flex items-center justify-center mm-glow-neon">
-            <Building2 className="w-5 h-5 text-black" />
+    <header className="sticky top-0 z-50 border-b border-slate-200/80 bg-white/95 backdrop-blur-md">
+      <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
+        <Link href="/" className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-[#0F2B5B] to-[#1E4A8C] shadow-sm">
+            <Building2 className="h-5 w-5 text-white" strokeWidth={2.25} />
           </div>
-          <span className="text-xl font-bold text-white">
-            Central<span className="text-mm-neon">Mark</span>
-          </span>
+          <div className="leading-tight">
+            <span className="block text-lg font-bold tracking-tight text-[#0F2B5B]">
+              Central<span className="text-[#2563EB]">Mark</span>
+            </span>
+            <span className="hidden text-[11px] font-medium uppercase tracking-[0.14em] text-slate-500 sm:block">
+              Administración del mall
+            </span>
+          </div>
         </Link>
-        <div className="flex items-center gap-2">
+
+        <nav className="flex items-center gap-1 sm:gap-2">
           <Link
             href="/tienda"
-            className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm text-neutral-400 hover:text-mm-neon hover:bg-mm-neon/5 transition"
+            className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-100 hover:text-[#0F2B5B]"
           >
-            <Store className="w-4 h-4" />
-            Tienda
+            <Store className="h-4 w-4" />
+            <span className="hidden sm:inline">Tiendas</span>
           </Link>
           <Link
             href="/admin"
-            className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm text-neutral-400 hover:text-white hover:bg-white/5 transition"
+            className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-[#0F2B5B] bg-blue-50 border border-blue-100"
           >
-            <Shield className="w-4 h-4" />
-            Admin
+            <Shield className="h-4 w-4" />
+            <span className="hidden sm:inline">Admin</span>
           </Link>
           <Link
             href="/vitrina"
-            className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm bg-mm-neon text-black font-semibold hover:brightness-110 transition mm-glow-neon"
+            className="ml-1 rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-[#0F2B5B] transition hover:bg-slate-50"
           >
-            <Monitor className="w-4 h-4" />
-            Vitrina
+            <Monitor className="h-4 w-4 inline sm:mr-1.5" />
+            <span className="hidden sm:inline">Vitrina</span>
           </Link>
-        </div>
+        </nav>
       </div>
-    </nav>
+    </header>
   );
 }

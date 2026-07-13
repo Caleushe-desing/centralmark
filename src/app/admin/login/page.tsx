@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Sparkles, Shield } from "lucide-react";
+import { Building2, Shield } from "lucide-react";
 
 export default function AdminLoginPage() {
   const router = useRouter();
@@ -15,7 +15,7 @@ export default function AdminLoginPage() {
     setLoading(true);
     setError(null);
 
-    const password = (new FormData(e.currentTarget).get("password") as string);
+    const password = new FormData(e.currentTarget).get("password") as string;
 
     const res = await fetch("/api/auth/admin/login", {
       method: "POST",
@@ -35,37 +35,37 @@ export default function AdminLoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-mm-black flex items-center justify-center px-6">
+    <div className="cm-app-bg flex min-h-screen items-center justify-center px-6">
       <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <Link href="/" className="inline-flex items-center gap-2 mb-6">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-mm-neon to-mm-yellow flex items-center justify-center mm-glow-neon">
-              <Sparkles className="w-6 h-6 text-black" />
+        <div className="mb-8 text-center">
+          <Link href="/" className="mb-6 inline-flex items-center gap-2">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-[#0F2B5B] to-[#1E4A8C] shadow-sm">
+              <Building2 className="h-6 w-6 text-white" />
             </div>
           </Link>
-          <h1 className="text-2xl font-bold text-white">Panel Admin del Mall</h1>
-          <p className="text-neutral-400 mt-2">Acceso restringido al administrador</p>
+          <h1 className="text-2xl font-bold text-[#0F2B5B]">Panel Admin del Mall</h1>
+          <p className="mt-2 text-slate-600">Acceso restringido al administrador</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="mm-card p-8 space-y-5">
+        <form onSubmit={handleSubmit} className="cm-card space-y-5 p-8">
           <div>
-            <label className="block text-sm text-neutral-400 mb-1">Contraseña de administrador</label>
-            <input name="password" type="password" required className="mm-input" />
+            <label className="mb-1 block text-sm text-slate-600">Contraseña de administrador</label>
+            <input name="password" type="password" required className="cm-input" />
           </div>
 
-          {error && <p className="text-red-400 text-sm">{error}</p>}
+          {error && <p className="text-sm text-red-600">{error}</p>}
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full flex items-center justify-center gap-2 py-3 rounded-xl mm-btn-primary disabled:opacity-50"
+            className="cm-btn-primary flex w-full items-center justify-center gap-2 py-3 disabled:opacity-50"
           >
-            <Shield className="w-5 h-5" />
+            <Shield className="h-5 w-5" />
             {loading ? "Verificando..." : "Entrar al panel"}
           </button>
         </form>
 
-        <p className="text-center text-xs text-neutral-600 mt-6">Demo: admin2026</p>
+        <p className="mt-6 text-center text-xs text-slate-500">Demo: admin2026</p>
       </div>
     </div>
   );

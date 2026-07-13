@@ -7,14 +7,23 @@ import {
   type CompositionLayout,
   type VisualArchetype,
 } from "../composition/rules";
-import { buildProAdUserPrompt, getDesignerSystemPrompt } from "./prompts";
+import {
+  buildDesignCorrectionPrompt,
+  buildProAdUserPrompt,
+  getDesignerSystemPrompt,
+} from "./prompts";
+import { buildDeterministicDesignV2 } from "./design-fallback";
 import { clampImageConcept } from "./clamp-concept";
+import { parseBriefFacts, type BriefFacts } from "../brief-facts";
+import { validateDesignOutput, type DesignValidationError } from "../design-output-validator";
 import { getArchetypeDefinition, parseArchetype } from "../archetypes";
 import {
-  proAdDesignSchema,
+  designDocumentV2Schema,
+  flattenToLegacyDesign,
   proAdInputSchema,
-  PRO_AD_JSON_SCHEMA,
+  DESIGN_DOCUMENT_V2_JSON_SCHEMA,
   type DesignDocument,
+  type DesignDocumentV2,
   type DesignGenerationResult,
   type ProAdInput,
 } from "../schemas";
@@ -31,8 +40,66 @@ function trimHook(hook: string, maxWords: number): string {
   return words.length > maxWords ? words.slice(0, maxWords).join(" ") : hook.trim();
 }
 
-function sanitizeDesign(raw: DesignDocument, archetype: VisualArchetype): DesignDocument {
+function getModelTemperature(archetype: VisualArchetype): number {
+  const temperatures: Record<VisualArchetype, number> = {
+    drop: 0.65,
+    promo: 0.6,
+    spotlight: 0.55,
+    editorial: 0.6,
+  };
+  return temperatures[archetype];
+}
+
+function enforceArchetypeV2(design: DesignDocumentV2, archetype: VisualArchetype): DesignDocumentV2 {
+  const def = getArchetypeDefinition(archetype);
+  const layout = getLayoutById(design.composition.layoutId);
+  const layoutId =
+    layout && layout.archetype === archetype ? design.composition.layoutId : def.defaultLayoutId;
+
+  return {
+    ...design,
+    composition: {
+      category: archetype,
+      layoutId,
+    },
+  };
+}
+
+function sanitizeDesignV2(raw: DesignDocumentV2, archetype: VisualArchetype): DesignDocumentV2 {
   const maxHookWords = getArchetypeDefinition(archetype).maxHookWords;
+  let hook = raw.textOnImage.hook.trim();
+  if (countWords(hook) > maxHookWords) {
+    hook = trimHook(hook, maxHookWords);
+  }
+
+  return enforceArchetypeV2(
+    {
+      ...raw,
+      visualConcept: {
+        imagePrompt: clampImageConcept(raw.visualConcept.imagePrompt.trim()),
+      },
+      textOnImage: {
+        productName: raw.textOnImage.productName.trim(),
+        badge: raw.textOnImage.badge.trim(),
+        hook,
+        subtext: raw.textOnImage.subtext.trim(),
+        cta: raw.textOnImage.cta.trim(),
+      },
+      textExternal: {
+        caption: raw.textExternal.caption.trim(),
+      },
+    },
+    archetype
+  );
+}
+
+function sanitizeLegacyDesign(raw: DesignDocument, archetype: VisualArchetype): DesignDocument {
+  const maxHookWords = getArchetypeDefinition(archetype).maxHookWords;
+  const def = getArchetypeDefinition(archetype);
+  const layout = getLayoutById(raw.compositionLayoutId);
+  const layoutId =
+    layout && layout.archetype === archetype ? raw.compositionLayoutId : def.defaultLayoutId;
+
   return {
     ...raw,
     imagePrompt: clampImageConcept(raw.imagePrompt.trim()),
@@ -41,43 +108,49 @@ function sanitizeDesign(raw: DesignDocument, archetype: VisualArchetype): Design
     badge: raw.badge.trim(),
     subtext: raw.subtext.trim(),
     cta: raw.cta.trim(),
-  };
-}
-
-/** Fuerza arquetipo y layout por defecto si la IA se desvía */
-function enforceArchetype(design: DesignDocument, archetype: VisualArchetype): DesignDocument {
-  const def = getArchetypeDefinition(archetype);
-  const layout = getLayoutById(design.compositionLayoutId);
-  const layoutId =
-    layout && layout.archetype === archetype ? design.compositionLayoutId : def.defaultLayoutId;
-
-  return {
-    ...design,
     compositionCategory: archetype,
     compositionLayoutId: layoutId,
   };
 }
 
-async function generateDesignFromBrief(brief: string, archetype: VisualArchetype) {
+interface LlmUsage {
+  promptTokens: number;
+  completionTokens: number;
+}
+
+interface LlmDesignResult {
+  designV2: DesignDocumentV2;
+  model: string;
+  usage: LlmUsage;
+}
+
+async function invokeDesignLlm(
+  brief: string,
+  facts: BriefFacts,
+  archetype: VisualArchetype,
+  options?: { correctionErrors?: DesignValidationError[] }
+): Promise<LlmDesignResult> {
   const client = getOpenAIClient();
   const model = getCampaignModel();
+  const temperature = getModelTemperature(archetype);
 
-  const temperature =
-    archetype === "drop" ? 0.82 : archetype === "promo" ? 0.7 : archetype === "spotlight" ? 0.65 : 0.78;
+  const userContent = options?.correctionErrors?.length
+    ? buildDesignCorrectionPrompt(brief, archetype, facts, options.correctionErrors)
+    : buildProAdUserPrompt(brief, archetype, facts);
 
   const response = await client.chat.completions.create({
     model,
     temperature,
     messages: [
       { role: "system", content: getDesignerSystemPrompt(archetype) },
-      { role: "user", content: buildProAdUserPrompt(brief, archetype) },
+      { role: "user", content: userContent },
     ],
     response_format: {
       type: "json_schema",
       json_schema: {
-        name: "design_engine_composition",
+        name: "design_engine_v2",
         strict: true,
-        schema: PRO_AD_JSON_SCHEMA,
+        schema: DESIGN_DOCUMENT_V2_JSON_SCHEMA,
       },
     },
   });
@@ -87,22 +160,63 @@ async function generateDesignFromBrief(brief: string, archetype: VisualArchetype
     throw new DesignEngineError("OpenAI no devolvió diseño", "EMPTY_DESIGN", 502);
   }
 
-  const parsed = proAdDesignSchema.parse(JSON.parse(raw));
-  let design = sanitizeDesign(parsed, archetype);
-  design = enforceArchetype(design, archetype);
+  const parsed = designDocumentV2Schema.parse(JSON.parse(raw));
+  const usage = response.usage ?? { prompt_tokens: 0, completion_tokens: 0 };
 
-  const maxHookWords = getArchetypeDefinition(archetype).maxHookWords;
-  if (countWords(design.hook) > maxHookWords) {
-    design.hook = trimHook(design.hook, maxHookWords);
+  return {
+    designV2: parsed,
+    model,
+    usage: {
+      promptTokens: usage.prompt_tokens ?? 0,
+      completionTokens: usage.completion_tokens ?? 0,
+    },
+  };
+}
+
+/**
+ * Pipeline de 3 capas: parse → LLM V2 → validar → reintento → fallback → legacy.
+ */
+async function generateDesignPipeline(brief: string, archetype: VisualArchetype) {
+  const facts = parseBriefFacts(brief);
+
+  let promptTokens = 0;
+  let completionTokens = 0;
+  let model = getCampaignModel();
+  let usedFallback = false;
+
+  const first = await invokeDesignLlm(brief, facts, archetype);
+  promptTokens += first.usage.promptTokens;
+  completionTokens += first.usage.completionTokens;
+  model = first.model;
+
+  let designV2 = sanitizeDesignV2(first.designV2, archetype);
+  let validation = validateDesignOutput(designV2, { facts, archetype });
+
+  if (!validation.valid) {
+    const retry = await invokeDesignLlm(brief, facts, archetype, {
+      correctionErrors: validation.errors,
+    });
+    promptTokens += retry.usage.promptTokens;
+    completionTokens += retry.usage.completionTokens;
+
+    designV2 = sanitizeDesignV2(retry.designV2, archetype);
+    validation = validateDesignOutput(designV2, { facts, archetype });
+
+    if (!validation.valid) {
+      designV2 = sanitizeDesignV2(buildDeterministicDesignV2(facts, archetype), archetype);
+      usedFallback = true;
+    }
   }
 
-  const usage = response.usage ?? { prompt_tokens: 0, completion_tokens: 0 };
+  const design = sanitizeLegacyDesign(flattenToLegacyDesign(designV2), archetype);
 
   return {
     design,
     model,
-    promptTokens: usage.prompt_tokens ?? 0,
-    completionTokens: usage.completion_tokens ?? 0,
+    promptTokens,
+    completionTokens,
+    usedFallback,
+    facts,
   };
 }
 
@@ -144,7 +258,7 @@ export async function runDesignEngine(
 
   try {
     await onPhase?.("brief");
-    const { design, model, promptTokens, completionTokens } = await generateDesignFromBrief(
+    const { design, model, promptTokens, completionTokens, facts } = await generateDesignPipeline(
       brief,
       archetype
     );
@@ -154,7 +268,7 @@ export async function runDesignEngine(
     const styleName = layout.name;
 
     const imageConcept = clampImageConcept(design.imagePrompt);
-    const productLabel = brief.split(/[.!?\n]/)[0]?.trim().slice(0, 80) || "Producto";
+    const productLabel = facts.productName.slice(0, 80) || "Producto";
 
     await onPhase?.("render");
     const imageResult = await generateAdImage({

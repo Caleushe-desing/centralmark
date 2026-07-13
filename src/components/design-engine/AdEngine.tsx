@@ -2,7 +2,11 @@
 
 import { forwardRef } from "react";
 import type { AdCopySlots, CompositionLayout } from "@/lib/design-engine/composition/rules";
-import { zoneScrimStylePlain } from "@/lib/design-engine/scrims/local-scrim";
+import {
+  dropBottomRightScrimStyle,
+  dropTopLeftScrimStyle,
+  zoneScrimStylePlain,
+} from "@/lib/design-engine/scrims/local-scrim";
 import { paletteCssVars } from "./utils";
 import { DecorativeLayer, TextSlot } from "./TextSlot";
 
@@ -18,8 +22,14 @@ export const AdEngine = forwardRef<HTMLDivElement, AdEngineProps>(function AdEng
 ) {
   const topSlots = layout.slots.filter((s) => s.zone === "top");
   const bottomSlots = layout.slots.filter((s) => s.zone === "bottom");
-  const topScrim = zoneScrimStylePlain("top", 0.52);
-  const bottomScrim = zoneScrimStylePlain("bottom", 0.58);
+  const isDropGridBreak = layout.id === "drop-grid-break";
+  const isDrop = layout.archetype === "drop";
+  const topScrim = isDropGridBreak
+    ? dropTopLeftScrimStyle()
+    : zoneScrimStylePlain("top", isDrop ? 0.32 : layout.archetype === "spotlight" ? 0.2 : 0.48);
+  const bottomScrim = isDropGridBreak
+    ? dropBottomRightScrimStyle()
+    : zoneScrimStylePlain("bottom", isDrop ? 0.22 : layout.archetype === "spotlight" ? 0.15 : 0.5);
 
   return (
     <div
@@ -36,8 +46,8 @@ export const AdEngine = forwardRef<HTMLDivElement, AdEngineProps>(function AdEng
       <img
         src={imageUrl}
         alt=""
-        className="absolute inset-0 w-full h-full object-cover"
-        crossOrigin="anonymous"
+        className={`absolute inset-0 w-full h-full object-cover ${isDropGridBreak ? "object-[62%_50%]" : ""}`}
+        crossOrigin={imageUrl.startsWith("http") ? "anonymous" : undefined}
       />
 
       <div style={topScrim} aria-hidden />
@@ -51,7 +61,9 @@ export const AdEngine = forwardRef<HTMLDivElement, AdEngineProps>(function AdEng
           ))}
         </div>
 
-        <div className="flex-1 min-h-[28%] pointer-events-none" aria-hidden />
+        {!isDropGridBreak ? (
+          <div className="flex-1 min-h-[28%] pointer-events-none" aria-hidden />
+        ) : null}
 
         <div className={layout.bottomZoneClass}>
           {bottomSlots.map((rule) => (

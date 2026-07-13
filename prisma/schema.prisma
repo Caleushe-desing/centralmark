@@ -24,6 +24,10 @@ model Store {
   id             String    @id @default(cuid())
   name           String
   category       String
+  /** Rubro para muestras de arquetipo: footwear | fashion | tech | food | other */
+  rubro          String    @default("fashion")
+  /** Foto de producto del rubro — override de las muestras por defecto (sin OpenAI) */
+  previewImageUrl String?
   username       String    @unique
   passwordHash   String
   logoUrl        String?
@@ -194,6 +198,7 @@ model DesignGenerationJob {
   storeId       String
   store         Store            @relation(fields: [storeId], references: [id], onDelete: Cascade)
   brief         String
+  archetype       String           @default("drop")
   status        DesignJobStatus  @default(QUEUED)
   phase         String           @default("queued")
   errorMessage  String?

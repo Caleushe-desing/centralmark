@@ -3,11 +3,15 @@
 import { useCallback, useEffect, useState, Suspense } from "react";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
-import { Link2, Save, Share2, Unlink } from "lucide-react";
+import { AlertTriangle, Link2, Save, Share2, Unlink, Store } from "lucide-react";
+import { STORE_RUBROS, getStoreRubroDefinition } from "@/lib/store/rubros";
 
 interface StoreSettings {
   name: string;
   logoUrl: string | null;
+  rubro: string;
+  category: string;
+  previewImageUrl: string | null;
   mall: { name: string; fixedHashtags: string };
 }
 
@@ -40,8 +44,12 @@ function ConfiguracionContent() {
   const [store, setStore] = useState<StoreSettings | null>(null);
   const [social, setSocial] = useState<SocialStatus | null>(null);
   const [name, setName] = useState("");
+  const [rubro, setRubro] = useState("fashion");
+  const [removePreview, setRemovePreview] = useState(false);
   const [loading, setLoading] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [saveNotice, setSaveNotice] = useState<string | null>(null);
   const [metaMessage, setMetaMessage] = useState<string | null>(null);
   const [pagePicker, setPagePicker] = useState<{
     pendingId: string;
@@ -65,6 +73,8 @@ function ConfiguracionContent() {
       const data = await res.json();
       setStore(data);
       setName(data.name);
+      setRubro(data.rubro ?? "fashion");
+      setRemovePreview(false);
     }
     await loadSocial();
   }, [loadSocial]);
@@ -95,19 +105,46 @@ function ConfiguracionContent() {
     e.preventDefault();
     setLoading(true);
     setSaved(false);
+    setSaveError(null);
+    setSaveNotice(null);
 
-    const formData = new FormData(e.currentTarget);
+    const form = e.currentTarget;
+    const formData = new FormData(form);
     formData.set("name", name);
+    formData.set("rubro", rubro);
+    if (removePreview) formData.set("removePreviewImage", "true");
 
-    const res = await fetch("/api/store/settings", { method: "PATCH", body: formData });
+    const previousRubro = store?.rubro ?? "fashion";
 
-    if (res.ok) {
-      const data = await res.json();
+    try {
+      const res = await fetch("/api/store/settings", { method: "PATCH", body: formData });
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        setSaveError(
+          typeof data.error === "string"
+            ? data.error
+            : "No se pudo guardar. Intenta de nuevo."
+        );
+        return;
+      }
+
       setStore(data);
       setName(data.name);
+      setRubro(data.rubro ?? "fashion");
+      setRemovePreview(false);
       setSaved(true);
+
+      if (previousRubro !== (data.rubro ?? "fashion")) {
+        setSaveNotice(
+          `Rubro guardado: ${getStoreRubroDefinition(data.rubro).label}. Las muestras en Mis Ofertas ya usan este rubro.`
+        );
+      }
+    } catch {
+      setSaveError("Error de conexión. Revisa tu red e intenta de nuevo.");
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }
 
   async function disconnectMeta() {
@@ -167,6 +204,12 @@ function ConfiguracionContent() {
       </main>
     );
   }
+
+  const savedRubro = store.rubro ?? "fashion";
+  const rubroUnsaved = savedRubro !== rubro;
+  const rubroDefaultImage = getStoreRubroDefinition(rubro).defaultSampleImageUrl;
+  const previewDisplayUrl =
+    store.previewImageUrl && !removePreview ? store.previewImageUrl : rubroDefaultImage;
 
   return (
     <main className="max-w-lg mx-auto px-6 py-10">
@@ -339,6 +382,98 @@ function ConfiguracionContent() {
         </section>
 
         <section className="p-6 rounded-2xl border border-white/10 bg-white/5 space-y-4">
+          <h2 className="text-lg font-semibold text-white flex items-center gap-2">
+            <Store className="w-5 h-5 text-mm-neon" />
+            Rubro de tu tienda
+          </h2>
+          <p className="text-xs text-slate-500">
+            Define el tipo de negocio. Las muestras de arquetipos usarán fotos y textos acordes a este
+            rubro (sin gastar crédito de IA).
+          </p>
+          <select
+            name="rubro"
+            value={rubro}
+            onChange={(e) => {
+              setRubro(e.target.value);
+              setRemovePreview(true);
+              setSaved(false);
+              setSaveError(null);
+              setSaveNotice(null);
+            }}
+            className={`w-full bg-slate-900 border rounded-xl px-4 py-3 text-white ${
+              rubroUnsaved ? "border-amber-400/60 ring-1 ring-amber-400/30" : "border-white/10"
+            }`}
+          >
+            {STORE_RUBROS.map((r) => (
+              <option key={r.id} value={r.id}>
+                {r.label}
+              </option>
+            ))}
+          </select>
+          {rubroUnsaved && (
+            <div
+              role="status"
+              className="flex gap-3 p-4 rounded-xl bg-amber-500/15 border border-amber-500/35 text-amber-100"
+            >
+              <AlertTriangle className="w-5 h-5 shrink-0 text-amber-300 mt-0.5" />
+              <div className="space-y-1 text-sm">
+                <p className="font-medium text-amber-50">
+                  Cambiaste el rubro a{" "}
+                  <strong>{getStoreRubroDefinition(rubro).label}</strong>
+                </p>
+                <p className="text-amber-200/90 text-xs leading-relaxed">
+                  La vista previa ya se actualizó aquí, pero{" "}
+                  <strong className="text-amber-100">debes pulsar Guardar</strong> para que las
+                  muestras de arquetipo en <em>Mis Ofertas</em> usen el nuevo rubro.
+                </p>
+              </div>
+            </div>
+          )}
+        </section>
+
+        <section className="p-6 rounded-2xl border border-white/10 bg-white/5 space-y-4">
+          <h2 className="text-lg font-semibold text-white">Foto de muestra (opcional)</h2>
+          <p className="text-xs text-slate-500">
+            Sube una foto de tu producto (ej. par de zapatillas si vendes calzado). Reemplaza la imagen
+            por defecto del rubro en las tarjetas de arquetipo. Sin costo de IA.
+          </p>
+          <div className="flex items-center gap-6 flex-wrap">
+            <div className="relative w-28 h-28 rounded-xl overflow-hidden bg-slate-900 border border-white/10">
+              <Image
+                key={previewDisplayUrl}
+                src={previewDisplayUrl}
+                alt="Vista previa del rubro"
+                fill
+                className="object-cover"
+              />
+            </div>
+            <div className="space-y-2 text-xs text-slate-500">
+              <p>
+                {store.previewImageUrl && !removePreview
+                  ? "Foto personalizada activa"
+                  : `Vista previa del rubro: ${getStoreRubroDefinition(rubro).label}`}
+              </p>
+              <input
+                name="previewImage"
+                type="file"
+                accept="image/*"
+                onChange={() => setRemovePreview(false)}
+                className="text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-mm-neon/20 file:text-mm-neon"
+              />
+              {store.previewImageUrl && !removePreview && (
+                <button
+                  type="button"
+                  onClick={() => setRemovePreview(true)}
+                  className="block text-xs text-red-400 hover:text-red-300"
+                >
+                  Quitar foto personalizada (usar imagen del rubro)
+                </button>
+              )}
+            </div>
+          </div>
+        </section>
+
+        <section className="p-6 rounded-2xl border border-white/10 bg-white/5 space-y-4">
           <h2 className="text-lg font-semibold text-white">Logo</h2>
           <div className="flex items-center gap-6">
             {store.logoUrl ? (
@@ -362,14 +497,52 @@ function ConfiguracionContent() {
           </p>
         </section>
 
+        {saveNotice && (
+          <div
+            role="status"
+            className="p-4 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-200 text-sm"
+          >
+            {saveNotice}
+          </div>
+        )}
+
+        {saveError && (
+          <div
+            role="alert"
+            className="flex gap-3 p-4 rounded-xl bg-red-500/15 border border-red-500/35 text-red-200 text-sm"
+          >
+            <AlertTriangle className="w-5 h-5 shrink-0 text-red-300" />
+            <p>{saveError}</p>
+          </div>
+        )}
+
+        {rubroUnsaved && (
+          <p className="text-sm text-amber-300/90 flex items-center gap-2">
+            <AlertTriangle className="w-4 h-4 shrink-0" />
+            Tienes un cambio de rubro sin guardar.
+          </p>
+        )}
         <button
           type="submit"
           disabled={loading}
-          className="flex items-center gap-2 px-6 py-3 rounded-xl mm-btn-primary mm-glow-neon disabled:opacity-50"
+          className={`flex items-center gap-2 px-6 py-3 rounded-xl mm-btn-primary disabled:opacity-50 transition ${
+            rubroUnsaved ? "mm-glow-neon ring-2 ring-amber-400/50" : "mm-glow-neon"
+          }`}
         >
           <Save className="w-5 h-5" />
-          {loading ? "Guardando..." : saved ? "¡Guardado!" : "Guardar"}
+          {loading
+            ? "Guardando..."
+            : saved && !rubroUnsaved
+              ? "¡Guardado!"
+              : rubroUnsaved
+                ? "Guardar rubro"
+                : "Guardar"}
         </button>
+        {rubroUnsaved && (
+          <p className="text-xs text-slate-500">
+            Pulsa <strong className="text-amber-200/90">Guardar rubro</strong> para aplicar el cambio en Mis Ofertas.
+          </p>
+        )}
       </form>
     </main>
   );

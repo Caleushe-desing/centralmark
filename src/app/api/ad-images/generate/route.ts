@@ -4,6 +4,8 @@ import {
   AdImageGenerationError,
   generateAdImage,
 } from "@/lib/ai/ad-image";
+import { assertStoreAiRateLimit, StoreAiRateLimitError } from "@/lib/ai/rate-limit/store-ai-limiter";
+import { aiRateLimitResponse } from "@/lib/ai/rate-limit/http";
 import { requireStoreSession } from "@/lib/auth/session";
 
 /**
@@ -21,7 +23,8 @@ import { requireStoreSession } from "@/lib/auth/session";
  */
 export async function POST(request: Request) {
   try {
-    await requireStoreSession();
+    const session = await requireStoreSession();
+    assertStoreAiRateLimit(session.storeId, "premium");
     const body = await request.json();
 
     const parsed = adImageInputSchema.safeParse(body);
@@ -46,6 +49,9 @@ export async function POST(request: Request) {
       metadata: result.metadata,
     });
   } catch (error) {
+    if (error instanceof StoreAiRateLimitError) {
+      return aiRateLimitResponse(error);
+    }
     if (error instanceof AdImageGenerationError) {
       const headers: HeadersInit = {};
       if (error.retryAfterSeconds) {

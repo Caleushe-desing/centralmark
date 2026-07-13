@@ -1,4 +1,5 @@
-import { createDesignJob, updateJobPhase, getDesignJobRecord } from "./job-store";
+import { createDesignJob, updateJobPhase, getDesignJobRecord, tryClaimDesignJob } from "./job-store";
+import { parseArchetype } from "../archetypes";
 import type { DesignGenerationResult } from "../schemas";
 
 export type JobPhase = "queued" | "brief" | "composition" | "render" | "persist" | "done" | "failed";
@@ -13,12 +14,12 @@ export interface JobPollResult {
 
 export { createDesignJob } from "./job-store";
 
-/** Evita procesar el mismo job dos veces en paralelo */
-const activeProcessors = new Set<string>();
+/** Fallback de desarrollo: un solo kick por job si after() no arrancó el worker */
+const pollFallbackKicked = new Set<string>();
 
 export async function processDesignJob(jobId: string): Promise<void> {
-  if (activeProcessors.has(jobId)) return;
-  activeProcessors.add(jobId);
+  const claimed = await tryClaimDesignJob(jobId);
+  if (!claimed) return;
 
   try {
     const { prisma } = await import("@/lib/db");
@@ -32,7 +33,7 @@ export async function processDesignJob(jobId: string): Promise<void> {
       await updateJobPhase(jobId, "brief", "PROCESSING");
 
       const result = await runDesignEngine(
-        { brief: fullJob.brief },
+        { brief: fullJob.brief, archetype: parseArchetype(fullJob.archetype) },
         {
           storeId: fullJob.storeId,
           jobId,
@@ -54,6 +55,7 @@ export async function processDesignJob(jobId: string): Promise<void> {
           completedAt: new Date(),
         },
       });
+      pollFallbackKicked.delete(jobId);
     } catch (error) {
       const message =
         error instanceof DesignEngineError
@@ -71,13 +73,14 @@ export async function processDesignJob(jobId: string): Promise<void> {
           completedAt: new Date(),
         },
       });
+      pollFallbackKicked.delete(jobId);
     }
-  } finally {
-    activeProcessors.delete(jobId);
+  } catch {
+    // Sin rethrow: evita loops de error en background
   }
 }
 
-/** Si el job sigue en cola, dispara el procesamiento (fallback para Next.js dev) */
+/** Fallback si after() no ejecutó el worker (p. ej. dev) */
 export function ensureJobProcessing(jobId: string): void {
   void processDesignJob(jobId);
 }
@@ -87,9 +90,12 @@ export async function getDesignJob(jobId: string, storeId: string): Promise<JobP
   if (!job) return null;
 
   if (job.status === "QUEUED") {
-    ensureJobProcessing(jobId);
-    // Releer tras disparar procesamiento
-    job = (await getDesignJobRecord(jobId, storeId)) ?? job;
+    const ageMs = Date.now() - job.createdAt.getTime();
+    if (ageMs > 4000 && !pollFallbackKicked.has(jobId)) {
+      pollFallbackKicked.add(jobId);
+      ensureJobProcessing(jobId);
+      job = (await getDesignJobRecord(jobId, storeId)) ?? job;
+    }
   }
 
   const base: JobPollResult = {

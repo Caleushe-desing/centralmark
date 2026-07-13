@@ -5,6 +5,8 @@ import { toPng } from "html-to-image";
 import { AdEngine } from "@/components/design-engine";
 import type { CompositionLayout } from "@/lib/design-engine/composition/rules";
 import type { DesignDocument } from "@/lib/design-engine/schemas";
+import type { VisualArchetype } from "@/lib/design-engine/archetypes";
+import { DEFAULT_ARCHETYPE } from "@/lib/design-engine/archetypes";
 import { Loader2 } from "lucide-react";
 
 const POLL_MS = 1500;
@@ -20,6 +22,7 @@ export interface DesignPreviewState {
 
 interface DesignEnginePreviewProps {
   brief: string;
+  archetype?: VisualArchetype;
   /** Incrementar para disparar nueva generación */
   trigger: number;
   onReady: (state: DesignPreviewState) => void;
@@ -30,6 +33,7 @@ interface DesignEnginePreviewProps {
 
 export function DesignEnginePreview({
   brief,
+  archetype = DEFAULT_ARCHETYPE,
   trigger,
   onReady,
   onExportReady,
@@ -42,13 +46,19 @@ export function DesignEnginePreview({
   const [preview, setPreview] = useState<DesignPreviewState | null>(null);
   const [localError, setLocalError] = useState<string | null>(null);
 
-  const setLoad = useCallback(
-    (v: boolean) => {
-      setLoading(v);
-      onLoadingChange?.(v);
-    },
-    [onLoadingChange]
-  );
+  const callbacksRef = useRef({ onReady, onError, onExportReady, onLoadingChange });
+  callbacksRef.current = { onReady, onError, onExportReady, onLoadingChange };
+
+  const briefRef = useRef(brief);
+  briefRef.current = brief;
+
+  const archetypeRef = useRef(archetype);
+  archetypeRef.current = archetype;
+
+  const setLoad = useCallback((v: boolean) => {
+    setLoading(v);
+    callbacksRef.current.onLoadingChange?.(v);
+  }, []);
 
   const registerExport = useCallback(() => {
     const el = composerRef.current;
@@ -73,10 +83,14 @@ export function DesignEnginePreview({
   }, [preview, registerExport]);
 
   useEffect(() => {
-    if (!trigger || !brief.trim()) return;
+    if (!trigger) return;
+
+    const briefText = briefRef.current.trim();
+    if (!briefText) return;
 
     let cancelled = false;
     let pollTimer: ReturnType<typeof setTimeout>;
+    const callbacks = callbacksRef.current;
 
     async function poll(jobId: string) {
       const res = await fetch(`/api/campaign/generate/${jobId}`);
@@ -87,7 +101,7 @@ export function DesignEnginePreview({
         setLoad(false);
         const msg = data.error ?? "Error al consultar generación";
         setLocalError(msg);
-        onError(msg);
+        callbacks.onError(msg);
         return;
       }
 
@@ -102,7 +116,7 @@ export function DesignEnginePreview({
           costoEstimado: data.result.costoEstimado,
         };
         setPreview(state);
-        onReady(state);
+        callbacks.onReady(state);
         setLoad(false);
         setPhaseLabel(null);
         return;
@@ -112,7 +126,7 @@ export function DesignEnginePreview({
         setLoad(false);
         const msg = data.error ?? "La generación falló";
         setLocalError(msg);
-        onError(msg);
+        callbacks.onError(msg);
         return;
       }
 
@@ -123,14 +137,14 @@ export function DesignEnginePreview({
       setLoad(true);
       setPreview(null);
       setLocalError(null);
-      onExportReady(null);
+      callbacks.onExportReady(null);
       setPhaseLabel("Iniciando…");
 
       try {
         const res = await fetch("/api/campaign/generate", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ brief: brief.trim() }),
+          body: JSON.stringify({ brief: briefText, archetype: archetypeRef.current }),
         });
         const data = await res.json();
         if (cancelled) return;
@@ -145,7 +159,7 @@ export function DesignEnginePreview({
           setLoad(false);
           const msg = err instanceof Error ? err.message : "Error desconocido";
           setLocalError(msg);
-          onError(msg);
+          callbacks.onError(msg);
         }
       }
     }
@@ -156,7 +170,8 @@ export function DesignEnginePreview({
       cancelled = true;
       clearTimeout(pollTimer);
     };
-  }, [trigger, brief, onReady, onExportReady, onError, setLoad]);
+    // Solo re-disparar cuando el usuario pulsa "Generar" (trigger), no en cada re-render del padre.
+  }, [trigger]);
 
   if (!preview && !loading && !localError) return null;
 
@@ -167,7 +182,9 @@ export function DesignEnginePreview({
           {localError}
           {localError.includes("OPENAI") && (
             <p className="mt-2 text-xs text-red-200/80">
-              Configura <code className="text-red-100">OPENAI_API_KEY</code> en el entorno del agente.
+              El administrador del mall debe agregar una API key válida de OpenAI en el archivo{" "}
+              <code className="text-red-100">.env</code> del servidor (
+              <code className="text-red-100">OPENAI_API_KEY</code>).
             </p>
           )}
         </div>
@@ -179,11 +196,8 @@ export function DesignEnginePreview({
         </div>
       )}
       {preview && (
-        <div className="overflow-hidden rounded-2xl border border-white/10 bg-black mx-auto max-w-full">
-          <div
-            className="origin-top-left scale-[0.36] sm:scale-[0.42] md:scale-[0.48] lg:scale-[0.38] xl:scale-[0.42]"
-            style={{ width: 1080, height: 1080 * 0.42 }}
-          >
+        <div className="overflow-hidden rounded-2xl border border-white/10 bg-black mx-auto max-w-full flex justify-center">
+          <div className="scale-[0.36] sm:scale-[0.42] md:scale-[0.48] lg:scale-[0.38] xl:scale-[0.42] origin-top">
             <AdEngine
               ref={composerRef}
               imageUrl={preview.imageUrl}

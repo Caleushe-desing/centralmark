@@ -75,6 +75,16 @@ fi
 echo ""
 echo "✅ Rama $BRANCH subida a GitHub."
 
+# Recordar rama para la próxima /iniciar-jornada
+mkdir -p .cursor
+echo "$BRANCH" > .cursor/last-branch
+git add .cursor/last-branch
+if ! git diff --cached --quiet; then
+  git commit -m "chore: recordar rama de trabajo ($BRANCH)" || true
+  git push origin "$BRANCH" || true
+fi
+echo "→ Próxima jornada arrancará en: $BRANCH"
+
 # Merge opcional a master
 if [ "$MERGE" = true ]; then
   echo ""

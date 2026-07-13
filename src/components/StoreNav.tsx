@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Sparkles, Package, Settings, Tag, LogOut, Megaphone } from "lucide-react";
+import { Sparkles, Package, Settings, Tag, LogOut, Megaphone, Shield } from "lucide-react";
 
 interface StoreNavProps {
   storeName: string;
@@ -56,6 +56,14 @@ export function StoreNav({ storeName, mallName }: StoreNavProps) {
                 <span className="hidden sm:inline">{label}</span>
               </Link>
             ))}
+            <Link
+              href="/admin"
+              className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-neutral-500 hover:text-white hover:bg-white/5 transition"
+              title="Panel del mall — aprobar y publicar ofertas"
+            >
+              <Shield className="w-4 h-4" />
+              <span className="hidden sm:inline">Admin</span>
+            </Link>
             <button
               onClick={logout}
               className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-neutral-500 hover:text-white hover:bg-white/5 transition ml-1"

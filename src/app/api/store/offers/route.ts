@@ -89,7 +89,7 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    const generated = await runOfferGenerationPipeline(offer.id);
+    const generated = await runOfferGenerationPipeline(offer.id, { skipModeration: true });
     return NextResponse.json(generated, { status: 201 });
   } catch (error) {
     const msg = error instanceof Error ? error.message : "Error creando oferta";

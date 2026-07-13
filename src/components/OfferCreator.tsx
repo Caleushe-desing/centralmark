@@ -4,11 +4,18 @@ import { CaptionEditor } from "@/components/CaptionEditor";
 import { CensoredInput, CensoredTextarea } from "@/components/CensoredField";
 import { OfferPreview } from "@/components/OfferPreview";
 import { DesignEnginePreview } from "@/components/design-engine/DesignEnginePreview";
+import { ArchetypeSelector } from "@/components/design-engine/ArchetypeSelector";
 import type { DesignPreviewState } from "@/components/design-engine/DesignEnginePreview";
+import type { VisualArchetype } from "@/lib/design-engine/archetypes";
+import { DEFAULT_ARCHETYPE } from "@/lib/design-engine/archetypes";
+import {
+  archetypeBriefPlaceholder,
+  BRIEF_STRUCTURE_HINT,
+} from "@/lib/design-engine/archetype-brief-placeholders";
 import { buildDefaultHashtags } from "@/lib/offer/default-copy";
 import type { ImageCreationMode } from "@/lib/ai/image-generator";
 import type { TextLayer } from "@/lib/image/text-layers";
-import { ImagePlus, Scissors, Sparkles, Upload, Wand2 } from "lucide-react";
+import { ImagePlus, Scissors, Sparkles, Upload, Wand2, AlertTriangle } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { CampaignApplyPayload } from "@/components/CampaignStudio";
 
@@ -17,6 +24,9 @@ interface StoreBranding {
   mallName: string;
   logoUrl?: string | null;
   customHashtags?: string | null;
+  rubro?: string | null;
+  category?: string | null;
+  previewImageUrl?: string | null;
 }
 
 type ImageSource = "ai" | "upload";
@@ -53,8 +63,17 @@ export function OfferCreator({
   const [captionSuggestLoading, setCaptionSuggestLoading] = useState(false);
   const [campaignImagePrompt, setCampaignImagePrompt] = useState<string | null>(null);
   const [designTrigger, setDesignTrigger] = useState(0);
+  const [archetype, setArchetype] = useState<VisualArchetype>(DEFAULT_ARCHETYPE);
   const [designPreview, setDesignPreview] = useState<DesignPreviewState | null>(null);
   const [generationPhase, setGenerationPhase] = useState<string | null>(null);
+  const [aiConfigured, setAiConfigured] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    fetch("/api/config")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => setAiConfigured(Boolean(data?.hasOpenAI)))
+      .catch(() => setAiConfigured(false));
+  }, []);
 
   useEffect(() => {
     if (!campaignSeed?.applyId) return;
@@ -148,6 +167,12 @@ export function OfferCreator({
       setError("Escribe qué quieres publicar");
       return;
     }
+    if (aiConfigured === false) {
+      setError(
+        "La generación con IA no está disponible. Pide al administrador del mall que configure OPENAI_API_KEY en el servidor."
+      );
+      return;
+    }
     setError(null);
     setDesignPreview(null);
     setPreviewImageUrl(null);
@@ -155,14 +180,19 @@ export function OfferCreator({
     setDesignTrigger((t) => t + 1);
   }
 
-  function handleDesignReady(state: DesignPreviewState) {
+  const handleDesignReady = useCallback((state: DesignPreviewState) => {
     setDesignPreview(state);
     setPreviewMeta({ productName: state.design.hook, discountPercent: null });
     setCaption(state.design.caption);
-    if (!offerHashtags.trim()) {
-      setOfferHashtags(buildDefaultHashtags(null, state.design.hook));
-    }
-  }
+    setOfferHashtags((prev) =>
+      prev.trim() ? prev : buildDefaultHashtags(null, state.design.hook)
+    );
+  }, []);
+
+  const handlePreviewLoadingChange = useCallback((v: boolean) => {
+    setPreviewLoading(v);
+    if (!v) setGenerationPhase(null);
+  }, []);
 
 type UploadMode = "default" | "enhance" | "removeBg";
 
@@ -268,6 +298,23 @@ type UploadMode = "default" | "enhance" | "removeBg";
   return (
     <div className="grid lg:grid-cols-2 gap-6 items-start">
       <form onSubmit={handleSubmit} className="space-y-4">
+        {aiConfigured === false && (
+          <div
+            role="alert"
+            className="flex gap-3 p-4 rounded-xl bg-amber-500/15 border border-amber-500/35 text-amber-100 text-sm"
+          >
+            <AlertTriangle className="w-5 h-5 shrink-0 text-amber-300 mt-0.5" />
+            <div className="space-y-1">
+              <p className="font-medium text-amber-50">Generación con IA no disponible</p>
+              <p className="text-xs text-amber-200/90 leading-relaxed">
+                Falta configurar <code className="text-amber-100">OPENAI_API_KEY</code>. En Cloud
+                Agents: en el dashboard → Agentes en la nube → clic en tu repo →{" "}
+                <strong className="text-amber-100">Secretos de ejecución</strong> (no «Claves API»).
+                Luego <code className="text-amber-100">/iniciar-jornada</code> o reinicia el servidor.
+              </p>
+            </div>
+          </div>
+        )}
         <div className="flex items-center gap-2">
           <Sparkles className="w-5 h-5 text-mm-neon" />
           <h2 className="text-lg font-semibold text-white">Nueva publicación</h2>
@@ -383,6 +430,24 @@ type UploadMode = "default" | "enhance" | "removeBg";
           </div>
         ) : (
           <div className="space-y-3">
+            <ArchetypeSelector
+              value={archetype}
+              onChange={(next) => {
+                setArchetype(next);
+                if (designPreview) {
+                  setDesignPreview(null);
+                  setExportImage(null);
+                }
+              }}
+              disabled={previewLoading || loading}
+              storeContext={{
+                storeName: storeBranding?.name ?? "Tu tienda",
+                rubro: storeBranding?.rubro,
+                category: storeBranding?.category,
+                previewImageUrl: storeBranding?.previewImageUrl,
+              }}
+            />
+
             <div>
               <label className="block text-sm text-neutral-400 mb-1">
                 Idea para tu publicación *
@@ -402,19 +467,19 @@ type UploadMode = "default" | "enhance" | "removeBg";
                   if (designPreview || previewImageUrl) resetPreview();
                 }}
                 rows={5}
-                placeholder="Ej: Zapatillas Nike outlet 30%, estética editorial premium, urgencia fin de semana…"
+                placeholder={archetypeBriefPlaceholder(archetype)}
                 className="w-full bg-mm-surface border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-neutral-600 resize-none"
               />
+              <p className="text-xs text-neutral-500 mt-1.5 leading-relaxed">{BRIEF_STRUCTURE_HINT}</p>
             </div>
 
             <p className="text-xs text-neutral-600">
-              El Design Engine genera composición editorial, imagen IA y copy optimizado. Misma
-              calidad que el Gestor Pro, integrado en tu flujo de tienda.
+              El Design Engine aplica las reglas del arquetipo elegido a imagen y textos.
             </p>
 
             <button
               type="button"
-              disabled={previewLoading || loading}
+              disabled={previewLoading || loading || aiConfigured === false}
               onClick={generatePreview}
               className="w-full py-2.5 rounded-xl bg-mm-neon/90 text-black text-sm hover:bg-mm-neon-dim disabled:opacity-50"
             >
@@ -486,18 +551,16 @@ type UploadMode = "default" | "enhance" | "removeBg";
           <div className="space-y-4">
             <DesignEnginePreview
               brief={brief}
+              archetype={archetype}
               trigger={designTrigger}
               onReady={handleDesignReady}
               onExportReady={handleRegisterExport}
               onError={setError}
-              onLoadingChange={(v) => {
-                setPreviewLoading(v);
-                if (!v) setGenerationPhase(null);
-              }}
+              onLoadingChange={handlePreviewLoadingChange}
             />
             {!designPreview && !previewLoading && (
               <p className="text-neutral-600 text-sm text-center py-12">
-                La vista previa editorial aparecerá aquí
+                La vista previa aparecerá aquí al generar
               </p>
             )}
           </div>

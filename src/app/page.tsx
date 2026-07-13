@@ -30,6 +30,12 @@ export default function HomePage() {
               <ArrowRight className="w-5 h-5" />
             </Link>
             <Link
+              href="/admin"
+              className="flex items-center gap-2 px-8 py-4 rounded-xl border border-white/15 text-neutral-300 hover:bg-white/5 transition"
+            >
+              Panel admin
+            </Link>
+            <Link
               href="/vitrina"
               className="flex items-center gap-2 px-8 py-4 rounded-xl border border-mm-yellow/30 text-mm-yellow hover:bg-mm-yellow/10 transition"
             >

@@ -13,6 +13,11 @@ export class OpenAIConfigError extends Error {
 
 let cachedClient: OpenAI | null = null;
 
+export function isOpenAIConfigured(): boolean {
+  const apiKey = process.env.OPENAI_API_KEY?.trim();
+  return Boolean(apiKey && apiKey !== PLACEHOLDER_KEY);
+}
+
 /**
  * Inicialización segura del cliente OpenAI.
  * Lee la API key desde process.env.OPENAI_API_KEY (nunca hardcodeada).
@@ -20,14 +25,15 @@ let cachedClient: OpenAI | null = null;
 export function getOpenAIClient(): OpenAI {
   if (cachedClient) return cachedClient;
 
-  const apiKey = process.env.OPENAI_API_KEY?.trim();
-  if (!apiKey || apiKey === PLACEHOLDER_KEY) {
+  if (!isOpenAIConfigured()) {
     throw new OpenAIConfigError();
   }
 
+  const apiKey = process.env.OPENAI_API_KEY!.trim();
+
   cachedClient = new OpenAI({
     apiKey,
-    maxRetries: 2,
+    maxRetries: 0,
     timeout: 90_000,
   });
 

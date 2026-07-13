@@ -1,6 +1,7 @@
 import { APIError } from "openai";
 import { getOpenAIClient, getCampaignModel, OpenAIConfigError } from "@/lib/openai/client";
 import { generateAdImage } from "@/lib/ai/ad-image";
+import { prisma } from "@/lib/db";
 import {
   getLayoutById,
   resolveLayout,
@@ -9,18 +10,22 @@ import {
 } from "../composition/rules";
 import { buildProAdUserPrompt, getDesignerSystemPrompt } from "./prompts";
 import { clampImageConcept } from "./clamp-concept";
+import { sanitizeSpanishCopy } from "../copy/sanitize-spanish";
 import { getArchetypeDefinition, parseArchetype } from "../archetypes";
+import { applyStoreBrandToLayout, type StoreBrandContext } from "../store-branding";
 import {
+  campaignBriefSchema,
   proAdDesignSchema,
-  proAdInputSchema,
   PRO_AD_JSON_SCHEMA,
   type DesignDocument,
   type DesignGenerationResult,
-  type ProAdInput,
+  type CampaignBriefInput,
 } from "../schemas";
 import { calculateGenerationCost } from "../financial/pricing";
 import { persistDesignGenerationAtomic } from "../persist/generation";
 import { DesignEngineError } from "../errors";
+
+const MODEL_TEMPERATURE = 0.62;
 
 function countWords(text: string): number {
   return text.trim().split(/\s+/).filter(Boolean).length;
@@ -36,16 +41,19 @@ function sanitizeDesign(raw: DesignDocument, archetype: VisualArchetype): Design
   return {
     ...raw,
     imagePrompt: clampImageConcept(raw.imagePrompt.trim()),
-    caption: raw.caption.trim(),
-    hook: trimHook(raw.hook, maxHookWords),
-    badge: raw.badge.trim(),
-    subtext: raw.subtext.trim(),
-    cta: raw.cta.trim(),
+    caption: sanitizeSpanishCopy(raw.caption.trim()),
+    hook: sanitizeSpanishCopy(trimHook(raw.hook, maxHookWords)),
+    badge: sanitizeSpanishCopy(raw.badge.trim()),
+    subtext: sanitizeSpanishCopy(raw.subtext.trim()),
+    cta: sanitizeSpanishCopy(raw.cta.trim()),
   };
 }
 
-/** Fuerza arquetipo y layout por defecto si la IA se desvía */
-function enforceArchetype(design: DesignDocument, archetype: VisualArchetype): DesignDocument {
+function normalizeArchetype(design: DesignDocument): VisualArchetype {
+  return parseArchetype(design.compositionCategory);
+}
+
+function enforceValidLayout(design: DesignDocument, archetype: VisualArchetype): DesignDocument {
   const def = getArchetypeDefinition(archetype);
   const layout = getLayoutById(design.compositionLayoutId);
   const layoutId =
@@ -58,19 +66,38 @@ function enforceArchetype(design: DesignDocument, archetype: VisualArchetype): D
   };
 }
 
-async function generateDesignFromBrief(brief: string, archetype: VisualArchetype) {
+async function loadStoreBrand(storeId: string): Promise<StoreBrandContext> {
+  const store = await prisma.store.findUnique({ where: { id: storeId } });
+  if (!store) {
+    throw new DesignEngineError("Tienda no encontrada", "STORE_NOT_FOUND", 404);
+  }
+  return {
+    name: store.name,
+    primaryColor: store.primaryColor,
+    secondaryColor: store.secondaryColor,
+    logoUrl: store.logoUrl,
+    rubro: store.rubro,
+    category: store.category,
+  };
+}
+
+async function generateDesignFromBrief(
+  brief: string,
+  brand: StoreBrandContext,
+  imageSource: "ai" | "upload"
+) {
   const client = getOpenAIClient();
   const model = getCampaignModel();
 
-  const temperature =
-    archetype === "drop" ? 0.82 : archetype === "promo" ? 0.7 : archetype === "spotlight" ? 0.65 : 0.78;
-
   const response = await client.chat.completions.create({
     model,
-    temperature,
+    temperature: MODEL_TEMPERATURE,
     messages: [
-      { role: "system", content: getDesignerSystemPrompt(archetype) },
-      { role: "user", content: buildProAdUserPrompt(brief, archetype) },
+      { role: "system", content: getDesignerSystemPrompt() },
+      {
+        role: "user",
+        content: buildProAdUserPrompt({ brief, brand, imageSource }),
+      },
     ],
     response_format: {
       type: "json_schema",
@@ -88,26 +115,31 @@ async function generateDesignFromBrief(brief: string, archetype: VisualArchetype
   }
 
   const parsed = proAdDesignSchema.parse(JSON.parse(raw));
+  const archetype = normalizeArchetype(parsed);
   let design = sanitizeDesign(parsed, archetype);
-  design = enforceArchetype(design, archetype);
-
-  const maxHookWords = getArchetypeDefinition(archetype).maxHookWords;
-  if (countWords(design.hook) > maxHookWords) {
-    design.hook = trimHook(design.hook, maxHookWords);
-  }
+  design = enforceValidLayout(design, archetype);
 
   const usage = response.usage ?? { prompt_tokens: 0, completion_tokens: 0 };
 
   return {
     design,
+    archetype,
     model,
     promptTokens: usage.prompt_tokens ?? 0,
     completionTokens: usage.completion_tokens ?? 0,
   };
 }
 
-export function resolveCompositionLayout(design: DesignDocument): CompositionLayout {
-  return resolveLayout(design.compositionCategory as VisualArchetype, design.compositionLayoutId);
+export function resolveCompositionLayout(
+  design: DesignDocument,
+  brand?: Pick<StoreBrandContext, "primaryColor" | "secondaryColor">
+): CompositionLayout {
+  const base = resolveLayout(
+    design.compositionCategory as VisualArchetype,
+    design.compositionLayoutId
+  );
+  if (!brand) return base;
+  return applyStoreBrandToLayout(base, brand);
 }
 
 export function getStyleName(design: DesignDocument): string {
@@ -124,14 +156,21 @@ export interface RunDesignEngineOptions {
 }
 
 export async function runDesignEngine(
-  input: ProAdInput,
+  input: CampaignBriefInput,
   options: RunDesignEngineOptions
-): Promise<DesignGenerationResult> {
+): Promise<DesignGenerationResult & { layout: CompositionLayout }> {
   const startedAt = Date.now();
-  const parsed = proAdInputSchema.parse(input);
-  const { brief, archetype: rawArchetype } = parsed;
-  const archetype = parseArchetype(rawArchetype);
+  const parsed = campaignBriefSchema.parse(input);
+  const { brief, imageSource, userImageUrl } = parsed;
   const { storeId, jobId, onPhase } = options;
+
+  if (imageSource === "upload" && !userImageUrl?.trim()) {
+    throw new DesignEngineError(
+      "Falta la imagen subida para crear la publicación.",
+      "MISSING_UPLOAD",
+      400
+    );
+  }
 
   try {
     getOpenAIClient();
@@ -143,28 +182,45 @@ export async function runDesignEngine(
   }
 
   try {
+    const brand = await loadStoreBrand(storeId);
+
     await onPhase?.("brief");
-    const { design, model, promptTokens, completionTokens } = await generateDesignFromBrief(
-      brief,
-      archetype
-    );
+    const { design, archetype, model, promptTokens, completionTokens } =
+      await generateDesignFromBrief(brief, brand, imageSource);
 
     await onPhase?.("composition");
-    const layout = resolveCompositionLayout(design);
+    const layout = resolveCompositionLayout(design, brand);
     const styleName = layout.name;
 
-    const imageConcept = clampImageConcept(design.imagePrompt);
-    const productLabel = brief.split(/[.!?\n]/)[0]?.trim().slice(0, 80) || "Producto";
+    let imageUrl: string;
+    let imageModel: string;
+    let imageCount = 0;
 
-    await onPhase?.("render");
-    const imageResult = await generateAdImage({
-      concept: imageConcept,
-      product: productLabel,
-      size: "1024x1024",
-      lighting: "auto",
-    });
+    if (imageSource === "upload" && userImageUrl) {
+      await onPhase?.("render");
+      imageUrl = userImageUrl.startsWith("http")
+        ? userImageUrl
+        : userImageUrl.startsWith("/")
+          ? userImageUrl
+          : `/${userImageUrl}`;
+      imageModel = "user-upload";
+    } else {
+      const imageConcept = clampImageConcept(design.imagePrompt);
+      const productLabel = brief.split(/[.!?\n]/)[0]?.trim().slice(0, 80) || brand.name;
 
-    const costBreakdown = calculateGenerationCost({ promptTokens, completionTokens }, 1);
+      await onPhase?.("render");
+      const imageResult = await generateAdImage({
+        concept: imageConcept,
+        product: productLabel,
+        size: "1024x1024",
+        lighting: "auto",
+      });
+      imageUrl = imageResult.imageUrl;
+      imageModel = imageResult.metadata.model;
+      imageCount = 1;
+    }
+
+    const costBreakdown = calculateGenerationCost({ promptTokens, completionTokens }, imageCount);
 
     await onPhase?.("persist");
     const generationId = await persistDesignGenerationAtomic({
@@ -172,23 +228,24 @@ export async function runDesignEngine(
       brief,
       design,
       styleName,
-      imageUrl: imageResult.imageUrl,
+      imageUrl,
       costBreakdown,
       textModel: model,
-      imageModel: imageResult.metadata.model,
+      imageModel,
       jobId,
     });
 
     return {
       design,
+      layout,
       styleName,
-      imageUrl: imageResult.imageUrl,
+      imageUrl,
       costoEstimado: costBreakdown.totalUsd,
       costBreakdown,
       generationId,
       metadata: {
         model,
-        imageModel: imageResult.metadata.model,
+        imageModel,
         generatedAt: new Date().toISOString(),
         durationMs: Date.now() - startedAt,
       },
@@ -207,7 +264,7 @@ export async function runDesignEngine(
       }
       if (error.status === 400) {
         throw new DesignEngineError(
-          "Contenido rechazado por políticas de OpenAI. Reformula el brief.",
+          "Contenido rechazado por políticas de OpenAI. Reformula tu instrucción.",
           "CONTENT_POLICY",
           400,
           { cause: error }

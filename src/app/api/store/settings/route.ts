@@ -32,6 +32,15 @@ export async function PATCH(request: NextRequest) {
     const rubro = rubroRaw ? parseStoreRubro(rubroRaw) : undefined;
     const rubroDef = rubro ? getStoreRubroDefinition(rubro) : null;
 
+    const primaryColorRaw = (formData.get("primaryColor") as string)?.trim();
+    const secondaryColorRaw = (formData.get("secondaryColor") as string)?.trim();
+    const primaryColor = /^#[0-9A-Fa-f]{6}$/.test(primaryColorRaw ?? "")
+      ? primaryColorRaw!
+      : undefined;
+    const secondaryColor = /^#[0-9A-Fa-f]{6}$/.test(secondaryColorRaw ?? "")
+      ? secondaryColorRaw!
+      : undefined;
+
     let logoUrl: string | undefined;
     let previewImageUrl: string | undefined;
     const logo = formData.get("logo") as File | null;
@@ -79,6 +88,8 @@ export async function PATCH(request: NextRequest) {
         ...(logoUrl ? { logoUrl } : {}),
         ...(previewImageUrl ? { previewImageUrl } : {}),
         ...(removePreview ? { previewImageUrl: null } : {}),
+        ...(primaryColor ? { primaryColor } : {}),
+        ...(secondaryColor ? { secondaryColor } : {}),
         // Al cambiar rubro sin nueva foto, usar imagen por defecto del rubro
         ...(rubroChanged && !hasNewPreviewImage ? { previewImageUrl: null } : {}),
       },

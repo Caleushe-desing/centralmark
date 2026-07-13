@@ -5,12 +5,16 @@ import { toPng } from "html-to-image";
 import { AdEngine } from "@/components/design-engine";
 import type { CompositionLayout } from "@/lib/design-engine/composition/rules";
 import type { DesignDocument } from "@/lib/design-engine/schemas";
-import type { VisualArchetype } from "@/lib/design-engine/archetypes";
-import { DEFAULT_ARCHETYPE } from "@/lib/design-engine/archetypes";
 import { Loader2 } from "lucide-react";
 
 const POLL_MS = 1500;
 const EXPORT_SIZE = 1080;
+
+export interface DesignGenerationRequest {
+  clientRequestId: string;
+  imageSource: "ai" | "upload";
+  userImageUrl?: string;
+}
 
 export interface DesignPreviewState {
   design: DesignDocument;
@@ -22,9 +26,9 @@ export interface DesignPreviewState {
 
 interface DesignEnginePreviewProps {
   brief: string;
-  archetype?: VisualArchetype;
-  /** Incrementar para disparar nueva generación */
+  generationRequest: DesignGenerationRequest | null;
   trigger: number;
+  logoUrl?: string | null;
   onReady: (state: DesignPreviewState) => void;
   onExportReady: (exporter: (() => Promise<Blob>) | null) => void;
   onError: (message: string) => void;
@@ -33,8 +37,9 @@ interface DesignEnginePreviewProps {
 
 export function DesignEnginePreview({
   brief,
-  archetype = DEFAULT_ARCHETYPE,
+  generationRequest,
   trigger,
+  logoUrl,
   onReady,
   onExportReady,
   onError,
@@ -52,11 +57,15 @@ export function DesignEnginePreview({
   const briefRef = useRef(brief);
   briefRef.current = brief;
 
-  const archetypeRef = useRef(archetype);
-  archetypeRef.current = archetype;
+  const requestRef = useRef(generationRequest);
+  requestRef.current = generationRequest;
+
+  const inflightRef = useRef(false);
+  const lastStartedRequestId = useRef<string | null>(null);
 
   const setLoad = useCallback((v: boolean) => {
     setLoading(v);
+    inflightRef.current = v;
     callbacksRef.current.onLoadingChange?.(v);
   }, []);
 
@@ -83,10 +92,20 @@ export function DesignEnginePreview({
   }, [preview, registerExport]);
 
   useEffect(() => {
-    if (!trigger) return;
+    if (!trigger || !generationRequest) return;
+
+    const req = requestRef.current;
+    if (!req) return;
+
+    const captured = { ...req };
+
+    if (lastStartedRequestId.current === captured.clientRequestId) return;
+    if (inflightRef.current) return;
 
     const briefText = briefRef.current.trim();
     if (!briefText) return;
+
+    lastStartedRequestId.current = captured.clientRequestId;
 
     let cancelled = false;
     let pollTimer: ReturnType<typeof setTimeout>;
@@ -99,6 +118,7 @@ export function DesignEnginePreview({
 
       if (!res.ok) {
         setLoad(false);
+        lastStartedRequestId.current = null;
         const msg = data.error ?? "Error al consultar generación";
         setLocalError(msg);
         callbacks.onError(msg);
@@ -124,6 +144,7 @@ export function DesignEnginePreview({
 
       if (data.status === "FAILED") {
         setLoad(false);
+        lastStartedRequestId.current = null;
         const msg = data.error ?? "La generación falló";
         setLocalError(msg);
         callbacks.onError(msg);
@@ -138,18 +159,24 @@ export function DesignEnginePreview({
       setPreview(null);
       setLocalError(null);
       callbacks.onExportReady(null);
-      setPhaseLabel("Iniciando…");
+      setPhaseLabel("Analizando tu instrucción…");
 
       try {
         const res = await fetch("/api/campaign/generate", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ brief: briefText, archetype: archetypeRef.current }),
+          body: JSON.stringify({
+            brief: briefText,
+            imageSource: captured.imageSource,
+            userImageUrl: captured.userImageUrl,
+            clientRequestId: captured.clientRequestId,
+          }),
         });
         const data = await res.json();
         if (cancelled) return;
 
         if (!res.ok) {
+          lastStartedRequestId.current = null;
           throw new Error(data.error ?? "No se pudo iniciar la generación");
         }
 
@@ -157,6 +184,7 @@ export function DesignEnginePreview({
       } catch (err) {
         if (!cancelled) {
           setLoad(false);
+          lastStartedRequestId.current = null;
           const msg = err instanceof Error ? err.message : "Error desconocido";
           setLocalError(msg);
           callbacks.onError(msg);
@@ -170,8 +198,7 @@ export function DesignEnginePreview({
       cancelled = true;
       clearTimeout(pollTimer);
     };
-    // Solo re-disparar cuando el usuario pulsa "Generar" (trigger), no en cada re-render del padre.
-  }, [trigger]);
+  }, [trigger, generationRequest, setLoad]);
 
   if (!preview && !loading && !localError) return null;
 
@@ -180,19 +207,12 @@ export function DesignEnginePreview({
       {localError && (
         <div className="rounded-xl border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-300">
           {localError}
-          {localError.includes("OPENAI") && (
-            <p className="mt-2 text-xs text-red-200/80">
-              El administrador del mall debe agregar una API key válida de OpenAI en el archivo{" "}
-              <code className="text-red-100">.env</code> del servidor (
-              <code className="text-red-100">OPENAI_API_KEY</code>).
-            </p>
-          )}
         </div>
       )}
       {loading && (
         <div className="flex items-center gap-2 text-sm text-mm-neon/90">
           <Loader2 className="w-4 h-4 animate-spin" />
-          <span>{phaseLabel ?? "Generando diseño premium…"}</span>
+          <span>{phaseLabel ?? "Creando tu publicación…"}</span>
         </div>
       )}
       {preview && (
@@ -201,6 +221,7 @@ export function DesignEnginePreview({
             <AdEngine
               ref={composerRef}
               imageUrl={preview.imageUrl}
+              logoUrl={logoUrl}
               copy={{
                 hook: preview.design.hook,
                 badge: preview.design.badge,

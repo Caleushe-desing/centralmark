@@ -9,6 +9,8 @@ import { CampaignStudio, type CampaignApplyPayload } from "@/components/Campaign
 interface StoreSettings {
   name: string;
   logoUrl: string | null;
+  primaryColor: string;
+  secondaryColor: string;
   customHashtags: string | null;
   rubro: string;
   category: string;
@@ -48,7 +50,7 @@ export default function TiendaPage() {
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-white">Mis Ofertas</h1>
         <p className="text-neutral-400 mt-1">
-          Genera la imagen con IA, edita textos sobre la foto, y escribe el post con sus hashtags.
+          Describe tu publicación en una sola instrucción. La IA crea imagen, textos y caption en español.
         </p>
       </div>
 
@@ -67,6 +69,8 @@ export default function TiendaPage() {
                   name: store.name,
                   mallName: store.mall.name,
                   logoUrl: store.logoUrl,
+                  primaryColor: store.primaryColor,
+                  secondaryColor: store.secondaryColor,
                   customHashtags: store.customHashtags,
                   rubro: store.rubro,
                   category: store.category,

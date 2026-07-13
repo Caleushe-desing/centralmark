@@ -14,10 +14,11 @@ export interface AdEngineProps {
   imageUrl: string;
   copy: AdCopySlots;
   layout: CompositionLayout;
+  logoUrl?: string | null;
 }
 
 export const AdEngine = forwardRef<HTMLDivElement, AdEngineProps>(function AdEngine(
-  { imageUrl, copy, layout },
+  { imageUrl, copy, layout, logoUrl },
   ref
 ) {
   const topSlots = layout.slots.filter((s) => s.zone === "top");
@@ -53,6 +54,16 @@ export const AdEngine = forwardRef<HTMLDivElement, AdEngineProps>(function AdEng
       <div style={topScrim} aria-hidden />
       <div style={bottomScrim} aria-hidden />
       <DecorativeLayer layout={layout} />
+
+      {logoUrl ? (
+        <div
+          className="absolute top-6 right-6 z-30 pointer-events-none rounded-md bg-white/90 p-1.5 shadow-lg"
+          aria-hidden
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={logoUrl} alt="" className="h-10 w-auto max-w-[88px] object-contain" />
+        </div>
+      ) : null}
 
       <div className={layout.overlayClass}>
         <div className={layout.topZoneClass}>

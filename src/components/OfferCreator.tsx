@@ -2,20 +2,17 @@
 
 import { CaptionEditor } from "@/components/CaptionEditor";
 import { CensoredInput, CensoredTextarea } from "@/components/CensoredField";
-import { OfferPreview } from "@/components/OfferPreview";
-import { DesignEnginePreview } from "@/components/design-engine/DesignEnginePreview";
-import { ArchetypeSelector } from "@/components/design-engine/ArchetypeSelector";
-import type { DesignPreviewState } from "@/components/design-engine/DesignEnginePreview";
-import type { VisualArchetype } from "@/lib/design-engine/archetypes";
-import { DEFAULT_ARCHETYPE } from "@/lib/design-engine/archetypes";
 import {
-  archetypeBriefPlaceholder,
-  BRIEF_STRUCTURE_HINT,
-} from "@/lib/design-engine/archetype-brief-placeholders";
+  DesignEnginePreview,
+  type DesignGenerationRequest,
+  type DesignPreviewState,
+} from "@/components/design-engine/DesignEnginePreview";
+import {
+  PUBLICATION_INSTRUCTION_HINT,
+  PUBLICATION_INSTRUCTION_PLACEHOLDER,
+} from "@/lib/design-engine/publication-instruction";
 import { buildDefaultHashtags } from "@/lib/offer/default-copy";
-import type { ImageCreationMode } from "@/lib/ai/image-generator";
-import type { TextLayer } from "@/lib/image/text-layers";
-import { ImagePlus, Scissors, Sparkles, Upload, Wand2, AlertTriangle } from "lucide-react";
+import { ImagePlus, Sparkles, Upload, AlertTriangle } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { CampaignApplyPayload } from "@/components/CampaignStudio";
 
@@ -23,6 +20,8 @@ interface StoreBranding {
   name: string;
   mallName: string;
   logoUrl?: string | null;
+  primaryColor?: string;
+  secondaryColor?: string;
   customHashtags?: string | null;
   rubro?: string | null;
   category?: string | null;
@@ -43,30 +42,22 @@ export function OfferCreator({
   onCreated: () => void;
 }) {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const generateLockRef = useRef(false);
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [imageSource, setImageSource] = useState<ImageSource>("ai");
-  const [aiCreationMode, setAiCreationMode] = useState<ImageCreationMode>("complete");
-  const [activeCreationMode, setActiveCreationMode] = useState<ImageCreationMode>("editor");
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [brief, setBrief] = useState("");
   const [caption, setCaption] = useState("");
   const [offerHashtags, setOfferHashtags] = useState("");
-  const [previewImageUrl, setPreviewImageUrl] = useState<string | null>(null);
-  const [previewLoading, setPreviewLoading] = useState(false);
-  const [previewMeta, setPreviewMeta] = useState<{
-    productName?: string;
-    discountPercent?: number | null;
-  } | null>(null);
   const [exportImage, setExportImage] = useState<(() => Promise<Blob>) | null>(null);
-  const [previewTextLayers, setPreviewTextLayers] = useState<TextLayer[] | undefined>();
-  const [captionSuggestLoading, setCaptionSuggestLoading] = useState(false);
-  const [campaignImagePrompt, setCampaignImagePrompt] = useState<string | null>(null);
   const [designTrigger, setDesignTrigger] = useState(0);
-  const [archetype, setArchetype] = useState<VisualArchetype>(DEFAULT_ARCHETYPE);
+  const [generationRequest, setGenerationRequest] = useState<DesignGenerationRequest | null>(null);
   const [designPreview, setDesignPreview] = useState<DesignPreviewState | null>(null);
-  const [generationPhase, setGenerationPhase] = useState<string | null>(null);
+  const [previewLoading, setPreviewLoading] = useState(false);
   const [aiConfigured, setAiConfigured] = useState<boolean | null>(null);
+  const [campaignImagePrompt, setCampaignImagePrompt] = useState<string | null>(null);
 
   useEffect(() => {
     fetch("/api/config")
@@ -80,11 +71,9 @@ export function OfferCreator({
     setBrief(campaignSeed.brief);
     setCaption(campaignSeed.caption);
     setOfferHashtags(campaignSeed.hashtags);
-    setPreviewMeta({ productName: campaignSeed.productName, discountPercent: null });
     setCampaignImagePrompt(campaignSeed.imagePrompt ?? null);
     setError(null);
     setImageSource("ai");
-    setAiCreationMode("complete");
   }, [campaignSeed?.applyId, campaignSeed]);
 
   const handleRegisterExport = useCallback(
@@ -93,150 +82,11 @@ export function OfferCreator({
   );
 
   function resetPreview() {
-    setPreviewImageUrl(null);
-    setPreviewMeta(null);
-    setPreviewTextLayers(undefined);
     setExportImage(null);
-    setActiveCreationMode("editor");
     setCaption("");
     setOfferHashtags("");
-    setUploadedFile(null);
     setDesignPreview(null);
-    setGenerationPhase(null);
-  }
-
-  function applyAiSuggestions(data: {
-    productName?: string;
-    discountPercent?: number | null;
-    caption?: string;
-    suggestedCaption?: string;
-    suggestedHashtags?: string;
-    offerHashtags?: string;
-    textLayers?: TextLayer[];
-  }) {
-    const meta = {
-      productName: data.productName,
-      discountPercent: data.discountPercent,
-    };
-    setPreviewMeta(meta);
-    if (data.textLayers?.length) {
-      setPreviewTextLayers(data.textLayers);
-    }
-
-    if (storeBranding) {
-      setCaption(
-        data.caption?.trim() || data.suggestedCaption?.trim() || ""
-      );
-      setOfferHashtags(
-        data.offerHashtags?.trim() ||
-          data.suggestedHashtags?.trim() ||
-          buildDefaultHashtags(null, meta.productName)
-      );
-    }
-  }
-
-  async function suggestCaption() {
-    if (!brief.trim()) {
-      setError("Escribe primero la idea para la imagen");
-      return;
-    }
-    setCaptionSuggestLoading(true);
-    setError(null);
-    try {
-      const res = await fetch("/api/store/suggest-caption", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          aiBrief: brief,
-          productName: previewMeta?.productName,
-          discountPercent: previewMeta?.discountPercent,
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "No se pudo sugerir texto");
-      setCaption(data.caption);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Error al sugerir texto");
-    } finally {
-      setCaptionSuggestLoading(false);
-    }
-  }
-
-  function generatePreview() {
-    if (!brief.trim()) {
-      setError("Escribe qué quieres publicar");
-      return;
-    }
-    if (aiConfigured === false) {
-      setError(
-        "La generación con IA no está disponible. Pide al administrador del mall que configure OPENAI_API_KEY en el servidor."
-      );
-      return;
-    }
-    setError(null);
-    setDesignPreview(null);
-    setPreviewImageUrl(null);
-    setExportImage(null);
-    setDesignTrigger((t) => t + 1);
-  }
-
-  const handleDesignReady = useCallback((state: DesignPreviewState) => {
-    setDesignPreview(state);
-    setPreviewMeta({ productName: state.design.hook, discountPercent: null });
-    setCaption(state.design.caption);
-    setOfferHashtags((prev) =>
-      prev.trim() ? prev : buildDefaultHashtags(null, state.design.hook)
-    );
-  }, []);
-
-  const handlePreviewLoadingChange = useCallback((v: boolean) => {
-    setPreviewLoading(v);
-    if (!v) setGenerationPhase(null);
-  }, []);
-
-type UploadMode = "default" | "enhance" | "removeBg";
-
-  async function processUpload(mode: UploadMode = "default") {
-    if (!uploadedFile) {
-      setError("Selecciona una imagen de tu computador");
-      return;
-    }
-
-    setPreviewLoading(true);
-    setError(null);
-    if (mode === "default") {
-      setPreviewImageUrl(null);
-      setPreviewMeta(null);
-      setExportImage(null);
-    }
-
-    const formData = new FormData();
-    formData.set("image", uploadedFile);
-    if (brief.trim()) formData.set("aiBrief", brief);
-    if (mode === "enhance") formData.set("enhance", "true");
-    if (mode === "removeBg") formData.set("removeBg", "true");
-
-    const res = await fetch("/api/store/upload-offer-image", {
-      method: "POST",
-      body: formData,
-    });
-
-    setPreviewLoading(false);
-
-    if (!res.ok) {
-      const data = await res.json().catch(() => ({}));
-      setError((data as { error?: string }).error ?? "No se pudo procesar la imagen");
-      return;
-    }
-
-    const data = await res.json();
-    setPreviewImageUrl(data.previewDataUrl ?? data.previewUrl);
-    setActiveCreationMode("editor");
-    applyAiSuggestions(data);
-
-    if (mode === "enhance" && !data.enhanced) {
-      setError("La IA no pudo mejorar la imagen — se usó tu foto original.");
-    }
+    setGenerationRequest(null);
   }
 
   function handleFileSelect(file: File | null) {
@@ -246,22 +96,86 @@ type UploadMode = "default" | "enhance" | "removeBg";
       return;
     }
     setError(null);
-    setPreviewImageUrl(null);
-    setPreviewMeta(null);
-    setExportImage(null);
-    setCaption("");
-    setOfferHashtags("");
     setUploadedFile(file);
+    if (designPreview) resetPreview();
   }
+
+  async function handleGenerate() {
+    if (generateLockRef.current || previewLoading) return;
+
+    if (!brief.trim() || brief.trim().length < 10) {
+      setError("Describe tu publicación con más detalle (mínimo 10 caracteres)");
+      return;
+    }
+    if (aiConfigured === false) {
+      setError(
+        "La generación con IA no está disponible. Pide al administrador del mall que configure OPENAI_API_KEY en el servidor."
+      );
+      return;
+    }
+    if (imageSource === "upload" && !uploadedFile) {
+      setError("Sube una foto de tu producto o elige «Crear imagen con IA»");
+      return;
+    }
+
+    generateLockRef.current = true;
+    setError(null);
+    setDesignPreview(null);
+    setExportImage(null);
+
+    try {
+      let userImageUrl: string | undefined;
+
+      if (imageSource === "upload" && uploadedFile) {
+        const formData = new FormData();
+        formData.set("image", uploadedFile);
+        const uploadRes = await fetch("/api/store/upload-source-image", {
+          method: "POST",
+          body: formData,
+        });
+        const uploadData = await uploadRes.json();
+        if (!uploadRes.ok) {
+          throw new Error(uploadData.error ?? "No se pudo subir la imagen");
+        }
+        userImageUrl = uploadData.imageUrl as string;
+      }
+
+      const clientRequestId = crypto.randomUUID();
+      setGenerationRequest({
+        clientRequestId,
+        imageSource,
+        userImageUrl,
+      });
+      setDesignTrigger((t) => t + 1);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Error al preparar la generación");
+    } finally {
+      window.setTimeout(() => {
+        generateLockRef.current = false;
+      }, 800);
+    }
+  }
+
+  const handleDesignReady = useCallback((state: DesignPreviewState) => {
+    setDesignPreview(state);
+    setCaption(state.design.caption);
+    setOfferHashtags((prev) =>
+      prev.trim() ? prev : buildDefaultHashtags(null, state.design.hook)
+    );
+  }, []);
+
+  const handlePreviewLoadingChange = useCallback((v: boolean) => {
+    setPreviewLoading(v);
+  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!exportImage) {
-      setError("Primero genera tu publicación con el motor de diseño");
+      setError("Primero genera tu publicación");
       return;
     }
     if (!caption.trim()) {
-      setError("Escribe el texto de la publicación");
+      setError("Falta el texto de la publicación para Instagram/Facebook");
       return;
     }
     if (!offerHashtags.trim()) {
@@ -286,6 +200,7 @@ type UploadMode = "default" | "enhance" | "removeBg";
         throw new Error(data.error ?? "Error al crear oferta");
       }
       setBrief("");
+      setUploadedFile(null);
       resetPreview();
       onCreated();
     } catch (err) {
@@ -294,6 +209,8 @@ type UploadMode = "default" | "enhance" | "removeBg";
       setLoading(false);
     }
   }
+
+  const brandSwatch = storeBranding?.primaryColor ?? "#E11D48";
 
   return (
     <div className="grid lg:grid-cols-2 gap-6 items-start">
@@ -307,14 +224,13 @@ type UploadMode = "default" | "enhance" | "removeBg";
             <div className="space-y-1">
               <p className="font-medium text-amber-50">Generación con IA no disponible</p>
               <p className="text-xs text-amber-200/90 leading-relaxed">
-                Falta configurar <code className="text-amber-100">OPENAI_API_KEY</code>. En Cloud
-                Agents: en el dashboard → Agentes en la nube → clic en tu repo →{" "}
-                <strong className="text-amber-100">Secretos de ejecución</strong> (no «Claves API»).
-                Luego <code className="text-amber-100">/iniciar-jornada</code> o reinicia el servidor.
+                Configura <code className="text-amber-100">OPENAI_API_KEY</code> en el servidor para
+                crear publicaciones con IA.
               </p>
             </div>
           </div>
         )}
+
         <div className="flex items-center gap-2">
           <Sparkles className="w-5 h-5 text-mm-neon" />
           <h2 className="text-lg font-semibold text-white">Nueva publicación</h2>
@@ -328,13 +244,11 @@ type UploadMode = "default" | "enhance" | "removeBg";
               resetPreview();
             }}
             className={`flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium transition ${
-              imageSource === "ai"
-                ? "bg-mm-neon text-black"
-                : "text-neutral-400 hover:text-white"
+              imageSource === "ai" ? "bg-mm-neon text-black" : "text-neutral-400 hover:text-white"
             }`}
           >
             <Sparkles className="w-4 h-4" />
-            Generar con IA
+            Crear imagen con IA
           </button>
           <button
             type="button"
@@ -349,12 +263,12 @@ type UploadMode = "default" | "enhance" | "removeBg";
             }`}
           >
             <Upload className="w-4 h-4" />
-            Subir mi foto
+            Usar mi foto
           </button>
         </div>
 
-        {imageSource === "upload" ? (
-          <div className="space-y-3">
+        {imageSource === "upload" && (
+          <>
             <input
               ref={fileInputRef}
               type="file"
@@ -370,140 +284,83 @@ type UploadMode = "default" | "enhance" | "removeBg";
                 e.preventDefault();
                 handleFileSelect(e.dataTransfer.files?.[0] ?? null);
               }}
-              className="w-full py-8 rounded-xl border-2 border-dashed border-white/15 hover:border-mm-neon/50 hover:bg-mm-neon/5 transition flex flex-col items-center gap-2"
+              className="w-full py-6 rounded-xl border-2 border-dashed border-white/15 hover:border-mm-neon/50 hover:bg-mm-neon/5 transition flex flex-col items-center gap-2"
             >
-              <ImagePlus className="w-8 h-8 text-mm-neon" />
+              <ImagePlus className="w-7 h-7 text-mm-neon" />
               <span className="text-sm text-white font-medium">
-                {uploadedFile ? uploadedFile.name : "Arrastra o elige una imagen"}
+                {uploadedFile ? uploadedFile.name : "Arrastra o elige tu foto de producto"}
               </span>
-              <span className="text-xs text-neutral-500">JPG, PNG o WebP · máx. 12 MB</span>
+              <span className="text-xs text-neutral-500">Sin costo de imagen IA · JPG, PNG o WebP</span>
             </button>
+          </>
+        )}
 
-            <div>
-              <label className="block text-sm text-neutral-400 mb-1">
-                Qué quieres comunicar (la IA lee tu foto + este texto)
-              </label>
-              <CensoredTextarea
-                name="uploadBrief"
-                value={brief}
-                onChange={setBrief}
-                rows={3}
-                placeholder="Ej: 35% off en zapatos de fútbol, outlet, solo esta semana…"
-                className="w-full bg-mm-surface border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-neutral-600 resize-none"
-              />
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-              <button
-                type="button"
-                disabled={previewLoading || !uploadedFile}
-                onClick={() => processUpload("default")}
-                className="py-2.5 rounded-xl bg-mm-neon/90 text-black text-sm hover:bg-mm-neon-dim disabled:opacity-50"
-              >
-                {previewLoading ? "Procesando…" : "Usar foto + IA"}
-              </button>
-              <button
-                type="button"
-                disabled={previewLoading || !uploadedFile}
-                onClick={() => processUpload("removeBg")}
-                className="py-2.5 rounded-xl border border-emerald-500/40 text-emerald-300 text-sm hover:bg-emerald-500/10 disabled:opacity-50 flex items-center justify-center gap-1"
-                title="Recorta el producto y lo pone sobre fondo limpio"
-              >
-                <Scissors className="w-4 h-4" />
-                Quitar fondo
-              </button>
-              <button
-                type="button"
-                disabled={previewLoading || !uploadedFile}
-                onClick={() => processUpload("enhance")}
-                className="py-2.5 rounded-xl border border-mm-yellow/40 text-mm-yellow hover:bg-mm-yellow/10 disabled:opacity-50 flex items-center justify-center gap-1"
-              >
-                <Wand2 className="w-4 h-4" />
-                Mejorar IA
-              </button>
-            </div>
-            <p className="text-xs text-neutral-600">
-              <strong className="text-emerald-400/80">Quitar fondo:</strong> recorta el producto y lo
-              centra en fondo blanco tipo catálogo. Mejor calidad con{" "}
-              <code className="text-neutral-500">REMOVEBG_API_KEY</code> en .env.
+        <div>
+          <label className="block text-sm text-neutral-400 mb-1">
+            Describe tu publicación *
+          </label>
+          {campaignImagePrompt && (
+            <p className="text-xs text-mm-yellow/90 bg-mm-yellow/5 border border-mm-yellow/20 rounded-lg px-3 py-2 mb-2 leading-relaxed">
+              <strong className="text-mm-yellow">Sugerencia de campaña:</strong>{" "}
+              {campaignImagePrompt.slice(0, 220)}
+              {campaignImagePrompt.length > 220 ? "…" : ""}
             </p>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            <ArchetypeSelector
-              value={archetype}
-              onChange={(next) => {
-                setArchetype(next);
-                if (designPreview) {
-                  setDesignPreview(null);
-                  setExportImage(null);
-                }
-              }}
-              disabled={previewLoading || loading}
-              storeContext={{
-                storeName: storeBranding?.name ?? "Tu tienda",
-                rubro: storeBranding?.rubro,
-                category: storeBranding?.category,
-                previewImageUrl: storeBranding?.previewImageUrl,
-              }}
+          )}
+          <CensoredTextarea
+            name="publicationInstruction"
+            value={brief}
+            onChange={(v) => {
+              setBrief(v);
+              if (designPreview) resetPreview();
+            }}
+            rows={6}
+            placeholder={PUBLICATION_INSTRUCTION_PLACEHOLDER}
+            className="w-full bg-mm-surface border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-neutral-600 resize-none"
+          />
+          <p className="text-xs text-neutral-500 mt-1.5 leading-relaxed">{PUBLICATION_INSTRUCTION_HINT}</p>
+        </div>
+
+        {storeBranding && (
+          <div className="flex items-center gap-3 text-xs text-neutral-500">
+            <span
+              className="w-4 h-4 rounded-full border border-white/20 shrink-0"
+              style={{ backgroundColor: brandSwatch }}
+              aria-hidden
             />
-
-            <div>
-              <label className="block text-sm text-neutral-400 mb-1">
-                Idea para tu publicación *
-              </label>
-              {campaignImagePrompt && (
-                <p className="text-xs text-mm-yellow/90 bg-mm-yellow/5 border border-mm-yellow/20 rounded-lg px-3 py-2 mb-2 leading-relaxed">
-                  <strong className="text-mm-yellow">Sugerencia de campaña:</strong>{" "}
-                  {campaignImagePrompt.slice(0, 220)}
-                  {campaignImagePrompt.length > 220 ? "…" : ""}
-                </p>
-              )}
-              <CensoredTextarea
-                name="aiBrief"
-                value={brief}
-                onChange={(v) => {
-                  setBrief(v);
-                  if (designPreview || previewImageUrl) resetPreview();
-                }}
-                rows={5}
-                placeholder={archetypeBriefPlaceholder(archetype)}
-                className="w-full bg-mm-surface border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-neutral-600 resize-none"
-              />
-              <p className="text-xs text-neutral-500 mt-1.5 leading-relaxed">{BRIEF_STRUCTURE_HINT}</p>
-            </div>
-
-            <p className="text-xs text-neutral-600">
-              El Design Engine aplica las reglas del arquetipo elegido a imagen y textos.
-            </p>
-
-            <button
-              type="button"
-              disabled={previewLoading || loading || aiConfigured === false}
-              onClick={generatePreview}
-              className="w-full py-2.5 rounded-xl bg-mm-neon/90 text-black text-sm hover:bg-mm-neon-dim disabled:opacity-50"
-            >
-              {previewLoading ? (generationPhase ?? "Generando…") : "✨ Generar con Design Engine"}
-            </button>
+            <span>
+              La IA usará los colores de tu marca
+              {storeBranding.logoUrl ? " y tu logo" : ""}. Configúralos en{" "}
+              <a href="/tienda/configuracion" className="text-mm-neon/80 underline">
+                Configuración
+              </a>
+              .
+            </span>
           </div>
         )}
 
-        {(designPreview || previewImageUrl || caption.trim()) && (
+        <button
+          type="button"
+          disabled={previewLoading || loading || aiConfigured === false}
+          onClick={handleGenerate}
+          className="w-full py-2.5 rounded-xl bg-mm-neon/90 text-black text-sm font-medium hover:bg-mm-neon-dim disabled:opacity-50"
+        >
+          {previewLoading ? "Creando publicación…" : "✨ Generar publicación"}
+        </button>
+
+        {designPreview && (
           <div className="space-y-4 pt-2 border-t border-white/10">
             <div>
               <label className="block text-sm text-neutral-400 mb-1">
-                Texto de la publicación (Instagram/Facebook, fuera de la foto) *
+                Texto para Instagram / Facebook (fuera de la foto) *
               </label>
               <CaptionEditor
                 value={caption}
                 onChange={setCaption}
-                onSuggest={suggestCaption}
-                suggestLoading={captionSuggestLoading}
-                placeholder="Ej: 🔥 35% OFF en zapatos de fútbol. Solo hasta agotar stock…"
+                placeholder="La IA generará un caption profesional en español…"
                 className="w-full bg-mm-surface border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-neutral-600 resize-none"
               />
-              <p className="text-xs text-neutral-600">
-                La IA propone un texto según tu idea; puedes editarlo libremente.
+              <p className="text-xs text-neutral-600 mt-1">
+                Generado por IA en español. Puedes editarlo antes de publicar.
               </p>
             </div>
 
@@ -513,7 +370,7 @@ type UploadMode = "default" | "enhance" | "removeBg";
                 name="offerHashtags"
                 value={offerHashtags}
                 onChange={setOfferHashtags}
-                placeholder="#Outlet #Futbol #Zapatillas"
+                placeholder="#Oferta #TuTienda"
                 className="w-full bg-mm-surface border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-neutral-600"
               />
               {mallHashtags && (
@@ -529,11 +386,11 @@ type UploadMode = "default" | "enhance" | "removeBg";
 
         {storeBranding && !storeBranding.logoUrl && (
           <p className="text-xs text-amber-400/80">
-            Sube el logo de tu tienda en{" "}
+            Sube el logo en{" "}
             <a href="/tienda/configuracion" className="underline hover:text-amber-300">
               Configuración
             </a>{" "}
-            para que aparezca en tus publicaciones (esquina superior derecha).
+            para que aparezca en tus publicaciones.
           </p>
         )}
 
@@ -542,44 +399,25 @@ type UploadMode = "default" | "enhance" | "removeBg";
           disabled={loading || previewLoading || !exportImage}
           className="w-full py-3 rounded-xl mm-btn-primary mm-glow-neon disabled:opacity-50"
         >
-          {loading ? "Subiendo publicación…" : "Subir publicación"}
+          {loading ? "Publicando…" : "Publicar en vitrina"}
         </button>
       </form>
 
-      <div className="lg:sticky lg:top-24">
-        {imageSource === "ai" ? (
-          <div className="space-y-4">
-            <DesignEnginePreview
-              brief={brief}
-              archetype={archetype}
-              trigger={designTrigger}
-              onReady={handleDesignReady}
-              onExportReady={handleRegisterExport}
-              onError={setError}
-              onLoadingChange={handlePreviewLoadingChange}
-            />
-            {!designPreview && !previewLoading && (
-              <p className="text-neutral-600 text-sm text-center py-12">
-                La vista previa aparecerá aquí al generar
-              </p>
-            )}
-          </div>
-        ) : (
-          <OfferPreview
-            previewImageUrl={previewImageUrl}
-            previewLoading={previewLoading}
-            creationMode={activeCreationMode}
-            productName={previewMeta?.productName}
-            discountPercent={previewMeta?.discountPercent ?? undefined}
-            caption={caption}
-            offerHashtags={offerHashtags}
-            mallHashtags={mallHashtags}
-            storeName={storeBranding?.name}
-            mallName={storeBranding?.mallName}
-            logoUrl={storeBranding?.logoUrl}
-            initialTextLayers={previewTextLayers}
-            onRegisterExport={handleRegisterExport}
-          />
+      <div className="lg:sticky lg:top-24 space-y-4">
+        <DesignEnginePreview
+          brief={brief}
+          generationRequest={generationRequest}
+          trigger={designTrigger}
+          logoUrl={storeBranding?.logoUrl}
+          onReady={handleDesignReady}
+          onExportReady={handleRegisterExport}
+          onError={setError}
+          onLoadingChange={handlePreviewLoadingChange}
+        />
+        {!designPreview && !previewLoading && (
+          <p className="text-neutral-600 text-sm text-center py-12">
+            Escribe tu instrucción y pulsa Generar. La vista previa aparecerá aquí.
+          </p>
         )}
       </div>
     </div>

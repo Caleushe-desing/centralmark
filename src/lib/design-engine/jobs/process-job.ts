@@ -1,5 +1,4 @@
 import { createDesignJob, updateJobPhase, getDesignJobRecord, tryClaimDesignJob } from "./job-store";
-import { parseArchetype } from "../archetypes";
 import type { DesignGenerationResult } from "../schemas";
 
 export type JobPhase = "queued" | "brief" | "composition" | "render" | "persist" | "done" | "failed";
@@ -26,14 +25,18 @@ export async function processDesignJob(jobId: string): Promise<void> {
     const fullJob = await prisma.designGenerationJob.findUnique({ where: { id: jobId } });
     if (!fullJob || fullJob.status === "COMPLETED" || fullJob.status === "FAILED") return;
 
-    const { runDesignEngine, resolveCompositionLayout } = await import("../generate/orchestrator");
+    const { runDesignEngine } = await import("../generate/orchestrator");
     const { DesignEngineError } = await import("../errors");
 
     try {
       await updateJobPhase(jobId, "brief", "PROCESSING");
 
       const result = await runDesignEngine(
-        { brief: fullJob.brief, archetype: parseArchetype(fullJob.archetype) },
+        {
+          brief: fullJob.brief,
+          imageSource: (fullJob.imageSource === "upload" ? "upload" : "ai") as "ai" | "upload",
+          userImageUrl: fullJob.userImageUrl ?? undefined,
+        },
         {
           storeId: fullJob.storeId,
           jobId,
@@ -43,16 +46,15 @@ export async function processDesignJob(jobId: string): Promise<void> {
         }
       );
 
-      const layout = resolveCompositionLayout(result.design);
-
       await prisma.designGenerationJob.update({
         where: { id: jobId },
         data: {
           status: "COMPLETED",
           phase: "done",
-          resultJson: JSON.stringify({ ...result, layout }),
+          resultJson: JSON.stringify(result),
           costUsd: result.costoEstimado,
           completedAt: new Date(),
+          archetype: result.design.compositionCategory,
         },
       });
       pollFallbackKicked.delete(jobId);

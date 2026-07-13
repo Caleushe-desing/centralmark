@@ -1,63 +1,67 @@
 import { buildLayoutCatalogForPrompt } from "../composition/rules";
-import { getArchetypeDefinition, type VisualArchetype } from "../archetypes";
+import type { StoreBrandContext } from "../store-branding";
 
-function buildArchetypeSystemPrompt(archetype: VisualArchetype): string {
-  const def = getArchetypeDefinition(archetype);
-
-  const slotMapping: Record<VisualArchetype, string> = {
-    drop: `badge (eyebrow hype corto), hook (titular MASIVO 4-8 palabras en mayúsculas), subtext (descuento brutal: "-50% DTO" o similar), cta (urgencia con ·)`,
-    spotlight: `badge (etiqueta mínima ultraligera), hook (nombre producto 2-5 palabras, peso 200), subtext (una línea descriptiva ligera), cta (discreto con hairline)`,
-    editorial: `badge (línea edición/masthead serif), hook (titular portada 3-4 palabras, puede mezclar roman + itálica), subtext (bajada poética), cta (invitación sobria "VER COLECCIÓN")`,
-    promo: `subtext (SOLO el porcentaje: "50%" o "-50% OFF" — renderizado grande integrado), hook (nombre promo/colección), badge (contexto breve), cta (llamada comercial en bloque curado)`,
-  };
-
-  const imageStyle: Record<VisualArchetype, string> = {
-    drop: "Dynamic urban street fashion, model in motion, wet pavement, neon glow, high energy, cinematic — space for massive typography breaking the grid. NO text in image.",
-    spotlight: "Clean product hero shot, soft studio or minimal environment, abundant negative space center, subtle lighting, catalog premium. NO text in image.",
-    editorial: "High-fashion editorial photography, Vogue aesthetic, soft natural light, muted luxury grading, negative space for serif typography. NO text in image.",
-    promo: "Premium retail lifestyle, balanced composition with clean area for curated promo block, warm sophisticated tones. NO text in image.",
-  };
-
-  return `Eres director creativo de MarkMall Design Engine.
-Arquetipo activo: "${def.label}" (${archetype}).
-
-═══ REGLAS DE COMPOSICIÓN (OBLIGATORIAS) ═══
-${def.compositionRules}
-
-═══ MAPEO DE SLOTS ═══
-${slotMapping[archetype]}
-
-═══ COMPOSITION ENGINE ═══
-OBLIGATORIO: compositionCategory "${archetype}"
-Layout preferido: "${def.defaultLayoutId}"
-
-═══ imagePrompt ═══
-EN INGLÉS. Máx 2 oraciones (~350 chars).
-${imageStyle[archetype]}
-
-═══ caption ═══
-Caption Instagram alineado al arquetipo ${def.label}: AIDA, emojis moderados, hashtags relevantes.
-
-Responde SOLO el JSON del schema.`;
+export interface PublicationPromptContext {
+  brief: string;
+  brand: StoreBrandContext;
+  imageSource: "ai" | "upload";
 }
 
-export function getDesignerSystemPrompt(archetype: VisualArchetype): string {
-  return buildArchetypeSystemPrompt(archetype);
+function buildCreativeSystemPrompt(): string {
+  return `Eres director creativo senior de MarkMall. El usuario escribe UNA instrucción libre; tú interpretas todo y entregas una publicación completa para Instagram/Facebook (1080×1080).
+
+═══ IDIOMA (OBLIGATORIO) ═══
+- badge, hook, subtext, cta y caption → ESPAÑOL NATIVO comercial premium (Chile/LATAM).
+- PROHIBIDO inglés y anglicismos de marketing: OFF, SALE, SHOP, NEW, LIMITED, BUY, etc.
+- Usa: DTO, DESCUENTO, COMPRA, OFERTA, EXCLUSIVO, STOCK LIMITADO.
+
+═══ IMAGEN (imagePrompt) ═══
+- INGLÉS descriptivo, máx. 2 oraciones (~350 caracteres).
+- Escena ÚNICA y llamativa para redes: variar encuadre, luz, ambiente según el brief del usuario.
+- NO texto, letras ni palabras renderizadas en la foto.
+- Debe captar atención en scroll (contraste, energía visual, producto protagonista).
+
+═══ COMPOSICIÓN ═══
+- Elige compositionCategory y compositionLayoutId según la intención del brief (no uses siempre el mismo).
+- Catálogo de layouts disponible en el mensaje del usuario.
+
+═══ TEXTOS EN IMAGEN ═══
+- badge: etiqueta corta | hook: titular principal | subtext: oferta/descuento | cta: urgencia
+- Refleja lo que el usuario pidió; si no especifica textos, propón copy impactante en español.
+
+═══ CAPTION EXTERNO (feed IG/FB) ═══
+- 2-4 líneas profesionales, complementa la imagen (no repitas literalmente todos los slots).
+- Emojis moderados (1-3), SIN hashtags en el caption.
+- Tono comercial cercano, CTA claro.
+
+Responde ÚNICAMENTE el JSON del schema.`;
 }
 
-export function buildProAdUserPrompt(brief: string, archetype: VisualArchetype): string {
-  const def = getArchetypeDefinition(archetype);
+export function getDesignerSystemPrompt(): string {
+  return buildCreativeSystemPrompt();
+}
 
-  return `Brief del cliente:
+export function buildProAdUserPrompt(ctx: PublicationPromptContext): string {
+  const { brief, brand, imageSource } = ctx;
+
+  return `INSTRUCCIÓN DEL CLIENTE (interpreta todo):
 "${brief.trim()}"
 
-ARQUETIPO SELECCIONADO: ${def.label} — ${def.marketingPurpose}
+MARCA DE LA TIENDA:
+- Nombre: ${brand.name}
+- Color primario (acentos): ${brand.primaryColor}
+- Color secundario (contraste): ${brand.secondaryColor}
+- Rubro: ${brand.category ?? brand.rubro ?? "retail"}
 
-CATÁLOGO DE LAYOUTS (usa compositionCategory "${archetype}"):
+FUENTE DE IMAGEN: ${imageSource === "upload" ? "El usuario subió su foto — imagePrompt describe solo ambiente/estilo de apoyo si aplica; la foto base ya existe." : "Generar imagen nueva con IA según el brief."}
+
+Integra los colores de marca como acentos visuales en imagePrompt cuando sea coherente.
+
+CATÁLOGO DE LAYOUTS (elige el más adecuado al brief):
 ${buildLayoutCatalogForPrompt()}
 
-Genera: compositionCategory, compositionLayoutId, badge, hook, subtext, cta, imagePrompt (~350 chars), caption.`;
+Genera: compositionCategory, compositionLayoutId, badge, hook, subtext, cta, imagePrompt, caption.`;
 }
 
 /** @deprecated */
-export const PRO_AD_DESIGNER_SYSTEM = buildArchetypeSystemPrompt("editorial");
+export const PRO_AD_DESIGNER_SYSTEM = buildCreativeSystemPrompt();

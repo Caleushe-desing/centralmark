@@ -19,7 +19,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const jobId = await createDesignJob(session.storeId, parsed.data.brief, parsed.data.archetype);
+    const jobId = await createDesignJob(session.storeId, parsed.data);
     after(() => {
       enqueueDesignJob(jobId);
     });

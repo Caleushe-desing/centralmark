@@ -194,12 +194,15 @@ enum DesignJobStatus {
 
 /** Trabajos asíncronos del Design Engine (polling) */
 model DesignGenerationJob {
-  id            String           @id @default(cuid())
-  storeId       String
-  store         Store            @relation(fields: [storeId], references: [id], onDelete: Cascade)
-  brief         String
+  id              String           @id @default(cuid())
+  storeId         String
+  store           Store            @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  brief           String
   archetype       String           @default("drop")
-  status        DesignJobStatus  @default(QUEUED)
+  imageSource     String           @default("ai")
+  userImageUrl    String?
+  clientRequestId String?
+  status          DesignJobStatus  @default(QUEUED)
   phase         String           @default("queued")
   errorMessage  String?
   resultJson    String?

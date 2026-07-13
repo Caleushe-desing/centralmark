@@ -1,10 +1,12 @@
 import { prisma } from "@/lib/db";
 import { assertStoreAiRateLimit, StoreAiRateLimitError } from "@/lib/ai/rate-limit/store-ai-limiter";
-import { parseArchetype, type VisualArchetype } from "../archetypes";
+import { parseArchetype } from "../archetypes";
+import type { CampaignBriefInput } from "../schemas/brief";
 import { DesignEngineError } from "../errors";
 
 const STALE_PROCESSING_MS = 8 * 60 * 1000;
 const STALE_QUEUED_MS = 3 * 60 * 1000;
+const DUPLICATE_REQUEST_MS = 5 * 60 * 1000;
 
 /** Jobs huérfanos en cola o procesamiento bloquean nuevas generaciones — se marcan como fallidos. */
 export async function reconcileStaleDesignJobsForStore(storeId: string): Promise<void> {
@@ -61,6 +63,27 @@ export async function assertNoInflightDesignJob(storeId: string): Promise<void> 
   }
 }
 
+/** Evita cobrar dos veces por doble clic con el mismo clientRequestId */
+export async function findDuplicateDesignJob(
+  storeId: string,
+  clientRequestId: string | undefined
+): Promise<string | null> {
+  if (!clientRequestId) return null;
+
+  const since = new Date(Date.now() - DUPLICATE_REQUEST_MS);
+  const existing = await prisma.designGenerationJob.findFirst({
+    where: {
+      storeId,
+      clientRequestId,
+      createdAt: { gte: since },
+      status: { in: ["QUEUED", "PROCESSING", "COMPLETED"] },
+    },
+    orderBy: { createdAt: "desc" },
+  });
+
+  return existing?.id ?? null;
+}
+
 /** Marca jobs colgados en PROCESSING como fallidos (evita re-ejecutar y cobrar dos veces). */
 export async function failStaleProcessingJobs(jobId: string): Promise<void> {
   const staleBefore = new Date(Date.now() - STALE_PROCESSING_MS);
@@ -94,28 +117,49 @@ export async function tryClaimDesignJob(jobId: string): Promise<boolean> {
 
 export async function createDesignJob(
   storeId: string,
-  brief: string,
-  archetype: VisualArchetype = "drop"
+  input: CampaignBriefInput
 ): Promise<string> {
-  try {
-    assertStoreAiRateLimit(storeId, "premium");
-  } catch (error) {
-    if (error instanceof StoreAiRateLimitError) {
-      throw new DesignEngineError(error.message, "STORE_RATE_LIMIT", 429, {
-        cause: error,
-        retryAfterSeconds: error.retryAfterSeconds,
-      });
+  const imageSource = input.imageSource ?? "ai";
+
+  if (imageSource === "ai") {
+    try {
+      assertStoreAiRateLimit(storeId, "premium");
+    } catch (error) {
+      if (error instanceof StoreAiRateLimitError) {
+        throw new DesignEngineError(error.message, "STORE_RATE_LIMIT", 429, {
+          cause: error,
+          retryAfterSeconds: error.retryAfterSeconds,
+        });
+      }
+      throw error;
     }
-    throw error;
+  } else {
+    try {
+      assertStoreAiRateLimit(storeId, "standard");
+    } catch (error) {
+      if (error instanceof StoreAiRateLimitError) {
+        throw new DesignEngineError(error.message, "STORE_RATE_LIMIT", 429, {
+          cause: error,
+          retryAfterSeconds: error.retryAfterSeconds,
+        });
+      }
+      throw error;
+    }
   }
+
+  const duplicateId = await findDuplicateDesignJob(storeId, input.clientRequestId);
+  if (duplicateId) return duplicateId;
 
   await assertNoInflightDesignJob(storeId);
 
   const job = await prisma.designGenerationJob.create({
     data: {
       storeId,
-      brief,
-      archetype: parseArchetype(archetype),
+      brief: input.brief,
+      archetype: input.archetype ? parseArchetype(input.archetype) : "drop",
+      imageSource,
+      userImageUrl: input.userImageUrl ?? null,
+      clientRequestId: input.clientRequestId ?? null,
       status: "QUEUED",
       phase: "queued",
     },

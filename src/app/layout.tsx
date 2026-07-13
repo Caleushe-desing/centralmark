@@ -13,8 +13,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "MarkMall — Marketing con IA para Malls",
-  description: "Plataforma de ofertas con IA generativa para malls y tiendas",
+  title: "CentralMark — Centro de Marketing Inteligente",
+  description:
+    "Plataforma de marketing inteligente para centros comerciales. Conecta la administración del mall con cada tienda mediante IA generativa.",
 };
 
 export default function RootLayout({

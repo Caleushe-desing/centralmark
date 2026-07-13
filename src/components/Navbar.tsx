@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Sparkles, Store, Shield, Monitor } from "lucide-react";
+import { Building2, Store, Shield, Monitor } from "lucide-react";
 
 export function Navbar() {
   return (
@@ -7,10 +7,10 @@ export function Navbar() {
       <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2">
           <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-mm-neon to-mm-yellow flex items-center justify-center mm-glow-neon">
-            <Sparkles className="w-5 h-5 text-black" />
+            <Building2 className="w-5 h-5 text-black" />
           </div>
           <span className="text-xl font-bold text-white">
-            Mark<span className="text-mm-neon">Mall</span>
+            Central<span className="text-mm-neon">Mark</span>
           </span>
         </Link>
         <div className="flex items-center gap-2">

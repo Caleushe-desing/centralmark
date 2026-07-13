@@ -11,6 +11,7 @@ import {
 import { buildProAdUserPrompt, getDesignerSystemPrompt } from "./prompts";
 import { clampImageConcept } from "./clamp-concept";
 import { sanitizeSpanishCopy } from "../copy/sanitize-spanish";
+import { shapeCopyForLayout } from "../copy/shape-slot-copy";
 import { getArchetypeDefinition, parseArchetype } from "../archetypes";
 import { applyStoreBrandToLayout, type StoreBrandContext } from "../store-branding";
 import {
@@ -185,11 +186,16 @@ export async function runDesignEngine(
     const brand = await loadStoreBrand(storeId);
 
     await onPhase?.("brief");
-    const { design, archetype, model, promptTokens, completionTokens } =
+    const { design: rawDesign, archetype, model, promptTokens, completionTokens } =
       await generateDesignFromBrief(brief, brand, imageSource);
 
     await onPhase?.("composition");
-    const layout = resolveCompositionLayout(design, brand);
+    const layout = resolveCompositionLayout(rawDesign, brand);
+    const shapedSlots = shapeCopyForLayout(
+      { hook: rawDesign.hook, badge: rawDesign.badge, subtext: rawDesign.subtext, cta: rawDesign.cta },
+      layout
+    );
+    const design = { ...rawDesign, ...shapedSlots };
     const styleName = layout.name;
 
     let imageUrl: string;

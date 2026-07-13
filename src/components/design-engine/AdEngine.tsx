@@ -47,7 +47,7 @@ export const AdEngine = forwardRef<HTMLDivElement, AdEngineProps>(function AdEng
       <img
         src={imageUrl}
         alt=""
-        className={`absolute inset-0 w-full h-full object-cover ${isDropGridBreak ? "object-[62%_50%]" : ""}`}
+        className={`absolute inset-0 h-full w-full object-cover ${isDropGridBreak ? "object-[68%_48%]" : ""}`}
         crossOrigin={imageUrl.startsWith("http") ? "anonymous" : undefined}
       />
 
@@ -73,8 +73,10 @@ export const AdEngine = forwardRef<HTMLDivElement, AdEngineProps>(function AdEng
         </div>
 
         {!isDropGridBreak ? (
-          <div className="flex-1 min-h-[28%] pointer-events-none" aria-hidden />
-        ) : null}
+          <div className="pointer-events-none min-h-[28%] flex-1" aria-hidden />
+        ) : (
+          <div className="pointer-events-none min-h-[36%] flex-1" aria-hidden />
+        )}
 
         <div className={layout.bottomZoneClass}>
           {bottomSlots.map((rule) => (

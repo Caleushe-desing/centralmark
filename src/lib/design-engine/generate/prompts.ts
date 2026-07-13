@@ -26,7 +26,11 @@ function buildCreativeSystemPrompt(): string {
 - Catálogo de layouts disponible en el mensaje del usuario.
 
 ═══ TEXTOS EN IMAGEN ═══
-- badge: etiqueta corta | hook: titular principal | subtext: oferta/descuento | cta: urgencia
+- badge: etiqueta corta SIN porcentaje (ej. "OFERTA FLASH", "NUEVO DROP") — máx. 18 caracteres
+- hook: titular principal — máx. 5 palabras, sin repetir el descuento
+- subtext: SOLO cifra de descuento corta (ej. "80%", "50% DTO", "2x1") — máx. 10 caracteres, NUNCA frases
+- cta: urgencia breve (ej. "STOCK LIMITADO", "SOLO HOY") — máx. 24 caracteres
+- Para layout drop-grid-break: el % va en subtext, NO en badge ni hook
 - Refleja lo que el usuario pidió; si no especifica textos, propón copy impactante en español.
 
 ═══ CAPTION EXTERNO (feed IG/FB) ═══

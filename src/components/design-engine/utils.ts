@@ -43,11 +43,18 @@ export function paletteCssVars(palette: {
 }
 
 /** Ancho máximo útil por zona (1080 canvas − padding) */
-export function slotMaxWidthPx(rule: SlotRule, layout?: Pick<CompositionLayout, "id">): number {
+export function slotMaxWidthPx(
+  rule: SlotRule,
+  layout?: Pick<CompositionLayout, "id">,
+  slotKey?: SlotKey
+): number {
   if (layout?.id === "drop-grid-break") {
-    const pad = 40;
-    if (rule.zone === "top") return Math.floor(1080 * 0.5) - pad;
-    if (rule.zone === "bottom") return Math.floor(1080 * 0.52) - pad;
+    const horizontalPad = 32 + 3 + 8;
+    if (rule.zone === "top") return Math.floor(1080 * 0.48) - 64;
+    if (rule.zone === "bottom") {
+      const boxWidth = Math.floor(1080 * 0.48);
+      return boxWidth - horizontalPad - (slotKey === "cta" ? 4 : 0);
+    }
   }
 
   const base = 1080 - 112; // px-14 × 2

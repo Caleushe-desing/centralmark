@@ -96,16 +96,16 @@ function layoutDropGridBreak(): CompositionLayout {
     containerClass: "bg-black",
     overlayClass: OVERLAY,
     topZoneClass:
-      "relative z-10 flex flex-col justify-start items-start gap-1.5 px-8 pt-9 max-w-[50%] min-w-0 shrink-0",
+      "relative z-10 flex flex-col justify-start items-start gap-1.5 px-8 pt-9 max-w-[48%] min-w-0 shrink-0 max-h-[34%] overflow-hidden",
     bottomZoneClass:
-      "absolute bottom-7 right-6 z-20 flex flex-col items-end justify-end gap-1 min-w-0 w-[52%] max-w-[52%] overflow-hidden box-border px-4 py-3 border-l-[3px] border-[var(--ad-accent)] bg-black/72",
+      "absolute bottom-7 right-6 z-20 flex flex-col items-stretch justify-end gap-1.5 min-w-0 w-[48%] max-w-[48%] box-border px-4 py-3 border-l-[3px] border-[var(--ad-accent)] bg-black/78 backdrop-blur-[2px]",
     slots: [
       { slotKey: "badge", zone: "top", align: "left", className: "w-full min-w-0 max-w-full leading-tight", accent: "grid-break-box" },
       {
         slotKey: "hook",
         zone: "top",
         align: "left",
-        className: "w-full min-w-0 max-w-full leading-[0.92]",
+        className: "w-full min-w-0 max-w-full leading-[0.95]",
         accent: "impact-italic",
       },
       {
@@ -119,18 +119,17 @@ function layoutDropGridBreak(): CompositionLayout {
         slotKey: "cta",
         zone: "bottom",
         align: "right",
-        className: "w-full min-w-0 max-w-full text-right mt-0.5",
+        className: "w-full min-w-0 max-w-full text-right",
         accent: "glass-urgency",
       },
     ],
     typography: {
       badge: { fontFamily: "'Montserrat', sans-serif", fontWeight: "900", fontSize: "1.35rem", letterSpacing: "0.06em", uppercase: true, color: "#C8FF00" },
-      hook: { fontFamily: "'Montserrat', sans-serif", fontWeight: "900", fontSize: "4.25rem", letterSpacing: "-0.03em", uppercase: true, color: "#FFFFFF" },
-      subtext: { fontFamily: "'Montserrat', sans-serif", fontWeight: "900", fontSize: "4.75rem", uppercase: true, color: "#FF2332" },
-      cta: { fontFamily: "'Montserrat', sans-serif", fontWeight: "700", fontSize: "0.9rem", letterSpacing: "0.12em", uppercase: true, color: "#FFFFFF" },
+      hook: { fontFamily: "'Montserrat', sans-serif", fontWeight: "900", fontSize: "3.35rem", letterSpacing: "-0.03em", uppercase: true, color: "#FFFFFF" },
+      subtext: { fontFamily: "'Montserrat', sans-serif", fontWeight: "900", fontSize: "4rem", uppercase: true, color: "#FF2332" },
+      cta: { fontFamily: "'Montserrat', sans-serif", fontWeight: "700", fontSize: "0.82rem", letterSpacing: "0.08em", uppercase: true, color: "#FFFFFF" },
     },
     palette: { accent: "#C8FF00", contrast: "#FF2332", surface: "#050505", muted: "#94A3B8" },
-    decorative: { type: "light-streaks", className: "pointer-events-none" },
   };
 }
 
@@ -157,7 +156,6 @@ function layoutDropEdgeCut(): CompositionLayout {
       cta: { fontFamily: "'Montserrat', sans-serif", fontWeight: "700", fontSize: "0.95rem", letterSpacing: "0.2em", uppercase: true, color: "#F8FAFC" },
     },
     palette: { accent: "#00E5FF", contrast: "#FF2332", surface: "#0A0A0A", muted: "#64748B" },
-    decorative: { type: "light-streaks", className: "pointer-events-none" },
   };
 }
 

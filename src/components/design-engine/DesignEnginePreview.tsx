@@ -5,6 +5,7 @@ import { toPng } from "html-to-image";
 import { AdEngine } from "@/components/design-engine";
 import type { CompositionLayout } from "@/lib/design-engine/composition/rules";
 import type { DesignDocument } from "@/lib/design-engine/schemas";
+import { shapeCopyForLayout } from "@/lib/design-engine/copy/shape-slot-copy";
 import { Loader2 } from "lucide-react";
 
 const POLL_MS = 1500;
@@ -216,18 +217,21 @@ export function DesignEnginePreview({
         </div>
       )}
       {preview && (
-        <div className="overflow-hidden rounded-2xl border border-white/10 bg-black mx-auto max-w-full flex justify-center">
-          <div className="scale-[0.36] sm:scale-[0.42] md:scale-[0.48] lg:scale-[0.38] xl:scale-[0.42] origin-top">
+        <div className="mx-auto flex max-w-full justify-center overflow-hidden rounded-2xl border border-slate-200 bg-slate-900">
+          <div className="origin-top scale-[0.36] sm:scale-[0.42] md:scale-[0.48] lg:scale-[0.38] xl:scale-[0.42]">
             <AdEngine
               ref={composerRef}
               imageUrl={preview.imageUrl}
               logoUrl={logoUrl}
-              copy={{
-                hook: preview.design.hook,
-                badge: preview.design.badge,
-                subtext: preview.design.subtext,
-                cta: preview.design.cta,
-              }}
+              copy={shapeCopyForLayout(
+                {
+                  hook: preview.design.hook,
+                  badge: preview.design.badge,
+                  subtext: preview.design.subtext,
+                  cta: preview.design.cta,
+                },
+                preview.layout
+              )}
               layout={preview.layout}
             />
           </div>

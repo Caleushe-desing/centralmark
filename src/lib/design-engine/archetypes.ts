@@ -46,7 +46,7 @@ export const ARCHETYPE_DEFINITIONS: ArchetypeDefinition[] = [
       subtext: "-50% DTO",
       cta: "EXCLUSIVO · FIN DE SEMANA",
     },
-    maxHookWords: 8,
+    maxHookWords: 5,
     compositionRules:
       "Sans-serif ultra-bold masivo, alto contraste, cajas tipográficas que rompen la grilla de la imagen.",
   },

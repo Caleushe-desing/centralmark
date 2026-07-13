@@ -8,6 +8,7 @@ import {
   ellipsisEditorial,
   parseFontSizePx,
 } from "@/lib/design-engine/fit-text/measure";
+import { subtextUsesMegaDiscount } from "@/lib/design-engine/copy/shape-slot-copy";
 import {
   alignClass,
   buildSlotStyle,
@@ -63,10 +64,10 @@ function AccentWrapper({
 
   if (accent === "mega-discount") {
     return (
-      <div className={`w-full min-w-0 max-w-full overflow-hidden ${alignClass(rule.align)}`}>
+      <div className={`w-full min-w-0 max-w-full ${alignClass(rule.align)}`}>
         <div
-          className="block w-full min-w-0 max-w-full leading-[0.88] tracking-tight overflow-hidden"
-          style={{ color: layout.palette.contrast, textShadow: "0 4px 0 rgba(0,0,0,0.9)" }}
+          className="block w-full min-w-0 max-w-full leading-[0.9] tracking-tight"
+          style={{ color: layout.palette.contrast, textShadow: "0 3px 0 rgba(0,0,0,0.85)" }}
         >
           {children}
         </div>
@@ -75,9 +76,7 @@ function AccentWrapper({
   }
 
   if (accent === "glass-urgency") {
-    return (
-      <div className={`w-full min-w-0 max-w-full overflow-hidden ${alignClass(rule.align)}`}>{children}</div>
-    );
+    return <div className={`w-full min-w-0 max-w-full ${alignClass(rule.align)}`}>{children}</div>;
   }
 
   if (accent === "ultra-light") {
@@ -191,45 +190,68 @@ export function TextSlot({ slotKey, rule, copy, layout }: TextSlotProps) {
   const pRef = useRef<HTMLParagraphElement>(null);
   const [fitPx, setFitPx] = useState<number | null>(null);
 
-  const token = layout.typography[slotKey];
-  const basePx = parseFontSizePx(token.fontSize);
-  const maxWidth = slotMaxWidthPx(rule, layout);
   const accent = rule.accent ?? "none";
+  const useMegaDiscount =
+    accent === "mega-discount" && subtextUsesMegaDiscount(layout, rawText);
+  const effectiveAccent =
+    accent === "mega-discount" && !useMegaDiscount ? "glass-urgency" : accent;
+
   const maxLines =
-    accent === "mega-discount" || accent === "promo-numeral"
+    effectiveAccent === "mega-discount" || effectiveAccent === "promo-numeral"
       ? 1
-      : accent === "impact-italic"
-        ? 3
+      : effectiveAccent === "impact-italic"
+        ? layout.id === "drop-grid-break"
+          ? 2
+          : 3
         : slotMaxLines(slotKey);
   const maxChars =
     slotKey === "hook"
       ? layout.archetype === "drop"
-        ? 64
+        ? layout.id === "drop-grid-break"
+          ? 42
+          : 64
         : 48
-      : slotKey === "subtext" && (accent === "mega-discount" || accent === "promo-numeral")
-        ? 12
-        : slotKey === "subtext"
-          ? 120
-          : 40;
+      : slotKey === "subtext" && effectiveAccent === "mega-discount"
+        ? 10
+        : slotKey === "subtext" && effectiveAccent === "promo-numeral"
+          ? 12
+          : slotKey === "subtext"
+            ? 120
+            : slotKey === "cta"
+              ? layout.id === "drop-grid-break"
+                ? 24
+                : 40
+              : 40;
   const text = ellipsisEditorial(rawText, maxChars);
+
+  const token = layout.typography[slotKey];
+  const fitToken =
+    effectiveAccent === "mega-discount"
+      ? token
+      : effectiveAccent === "glass-urgency" && accent === "mega-discount"
+        ? layout.typography.cta
+        : token;
+  const basePx = parseFontSizePx(fitToken.fontSize);
+
+  const maxWidth = slotMaxWidthPx(rule, layout, slotKey);
 
   useLayoutEffect(() => {
     if (!text) return;
-    if (accent === "promo-numeral") {
+    if (effectiveAccent === "promo-numeral") {
       setFitPx(basePx);
       return;
     }
     const minRatio =
-      accent === "mega-discount"
-        ? 0.32
-        : accent === "impact-italic"
-          ? 0.62
-          : accent === "ultra-light"
+      effectiveAccent === "mega-discount"
+        ? 0.4
+        : effectiveAccent === "impact-italic"
+          ? 0.58
+          : effectiveAccent === "ultra-light"
             ? 0.8
-            : accent === "grid-break-box"
+            : effectiveAccent === "grid-break-box"
               ? 0.75
-              : accent === "glass-urgency"
-                ? 0.5
+              : effectiveAccent === "glass-urgency"
+                ? 0.62
                 : 0.45;
     const fitted = computeFitFontSizePx({
       text,
@@ -237,30 +259,41 @@ export function TextSlot({ slotKey, rule, copy, layout }: TextSlotProps) {
       minFontSizePx: Math.max(12, basePx * minRatio),
       maxWidthPx: maxWidth,
       maxLines,
-      fontFamily: token.fontFamily,
-      fontWeight: token.fontWeight,
-      letterSpacingPx: token.letterSpacing ? parseFontSizePx(token.letterSpacing, 1) : 0,
+      fontFamily: fitToken.fontFamily,
+      fontWeight: fitToken.fontWeight,
+      letterSpacingPx: fitToken.letterSpacing ? parseFontSizePx(fitToken.letterSpacing, 1) : 0,
     });
     setFitPx(fitted);
-  }, [text, basePx, maxWidth, maxLines, token.fontFamily, token.fontWeight, token.letterSpacing, accent, layout.id]);
+  }, [
+    text,
+    basePx,
+    maxWidth,
+    maxLines,
+    fitToken.fontFamily,
+    fitToken.fontWeight,
+    fitToken.letterSpacing,
+    effectiveAccent,
+    layout.id,
+    slotKey,
+  ]);
 
   if (!text) return null;
 
   const isTypographicCta = rule.accent === "typographic-cta";
   const skipDefaultShadow =
-    DROP_ACCENTS.has(accent) || SPOTLIGHT_ACCENTS.has(accent) || PROMO_ACCENTS.has(accent);
+    DROP_ACCENTS.has(effectiveAccent) || SPOTLIGHT_ACCENTS.has(effectiveAccent) || PROMO_ACCENTS.has(effectiveAccent);
 
   return (
-    <AccentWrapper rule={rule} layout={layout}>
+    <AccentWrapper rule={{ ...rule, accent: effectiveAccent }} layout={layout}>
       <p
         ref={pRef}
         style={{
-          ...buildSlotStyle(token, layout.palette.accent, fitPx ?? basePx),
-          fontStyle: token.fontStyle,
+          ...buildSlotStyle(fitToken, layout.palette.accent, fitPx ?? basePx),
+          fontStyle: fitToken.fontStyle,
           width: "100%",
           maxWidth: "100%",
           wordBreak: "break-word",
-          overflowWrap: "anywhere",
+          overflowWrap: "break-word",
           WebkitLineClamp: maxLines,
           display: "-webkit-box",
           WebkitBoxOrient: "vertical",

@@ -38,7 +38,7 @@ COPY . .
 RUN npx prisma generate \
   && npm run build \
   && npm prune --omit=dev \
-  && npm install prisma@7.8.0 dotenv@17.4.2 --omit=dev --no-save
+  && npm install prisma@7.8.0 dotenv@17.4.2 tsx@4.23.0 --omit=dev --no-save
 
 # ─── Stage 3: runtime ────────────────────────────────────────────────────────
 FROM node:${NODE_VERSION}-bookworm-slim AS runner
@@ -55,10 +55,12 @@ RUN apt-get update \
     ca-certificates \
     openssl \
     tini \
+    gosu \
   && rm -rf /var/lib/apt/lists/* \
   && groupadd --system --gid 1001 nodejs \
   && useradd --system --uid 1001 --gid nodejs nextjs \
-  && mkdir -p /app/data /app/public/uploads /app/public/generated
+  && mkdir -p /app/data /app/public/uploads /app/public/generated \
+  && chown -R nextjs:nodejs /app/data /app/public/uploads /app/public/generated
 
 # App standalone
 COPY --from=builder --chown=nextjs:nodejs /app/public ./public
@@ -76,7 +78,8 @@ COPY --chown=nextjs:nodejs scripts/docker-entrypoint.sh /app/docker-entrypoint.s
 COPY --chown=nextjs:nodejs scripts/docker-seed.mjs /app/scripts/docker-seed.mjs
 RUN chmod +x /app/docker-entrypoint.sh
 
-USER nextjs
+# Entrypoint arranca como root para chown de volúmenes, luego baja a nextjs
+USER root
 
 EXPOSE 3000
 

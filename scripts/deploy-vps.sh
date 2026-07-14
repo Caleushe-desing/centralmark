@@ -10,6 +10,9 @@ SSH_HOST="${SSH_HOST:-root@166.1.85.154}"
 REMOTE_DIR="${REMOTE_DIR:-/opt/centralmark}"
 SSH_OPTS=(-i "$SSH_KEY" -o StrictHostKeyChecking=accept-new -o IdentitiesOnly=yes)
 
+# Con pipes (tee), preservar el exit code real
+set -o pipefail
+
 echo "═══════════════════════════════════════"
 echo "  DEPLOY CentralMark → $SSH_HOST"
 echo "═══════════════════════════════════════"
@@ -25,19 +28,35 @@ ssh "${SSH_OPTS[@]}" "$SSH_HOST" "docker --version && docker compose version"
 echo "→ Preparando directorio remoto $REMOTE_DIR…"
 ssh "${SSH_OPTS[@]}" "$SSH_HOST" "mkdir -p '$REMOTE_DIR'"
 
-echo "→ Sincronizando código (rsync)…"
-rsync -az --delete \
-  --exclude '.git' \
-  --exclude 'node_modules' \
-  --exclude '.next' \
-  --exclude '.env' \
-  --exclude 'prisma/dev.db' \
-  --exclude 'prisma/dev.db-journal' \
-  --exclude 'public/uploads/*' \
-  --exclude 'public/generated/*' \
-  --exclude '.cursor' \
-  -e "ssh ${SSH_OPTS[*]}" \
-  "$ROOT/" "$SSH_HOST:$REMOTE_DIR/"
+echo "→ Sincronizando código…"
+if command -v rsync >/dev/null 2>&1; then
+  rsync -az --delete \
+    --exclude '.git' \
+    --exclude 'node_modules' \
+    --exclude '.next' \
+    --exclude '.env' \
+    --exclude 'prisma/dev.db' \
+    --exclude 'prisma/dev.db-journal' \
+    --exclude 'public/uploads/*' \
+    --exclude 'public/generated/*' \
+    --exclude '.cursor' \
+    -e "ssh ${SSH_OPTS[*]}" \
+    "$ROOT/" "$SSH_HOST:$REMOTE_DIR/"
+else
+  echo "  (rsync no disponible → tar+ssh)"
+  tar -C "$ROOT" \
+    --exclude='.git' \
+    --exclude='node_modules' \
+    --exclude='.next' \
+    --exclude='.env' \
+    --exclude='prisma/dev.db' \
+    --exclude='prisma/dev.db-journal' \
+    --exclude='.cursor' \
+    --exclude='public/uploads/*' \
+    --exclude='public/generated/*' \
+    -czf - . \
+    | ssh "${SSH_OPTS[@]}" "$SSH_HOST" "mkdir -p '$REMOTE_DIR' && tar -xzf - -C '$REMOTE_DIR'"
+fi
 
 # Restaurar .gitkeep en uploads/generated
 ssh "${SSH_OPTS[@]}" "$SSH_HOST" "mkdir -p '$REMOTE_DIR/public/uploads' '$REMOTE_DIR/public/generated' && touch '$REMOTE_DIR/public/uploads/.gitkeep' '$REMOTE_DIR/public/generated/.gitkeep'"

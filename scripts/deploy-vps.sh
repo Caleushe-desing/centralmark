@@ -70,6 +70,19 @@ else
   SESSION_SECRET="$EXISTING_SECRET"
 fi
 
+# Clave de acceso al sitio: reutilizar si existe; si no, usar default / env local
+EXISTING_SITE_PASS="$(ssh "${SSH_OPTS[@]}" "$SSH_HOST" "grep -E '^SITE_ACCESS_PASSWORD=' '$REMOTE_DIR/.env' 2>/dev/null | cut -d= -f2- || true")"
+LOCAL_SITE_PASS="$(grep -E '^SITE_ACCESS_PASSWORD=' "$ROOT/.env" 2>/dev/null | head -1 | cut -d= -f2- | sed 's/^\"//;s/\"$//' || true)"
+if [ -n "${SITE_ACCESS_PASSWORD:-}" ]; then
+  SITE_PASS="$SITE_ACCESS_PASSWORD"
+elif [ -n "$EXISTING_SITE_PASS" ]; then
+  SITE_PASS="$EXISTING_SITE_PASS"
+elif [ -n "$LOCAL_SITE_PASS" ]; then
+  SITE_PASS="$LOCAL_SITE_PASS"
+else
+  SITE_PASS="centralmark2026"
+fi
+
 # Leer OPENAI_API_KEY del .env local (no se imprime)
 OPENAI_API_KEY="$(grep -E '^OPENAI_API_KEY=' "$ROOT/.env" | head -1 | cut -d= -f2- | sed 's/^\"//;s/\"$//')"
 if [ -z "$OPENAI_API_KEY" ]; then
@@ -91,18 +104,21 @@ OPENAI_API_KEY=${OPENAI_API_KEY}
 SESSION_SECRET=${SESSION_SECRET}
 APP_PUBLIC_URL=${APP_PUBLIC_URL}
 COOKIE_SECURE=${COOKIE_SECURE}
+SITE_ACCESS_PASSWORD=${SITE_PASS}
 EOF
 chmod 600 '$REMOTE_DIR/.env'"
 
 echo "→ Cookie secure=${COOKIE_SECURE} (APP_PUBLIC_URL=${APP_PUBLIC_URL})"
+echo "→ Acceso al sitio protegido por clave (SITE_ACCESS_PASSWORD configurada)"
 
 echo "→ Build & up (docker compose)…"
 ssh "${SSH_OPTS[@]}" "$SSH_HOST" "cd '$REMOTE_DIR' && docker compose up --build -d"
 
 echo "→ Esperando health…"
 for i in $(seq 1 40); do
-  code="$(ssh "${SSH_OPTS[@]}" "$SSH_HOST" "curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1/ || true")"
-  echo "  intento $i → HTTP $code"
+  # Con gate activo, / redirige a /acceso → aceptamos 200/302/307
+  code="$(ssh "${SSH_OPTS[@]}" "$SSH_HOST" "curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1/acceso || true")"
+  echo "  intento $i → HTTP $code (/acceso)"
   if [ "$code" = "200" ]; then
     break
   fi
@@ -115,5 +131,7 @@ ssh "${SSH_OPTS[@]}" "$SSH_HOST" "cd '$REMOTE_DIR' && docker compose ps && docke
 
 echo ""
 echo "✅ Deploy listo: $APP_PUBLIC_URL"
+echo "   Clave de acceso al sitio: ${SITE_PASS}"
 echo "   Tienda: sneakerzone / tienda123"
-echo "   Admin:  admin2026"
+echo "   Admin mall:  admin2026"
+echo "   Admin web:   webadmin2026 → /web-admin"

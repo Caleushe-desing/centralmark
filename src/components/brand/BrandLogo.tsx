@@ -4,7 +4,8 @@ import Link from "next/link";
 type Props = {
   className?: string;
   priority?: boolean;
-  href?: string;
+  /** Pasá `null` o `""` para renderizar el logo sin enlace */
+  href?: string | null;
 };
 
 export function BrandLogo({ className = "h-10 w-auto", priority, href = "/" }: Props) {

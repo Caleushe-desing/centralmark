@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 const STORE_COOKIE = "markmall_store_session";
 const ADMIN_COOKIE = "markmall_admin_session";
 const WEB_ADMIN_COOKIE = "centralmark_web_session";
+const SITE_ACCESS_COOKIE = "centralmark_site_access";
 
 function getSecret() {
   const secret = process.env.SESSION_SECRET ?? "markmall-dev-secret-change-in-production";
@@ -52,6 +53,19 @@ export interface WebAdminSession {
   siteId: string;
 }
 
+export interface SiteAccessSession {
+  type: "site-access";
+}
+
+/** Contraseña de acceso público al sitio (vacío = deshabilitado). */
+export function getSiteAccessPassword(): string {
+  return (process.env.SITE_ACCESS_PASSWORD ?? "").trim();
+}
+
+export function isSiteAccessGateEnabled(): boolean {
+  return getSiteAccessPassword().length > 0;
+}
+
 export async function createStoreSession(storeId: string, storeName: string) {
   const token = await new SignJWT({ type: "store", storeId, storeName })
     .setProtectedHeader({ alg: "HS256" })
@@ -80,6 +94,16 @@ export async function createWebAdminSession(siteId = "default") {
 
   const jar = await cookies();
   jar.set(WEB_ADMIN_COOKIE, token, sessionCookieOptions(60 * 60 * 24));
+}
+
+export async function createSiteAccessSession() {
+  const token = await new SignJWT({ type: "site-access" })
+    .setProtectedHeader({ alg: "HS256" })
+    .setExpirationTime("30d")
+    .sign(getSecret());
+
+  const jar = await cookies();
+  jar.set(SITE_ACCESS_COOKIE, token, sessionCookieOptions(60 * 60 * 24 * 30));
 }
 
 export async function getStoreSession(): Promise<StoreSession | null> {
@@ -128,6 +152,20 @@ export async function getWebAdminSession(): Promise<WebAdminSession | null> {
   }
 }
 
+export async function getSiteAccessSession(): Promise<SiteAccessSession | null> {
+  const jar = await cookies();
+  const token = jar.get(SITE_ACCESS_COOKIE)?.value;
+  if (!token) return null;
+
+  try {
+    const { payload } = await jwtVerify(token, getSecret());
+    if (payload.type !== "site-access") return null;
+    return { type: "site-access" };
+  } catch {
+    return null;
+  }
+}
+
 export async function clearStoreSession() {
   const jar = await cookies();
   jar.delete(STORE_COOKIE);
@@ -141,6 +179,11 @@ export async function clearAdminSession() {
 export async function clearWebAdminSession() {
   const jar = await cookies();
   jar.delete(WEB_ADMIN_COOKIE);
+}
+
+export async function clearSiteAccessSession() {
+  const jar = await cookies();
+  jar.delete(SITE_ACCESS_COOKIE);
 }
 
 export async function requireStoreSession() {

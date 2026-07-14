@@ -1,14 +1,22 @@
+"use client";
+
 import Link from "next/link";
 import { BrandLogo } from "@/components/brand/BrandLogo";
 
 type Props = {
   blurb?: string;
   email?: string;
+  blurbSlot?: React.ReactNode;
+  emailSlot?: React.ReactNode;
+  disableLinks?: boolean;
 };
 
 export function LandingFooter({
   blurb = "Plataforma de marketing inteligente para centros comerciales.",
   email = "contacto@centralmark.cl",
+  blurbSlot,
+  emailSlot,
+  disableLinks,
 }: Props) {
   return (
     <footer className="relative overflow-hidden border-t border-white/10 bg-[#0B1B4D] text-slate-300">
@@ -21,9 +29,14 @@ export function LandingFooter({
         <div className="grid gap-10 md:grid-cols-4">
           <div className="md:col-span-2">
             <div className="mb-4">
-              <BrandLogo className="h-12 w-auto brightness-0 invert" />
+              <BrandLogo
+                className="h-12 w-auto brightness-0 invert"
+                href={disableLinks ? null : "/"}
+              />
             </div>
-            <p className="max-w-md text-sm leading-relaxed text-slate-400">{blurb}</p>
+            {blurbSlot ?? (
+              <p className="max-w-md text-sm leading-relaxed text-slate-400">{blurb}</p>
+            )}
           </div>
 
           <div>
@@ -32,24 +45,40 @@ export function LandingFooter({
             </h4>
             <ul className="space-y-2 text-sm">
               <li>
-                <Link href="/admin" className="transition hover:text-white">
-                  Panel de administración del mall
-                </Link>
+                {disableLinks ? (
+                  <span>Panel de administración del mall</span>
+                ) : (
+                  <Link href="/admin" className="transition hover:text-white">
+                    Panel de administración del mall
+                  </Link>
+                )}
               </li>
               <li>
-                <Link href="/tienda" className="transition hover:text-white">
-                  Portal de tiendas
-                </Link>
+                {disableLinks ? (
+                  <span>Portal de tiendas</span>
+                ) : (
+                  <Link href="/tienda" className="transition hover:text-white">
+                    Portal de tiendas
+                  </Link>
+                )}
               </li>
               <li>
-                <Link href="/vitrina" className="transition hover:text-white">
-                  Vitrina digital
-                </Link>
+                {disableLinks ? (
+                  <span>Vitrina digital</span>
+                ) : (
+                  <Link href="/vitrina" className="transition hover:text-white">
+                    Vitrina digital
+                  </Link>
+                )}
               </li>
               <li>
-                <Link href="/web-admin" className="transition hover:text-white">
-                  Admin de la web
-                </Link>
+                {disableLinks ? (
+                  <span>Admin de la web</span>
+                ) : (
+                  <Link href="/web-admin" className="transition hover:text-white">
+                    Admin de la web
+                  </Link>
+                )}
               </li>
             </ul>
           </div>
@@ -61,12 +90,14 @@ export function LandingFooter({
             <p className="text-sm leading-relaxed text-slate-400">
               ¿Interesado en implementar CentralMark en tu centro comercial?
             </p>
-            <a
-              href={`mailto:${email}`}
-              className="mt-2 inline-block text-sm font-medium text-[#00C2FF] transition hover:text-white"
-            >
-              {email}
-            </a>
+            {emailSlot ?? (
+              <a
+                href={`mailto:${email}`}
+                className="mt-2 inline-block text-sm font-medium text-[#00C2FF] transition hover:text-white"
+              >
+                {email}
+              </a>
+            )}
           </div>
         </div>
 

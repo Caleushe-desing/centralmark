@@ -1,6 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Imagen Docker de producción (output standalone)
+  output: "standalone",
   allowedDevOrigins: [
     "127.0.0.1",
     "192.168.4.71",

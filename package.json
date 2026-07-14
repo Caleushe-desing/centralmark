@@ -12,6 +12,7 @@
     "work:start": "bash scripts/work-start.sh",
     "work:end": "bash scripts/work-end.sh",
     "env:sync": "bash scripts/sync-env.sh",
+    "deploy:vps": "bash scripts/deploy-vps.sh",
     "postinstall": "prisma generate"
   },
   "dependencies": {

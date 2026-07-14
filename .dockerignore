@@ -1,0 +1,46 @@
+# Dependencies & build
+node_modules
+.next
+out
+build
+coverage
+
+# Git / IDE
+.git
+.github
+.cursor
+.gitignore
+*.md
+!README.md
+
+# Local env & secrets (se inyectan en el VPS aparte)
+.env
+.env.*
+!.env.example
+
+# Local databases & journals
+*.db
+*.db-journal
+prisma/dev.db
+prisma/dev.db-journal
+dev.db
+
+# Uploads / generated locales (persisten en volúmenes Docker)
+public/uploads/**
+!public/uploads/.gitkeep
+public/generated/**
+!public/generated/.gitkeep
+
+# Debug / misc
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+.DS_Store
+*.pem
+scripts/debug-*
+scripts/test-*
+
+# Cloud / agent noise
+/tmp
+*.log

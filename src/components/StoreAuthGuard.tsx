@@ -18,31 +18,41 @@ export function StoreAuthGuard({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (pathname === "/tienda/login") {
+      setStore(null);
       setLoading(false);
       return;
     }
 
+    let cancelled = false;
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 120000);
+    const timeout = setTimeout(() => controller.abort(), 30000);
+
+    setLoading(true);
 
     fetch("/api/auth/store/me", { signal: controller.signal })
       .then((res) => {
         if (!res.ok) {
-          router.replace("/tienda/login");
+          if (!cancelled) router.replace("/tienda/login");
           return null;
         }
         return res.json();
       })
       .then((data) => {
-        if (data) setStore(data);
+        if (!cancelled && data) setStore(data);
       })
       .catch(() => {
-        router.replace("/tienda/login");
+        if (!cancelled) router.replace("/tienda/login");
       })
       .finally(() => {
         clearTimeout(timeout);
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       });
+
+    return () => {
+      cancelled = true;
+      controller.abort();
+      clearTimeout(timeout);
+    };
   }, [pathname, router]);
 
   if (pathname === "/tienda/login") {
@@ -54,9 +64,6 @@ export function StoreAuthGuard({ children }: { children: React.ReactNode }) {
       <div className="cm-app-bg flex flex-col items-center justify-center gap-4 px-6 text-center">
         <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#2563EB] border-t-transparent" />
         <p className="text-sm text-slate-600">Cargando tu tienda…</p>
-        <p className="max-w-xs text-xs text-slate-500">
-          La primera vez puede tardar hasta 1 minuto. No cierres la pestaña.
-        </p>
       </div>
     );
   }

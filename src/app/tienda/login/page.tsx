@@ -17,6 +17,8 @@ function LoginForm() {
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (loading) return;
+
     setLoading(true);
     setError(null);
     setStatus("Conectando con el servidor…");
@@ -47,11 +49,9 @@ function LoginForm() {
       }
 
       setStatus("Entrando a tu tienda…");
-      router.push("/tienda");
+      // Soft navigation: refresh RSC/cookie cache, luego push (sin hard reload)
       router.refresh();
-      window.setTimeout(() => {
-        window.location.href = "/tienda";
-      }, 1500);
+      router.push("/tienda");
     } catch {
       setError(
         "No se pudo conectar. Espera 1 minuto (primera carga lenta) o usa http://localhost:3000"

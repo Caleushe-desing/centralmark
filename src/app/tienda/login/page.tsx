@@ -2,8 +2,8 @@
 
 import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import Link from "next/link";
-import { Building2, Store } from "lucide-react";
+import { Store } from "lucide-react";
+import { BrandLogo } from "@/components/brand/BrandLogo";
 
 function LoginForm() {
   const router = useRouter();
@@ -65,12 +65,10 @@ function LoginForm() {
     <div className="cm-app-bg flex min-h-screen items-center justify-center px-6">
       <div className="w-full max-w-md">
         <div className="mb-8 text-center">
-          <Link href="/" className="mb-6 inline-flex items-center gap-2">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-[#0F2B5B] to-[#1E4A8C] shadow-sm">
-              <Building2 className="h-6 w-6 text-white" />
-            </div>
-          </Link>
-          <h1 className="text-2xl font-bold text-[#0F2B5B]">Acceso de Tienda</h1>
+          <div className="mb-6 flex justify-center">
+            <BrandLogo className="h-12 w-auto" />
+          </div>
+          <h1 className="text-2xl font-bold text-[#0B1B4D]">Acceso de Tienda</h1>
           <p className="mt-2 text-slate-600">Ingresa con tu usuario y contraseña</p>
         </div>
 
@@ -98,7 +96,7 @@ function LoginForm() {
             />
           </div>
 
-          {status && <p className="text-sm text-[#2563EB]">{status}</p>}
+          {status && <p className="text-sm text-[#2F6BFF]">{status}</p>}
           {error && <p className="text-sm text-red-600">{error}</p>}
 
           <button

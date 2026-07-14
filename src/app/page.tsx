@@ -1,5 +1,9 @@
 import { CentralMarkLanding } from "@/components/landing/CentralMarkLanding";
+import { getLandingContentMap } from "@/lib/cms/site-cms";
 
-export default function HomePage() {
-  return <CentralMarkLanding />;
+export const dynamic = "force-dynamic";
+
+export default async function HomePage() {
+  const content = await getLandingContentMap();
+  return <CentralMarkLanding content={content} />;
 }

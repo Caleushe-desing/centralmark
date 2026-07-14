@@ -1,32 +1,37 @@
-@import url("https://fonts.googleapis.com/css2?family=Anton&family=Bebas+Neue&family=Inter:wght@400;600;700;900&family=Montserrat:ital,wght@0,400;0,700;0,900;1,400&family=Oswald:wght@400;700&family=Pacifico&family=Playfair+Display:wght@700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Anton&family=Bebas+Neue&family=Montserrat:ital,wght@0,400;0,700;0,900;1,400&family=Oswald:wght@400;700&family=Pacifico&family=Playfair+Display:wght@700&display=swap");
 @import "tailwindcss";
 
 :root {
-  --background: #f8fafc;
-  --foreground: #1e293b;
-  --cm-navy: #0f2b5b;
-  --cm-blue: #2563eb;
+  --background: #f7f9ff;
+  --foreground: #0b1b4d;
+  --cm-navy: #0b1b4d;
+  --cm-cyan: #00c2ff;
+  --cm-blue: #2f6bff;
+  --cm-magenta: #c026ff;
+  --cm-electric: #0066ff;
   --cm-surface: #ffffff;
   --cm-border: #e2e8f0;
-  --mm-neon: #2563eb;
-  --mm-yellow: #1e40af;
+  --cm-grad: linear-gradient(135deg, #00c2ff 0%, #2f6bff 48%, #c026ff 100%);
+  --mm-neon: #2f6bff;
+  --mm-yellow: #c026ff;
   --mm-surface: #ffffff;
   --mm-card: #ffffff;
-  --mm-border: rgba(37, 99, 235, 0.2);
+  --mm-border: rgba(47, 107, 255, 0.22);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --color-mm-black: #0f2b5b;
-  --color-mm-surface: #f8fafc;
+  --color-mm-black: #0b1b4d;
+  --color-mm-surface: #f7f9ff;
   --color-mm-card: #ffffff;
-  --color-mm-elevated: #f1f5f9;
-  --color-mm-neon: #2563eb;
+  --color-mm-elevated: #eef2ff;
+  --color-mm-neon: #2f6bff;
   --color-mm-neon-dim: #1d4ed8;
-  --color-mm-yellow: #1e40af;
-  --color-mm-yellow-dim: #1e3a8a;
-  --font-sans: var(--font-geist-sans);
+  --color-mm-yellow: #c026ff;
+  --color-mm-yellow-dim: #a21caf;
+  --font-sans: var(--font-dm-sans);
+  --font-display: var(--font-outfit);
   --font-mono: var(--font-geist-mono);
 }
 
@@ -35,23 +40,25 @@ body {
   color: var(--foreground);
   font-family: var(--font-sans), system-ui, sans-serif;
   background-image:
-    radial-gradient(ellipse 90% 55% at 50% -15%, rgba(37, 99, 235, 0.06), transparent 55%),
-    radial-gradient(ellipse 55% 45% at 100% 100%, rgba(15, 43, 91, 0.04), transparent 50%);
+    radial-gradient(ellipse 90% 55% at 50% -15%, rgba(0, 194, 255, 0.12), transparent 55%),
+    radial-gradient(ellipse 55% 45% at 100% 100%, rgba(192, 38, 255, 0.08), transparent 50%),
+    radial-gradient(ellipse 40% 35% at 0% 60%, rgba(47, 107, 255, 0.06), transparent 50%);
   background-attachment: fixed;
 }
 
 * {
   scrollbar-width: thin;
-  scrollbar-color: rgba(37, 99, 235, 0.25) transparent;
+  scrollbar-color: rgba(47, 107, 255, 0.3) transparent;
 }
 
 @layer utilities {
   .cm-app-bg {
-    @apply min-h-screen bg-slate-50 text-slate-800;
+    @apply min-h-screen bg-[#F7F9FF] text-[#0B1B4D];
   }
 
   .cm-page-title {
-    @apply text-3xl font-bold tracking-tight text-[#0F2B5B];
+    @apply text-3xl font-bold tracking-tight text-[#0B1B4D];
+    font-family: var(--font-display), var(--font-sans), sans-serif;
   }
 
   .cm-page-subtitle {
@@ -59,31 +66,51 @@ body {
   }
 
   .cm-card {
-    @apply rounded-2xl border border-slate-200 bg-white shadow-sm;
+    @apply rounded-2xl border border-slate-200/80 bg-white shadow-sm;
   }
 
   .cm-btn-primary {
-    @apply rounded-lg bg-[#0F2B5B] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#1E3A6E] disabled:opacity-50;
+    @apply rounded-lg px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition disabled:opacity-50;
+    background: var(--cm-grad);
+  }
+
+  .cm-btn-primary:hover {
+    filter: brightness(1.06);
   }
 
   .cm-btn-secondary {
-    @apply rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-[#0F2B5B] transition hover:bg-slate-50 disabled:opacity-50;
+    @apply rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-[#0B1B4D] transition hover:bg-slate-50 disabled:opacity-50;
   }
 
   .cm-input {
-    @apply w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-slate-800 placeholder:text-slate-400 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 transition;
+    @apply w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-slate-800 placeholder:text-slate-400 focus:border-[#2F6BFF] focus:outline-none focus:ring-2 focus:ring-[#2F6BFF]/20 transition;
+  }
+
+  .cm-brand-gradient {
+    background: var(--cm-grad);
+  }
+
+  .cm-gradient-text {
+    @apply bg-clip-text text-transparent;
+    background-image: var(--cm-grad);
   }
 
   .mm-gradient-text {
-    @apply bg-gradient-to-r from-[#2563EB] to-[#0F2B5B] bg-clip-text text-transparent;
+    @apply bg-clip-text text-transparent;
+    background-image: var(--cm-grad);
   }
 
   .mm-btn-primary {
-    @apply rounded-lg bg-[#0F2B5B] text-white font-semibold hover:bg-[#1E3A6E] transition shadow-sm;
+    @apply rounded-lg text-white font-semibold transition shadow-sm;
+    background: var(--cm-grad);
+  }
+
+  .mm-btn-primary:hover {
+    filter: brightness(1.06);
   }
 
   .mm-btn-outline {
-    @apply border border-[#2563EB]/35 text-[#2563EB] hover:bg-blue-50 transition;
+    @apply border border-[#2F6BFF]/40 text-[#2F6BFF] hover:bg-blue-50 transition;
   }
 
   .mm-card {
@@ -91,14 +118,56 @@ body {
   }
 
   .mm-input {
-    @apply w-full bg-white border border-slate-300 rounded-lg px-4 py-3 text-slate-800 placeholder:text-slate-400 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 transition;
+    @apply w-full bg-white border border-slate-300 rounded-lg px-4 py-3 text-slate-800 placeholder:text-slate-400 focus:border-[#2F6BFF] focus:outline-none focus:ring-2 focus:ring-[#2F6BFF]/20 transition;
   }
 
   .mm-glow-neon {
-    box-shadow: 0 4px 14px rgba(15, 43, 91, 0.12);
+    box-shadow: 0 8px 28px rgba(47, 107, 255, 0.18);
   }
 
   .mm-glow-yellow {
-    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.15);
+    box-shadow: 0 8px 28px rgba(192, 38, 255, 0.16);
+  }
+
+  .cm-animate-fade-up {
+    animation: cm-fade-up 0.7s ease-out both;
+  }
+
+  .cm-animate-fade-in {
+    animation: cm-fade-in 0.9s ease-out both;
+  }
+
+  .cm-animate-float {
+    animation: cm-float 5.5s ease-in-out infinite;
+  }
+}
+
+@keyframes cm-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes cm-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes cm-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
   }
 }

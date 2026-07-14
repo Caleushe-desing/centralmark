@@ -1,23 +1,29 @@
 import Link from "next/link";
-import { Building2 } from "lucide-react";
+import { BrandLogo } from "@/components/brand/BrandLogo";
 
-export function LandingFooter() {
+type Props = {
+  blurb?: string;
+  email?: string;
+};
+
+export function LandingFooter({
+  blurb = "Plataforma de marketing inteligente para centros comerciales.",
+  email = "contacto@centralmark.cl",
+}: Props) {
   return (
-    <footer className="border-t border-slate-200 bg-[#0F2B5B] text-slate-300">
+    <footer className="relative overflow-hidden border-t border-white/10 bg-[#0B1B4D] text-slate-300">
+      <div
+        className="pointer-events-none absolute inset-x-0 top-0 h-px"
+        style={{ background: "var(--cm-grad)" }}
+        aria-hidden
+      />
       <div className="mx-auto max-w-7xl px-6 py-14">
         <div className="grid gap-10 md:grid-cols-4">
           <div className="md:col-span-2">
-            <div className="mb-4 flex items-center gap-3">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-white/10">
-                <Building2 className="h-5 w-5 text-white" />
-              </div>
-              <span className="text-xl font-bold text-white">CentralMark</span>
+            <div className="mb-4">
+              <BrandLogo className="h-12 w-auto brightness-0 invert" />
             </div>
-            <p className="max-w-md text-sm leading-relaxed text-slate-400">
-              Plataforma de marketing inteligente para centros comerciales. Conecta a la
-              administración del mall con cada tienda mediante IA generativa y coordinación
-              centralizada.
-            </p>
+            <p className="max-w-md text-sm leading-relaxed text-slate-400">{blurb}</p>
           </div>
 
           <div>
@@ -27,7 +33,7 @@ export function LandingFooter() {
             <ul className="space-y-2 text-sm">
               <li>
                 <Link href="/admin" className="transition hover:text-white">
-                  Panel de administración
+                  Panel de administración del mall
                 </Link>
               </li>
               <li>
@@ -38,6 +44,11 @@ export function LandingFooter() {
               <li>
                 <Link href="/vitrina" className="transition hover:text-white">
                   Vitrina digital
+                </Link>
+              </li>
+              <li>
+                <Link href="/web-admin" className="transition hover:text-white">
+                  Admin de la web
                 </Link>
               </li>
             </ul>
@@ -51,17 +62,17 @@ export function LandingFooter() {
               ¿Interesado en implementar CentralMark en tu centro comercial?
             </p>
             <a
-              href="mailto:contacto@centralmark.cl"
-              className="mt-2 inline-block text-sm font-medium text-blue-300 transition hover:text-white"
+              href={`mailto:${email}`}
+              className="mt-2 inline-block text-sm font-medium text-[#00C2FF] transition hover:text-white"
             >
-              contacto@centralmark.cl
+              {email}
             </a>
           </div>
         </div>
 
         <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-8 text-xs text-slate-500 sm:flex-row">
           <p>© {new Date().getFullYear()} CentralMark. Todos los derechos reservados.</p>
-          <p>Marketing inteligente para centros comerciales y retail multi-sucursal.</p>
+          <p className="uppercase tracking-[0.2em] text-slate-400">Marketing en segundos</p>
         </div>
       </div>
     </footer>

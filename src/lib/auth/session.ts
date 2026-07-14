@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 
 const STORE_COOKIE = "markmall_store_session";
 const ADMIN_COOKIE = "markmall_admin_session";
+const WEB_ADMIN_COOKIE = "centralmark_web_session";
 
 function getSecret() {
   const secret = process.env.SESSION_SECRET ?? "markmall-dev-secret-change-in-production";
@@ -46,6 +47,11 @@ export interface AdminSession {
   mallId: string;
 }
 
+export interface WebAdminSession {
+  type: "web-admin";
+  siteId: string;
+}
+
 export async function createStoreSession(storeId: string, storeName: string) {
   const token = await new SignJWT({ type: "store", storeId, storeName })
     .setProtectedHeader({ alg: "HS256" })
@@ -64,6 +70,16 @@ export async function createAdminSession(mallId: string) {
 
   const jar = await cookies();
   jar.set(ADMIN_COOKIE, token, sessionCookieOptions(60 * 60 * 24));
+}
+
+export async function createWebAdminSession(siteId = "default") {
+  const token = await new SignJWT({ type: "web-admin", siteId })
+    .setProtectedHeader({ alg: "HS256" })
+    .setExpirationTime("1d")
+    .sign(getSecret());
+
+  const jar = await cookies();
+  jar.set(WEB_ADMIN_COOKIE, token, sessionCookieOptions(60 * 60 * 24));
 }
 
 export async function getStoreSession(): Promise<StoreSession | null> {
@@ -98,6 +114,20 @@ export async function getAdminSession(): Promise<AdminSession | null> {
   }
 }
 
+export async function getWebAdminSession(): Promise<WebAdminSession | null> {
+  const jar = await cookies();
+  const token = jar.get(WEB_ADMIN_COOKIE)?.value;
+  if (!token) return null;
+
+  try {
+    const { payload } = await jwtVerify(token, getSecret());
+    if (payload.type !== "web-admin" || typeof payload.siteId !== "string") return null;
+    return { type: "web-admin", siteId: payload.siteId };
+  } catch {
+    return null;
+  }
+}
+
 export async function clearStoreSession() {
   const jar = await cookies();
   jar.delete(STORE_COOKIE);
@@ -106,6 +136,11 @@ export async function clearStoreSession() {
 export async function clearAdminSession() {
   const jar = await cookies();
   jar.delete(ADMIN_COOKIE);
+}
+
+export async function clearWebAdminSession() {
+  const jar = await cookies();
+  jar.delete(WEB_ADMIN_COOKIE);
 }
 
 export async function requireStoreSession() {
@@ -118,6 +153,14 @@ export async function requireStoreSession() {
 
 export async function requireAdminSession() {
   const session = await getAdminSession();
+  if (!session) {
+    throw new Error("UNAUTHORIZED");
+  }
+  return session;
+}
+
+export async function requireWebAdminSession() {
+  const session = await getWebAdminSession();
   if (!session) {
     throw new Error("UNAUTHORIZED");
   }

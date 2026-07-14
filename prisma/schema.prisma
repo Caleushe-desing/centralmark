@@ -212,3 +212,30 @@ model DesignGenerationJob {
   updatedAt     DateTime         @updatedAt
   completedAt   DateTime?
 }
+
+/** Ajustes del sitio público (distinto del admin del mall) */
+model SiteSettings {
+  id               String   @id @default("default")
+  webAdminPassword String   @default("webadmin2026")
+  updatedAt        DateTime @updatedAt
+}
+
+/**
+ * Campos editables de la web (landing).
+ * type: text | textarea | image | json
+ */
+model SiteCmsField {
+  id           String   @id @default(cuid())
+  page         String   @default("landing")
+  key          String
+  type         String   @default("text")
+  label        String
+  section      String
+  sectionLabel String
+  value        String   @default("")
+  sortOrder    Int      @default(0)
+  updatedAt    DateTime @updatedAt
+
+  @@unique([page, key])
+  @@index([page, section])
+}

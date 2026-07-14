@@ -2,6 +2,7 @@ import "dotenv/config";
 import bcrypt from "bcryptjs";
 import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
 import { PrismaClient } from "../src/generated/prisma/client";
+import { LANDING_FIELD_DEFS } from "../src/lib/cms/landing-defaults";
 
 const adapter = new PrismaBetterSqlite3({
   url: process.env.DATABASE_URL ?? "file:./prisma/dev.db",
@@ -96,10 +97,44 @@ async function main() {
     });
   }
 
+  await prisma.siteSettings.upsert({
+    where: { id: "default" },
+    update: {},
+    create: {
+      id: "default",
+      webAdminPassword: "webadmin2026",
+    },
+  });
+
+  for (const field of LANDING_FIELD_DEFS) {
+    await prisma.siteCmsField.upsert({
+      where: { page_key: { page: "landing", key: field.key } },
+      update: {
+        type: field.type,
+        label: field.label,
+        section: field.section,
+        sectionLabel: field.sectionLabel,
+        sortOrder: field.sortOrder,
+        // No pisa value si ya existe (preserva ediciones del admin web)
+      },
+      create: {
+        page: "landing",
+        key: field.key,
+        type: field.type,
+        label: field.label,
+        section: field.section,
+        sectionLabel: field.sectionLabel,
+        value: field.value,
+        sortOrder: field.sortOrder,
+      },
+    });
+  }
+
   console.log("Seed completado");
   console.log("Tiendas — usuario / contraseña: tienda123");
   stores.forEach((s) => console.log(`  ${s.name}: ${s.username}`));
   console.log("Admin mall — contraseña: admin2026");
+  console.log("Admin web (CMS) — contraseña: webadmin2026  → /web-admin");
 }
 
 main()

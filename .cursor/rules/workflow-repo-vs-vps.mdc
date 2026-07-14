@@ -1,0 +1,23 @@
+# Flujo de trabajo CentralMark (agente)
+
+## Regla general
+
+Desarrollamos **siempre en el repositorio GitHub** (commits, ramas `cursor/…-7bcc`, PRs).  
+El servidor VPS **no** se actualiza en cada cambio.
+
+## Comandos de jornada
+
+| Comando | Qué hace |
+|---------|----------|
+| `/iniciar-jornada` | Sync repo, vuelve a la última rama, instala deps |
+| `/cerrar-jornada` | Commit + push de la rama (sin merge) |
+| `/cerrar-jornada + merge` | Commit + push + merge a `master` |
+| `/desplegar-vps` | **Único** disparador para subir al VPS (`scripts/deploy-vps.sh`) |
+
+## VPS
+
+- IP: `http://166.1.85.154`
+- Path remoto: `/opt/centralmark`
+- Stack: Docker Compose (`centralmark-web`)
+
+Sin la palabra `/desplegar-vps` (o equivalente explícito), el agente solo trabaja en Git.

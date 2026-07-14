@@ -78,6 +78,11 @@ if [ -z "$OPENAI_API_KEY" ]; then
 fi
 
 APP_PUBLIC_URL="${APP_PUBLIC_URL:-http://166.1.85.154}"
+if [[ "$APP_PUBLIC_URL" == https://* ]]; then
+  COOKIE_SECURE=true
+else
+  COOKIE_SECURE=false
+fi
 
 ssh "${SSH_OPTS[@]}" "$SSH_HOST" "cat > '$REMOTE_DIR/.env' <<EOF
 NODE_ENV=production
@@ -85,8 +90,11 @@ DATABASE_URL=file:/app/data/dev.db
 OPENAI_API_KEY=${OPENAI_API_KEY}
 SESSION_SECRET=${SESSION_SECRET}
 APP_PUBLIC_URL=${APP_PUBLIC_URL}
+COOKIE_SECURE=${COOKIE_SECURE}
 EOF
 chmod 600 '$REMOTE_DIR/.env'"
+
+echo "→ Cookie secure=${COOKIE_SECURE} (APP_PUBLIC_URL=${APP_PUBLIC_URL})"
 
 echo "→ Build & up (docker compose)…"
 ssh "${SSH_OPTS[@]}" "$SSH_HOST" "cd '$REMOTE_DIR' && docker compose up --build -d"

@@ -9,6 +9,32 @@ function getSecret() {
   return new TextEncoder().encode(secret);
 }
 
+/**
+ * Cookies Secure solo si la app se sirve por HTTPS.
+ * En VPS demo por HTTP (APP_PUBLIC_URL=http://...) deben ir secure:false
+ * o el navegador descarta la sesión y vuelve al login.
+ */
+function cookieSecure(): boolean {
+  if (process.env.COOKIE_SECURE === "true") return true;
+  if (process.env.COOKIE_SECURE === "false") return false;
+
+  const publicUrl = (process.env.APP_PUBLIC_URL ?? "").trim().toLowerCase();
+  if (publicUrl.startsWith("https://")) return true;
+  if (publicUrl.startsWith("http://")) return false;
+
+  return process.env.NODE_ENV === "production";
+}
+
+function sessionCookieOptions(maxAgeSeconds: number) {
+  return {
+    httpOnly: true,
+    secure: cookieSecure(),
+    sameSite: "lax" as const,
+    path: "/",
+    maxAge: maxAgeSeconds,
+  };
+}
+
 export interface StoreSession {
   type: "store";
   storeId: string;
@@ -27,13 +53,7 @@ export async function createStoreSession(storeId: string, storeName: string) {
     .sign(getSecret());
 
   const jar = await cookies();
-  jar.set(STORE_COOKIE, token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    path: "/",
-    maxAge: 60 * 60 * 24 * 7,
-  });
+  jar.set(STORE_COOKIE, token, sessionCookieOptions(60 * 60 * 24 * 7));
 }
 
 export async function createAdminSession(mallId: string) {
@@ -43,13 +63,7 @@ export async function createAdminSession(mallId: string) {
     .sign(getSecret());
 
   const jar = await cookies();
-  jar.set(ADMIN_COOKIE, token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    path: "/",
-    maxAge: 60 * 60 * 24,
-  });
+  jar.set(ADMIN_COOKIE, token, sessionCookieOptions(60 * 60 * 24));
 }
 
 export async function getStoreSession(): Promise<StoreSession | null> {

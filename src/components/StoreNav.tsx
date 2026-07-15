@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Building2, Settings, Tag, LogOut } from "lucide-react";
+import { Building2, Settings, ImageIcon, LogOut } from "lucide-react";
 
 interface StoreNavProps {
   storeName: string;
@@ -14,7 +14,7 @@ export function StoreNav({ storeName, mallName }: StoreNavProps) {
   const router = useRouter();
 
   const links = [
-    { href: "/tienda", label: "Ofertas", icon: Tag },
+    { href: "/tienda", label: "Publicaciones", icon: ImageIcon },
     { href: "/tienda/configuracion", label: "Configuración", icon: Settings },
   ];
 

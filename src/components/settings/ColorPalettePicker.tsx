@@ -189,7 +189,7 @@ export function ColorPalettePicker({
       <div className="grid gap-4 lg:grid-cols-2">
         <ColorFieldEditor
           label="Color primario"
-          description="Acento principal en ofertas y titulares"
+          description="Acento principal en publicaciones y titulares"
           value={primaryColor}
           active={activeField === "primary"}
           onActivate={() => setActiveField("primary")}

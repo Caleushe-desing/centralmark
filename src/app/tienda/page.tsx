@@ -46,7 +46,7 @@ export default function TiendaPage() {
   return (
     <main className="mx-auto max-w-7xl px-6 py-10">
       <div className="mb-8">
-        <h1 className="cm-page-title">Mis Ofertas</h1>
+        <h1 className="cm-page-title">Mis Publicaciones</h1>
         <p className="cm-page-subtitle">
           Describe tu publicación en una sola instrucción. La IA crea imagen, textos y caption en
           español según los productos que vende tu tienda.
@@ -77,9 +77,9 @@ export default function TiendaPage() {
       </div>
 
       <div className="space-y-6">
-        <h2 className="text-lg font-semibold text-[#0B1B4D]">Ofertas creadas</h2>
+        <h2 className="text-lg font-semibold text-[#0B1B4D]">Publicaciones creadas</h2>
         {offers.length === 0 ? (
-          <p className="text-slate-500">Aún no hay ofertas publicadas.</p>
+          <p className="text-slate-500">Aún no hay publicaciones.</p>
         ) : (
           offers.map((offer) => (
             <OfferCard

@@ -183,7 +183,7 @@ function ConfiguracionContent() {
 
       if (previousRubro !== (data.rubro ?? "fashion")) {
         setSaveNotice(
-          `Rubro guardado: ${getStoreRubroDefinition(data.rubro).label}. Las muestras en Mis Ofertas ya usan este rubro.`
+          `Rubro guardado: ${getStoreRubroDefinition(data.rubro).label}. Las muestras en Mis Publicaciones ya usan este rubro.`
         );
       }
     } catch {
@@ -368,7 +368,7 @@ function ConfiguracionContent() {
                       <strong>{getStoreRubroDefinition(rubro).label}</strong>
                     </p>
                     <p className="text-xs leading-relaxed text-amber-800">
-                      Pulsa <strong>Guardar cambios</strong> para aplicarlo en Mis Ofertas.
+                      Pulsa <strong>Guardar cambios</strong> para aplicarlo en Mis Publicaciones.
                     </p>
                   </div>
                 </div>

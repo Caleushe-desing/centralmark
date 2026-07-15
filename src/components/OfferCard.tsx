@@ -219,7 +219,7 @@ export function OfferForm({
       const res = await fetch("/api/store/offers", { method: "POST", body: formData });
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.error ?? "Error al crear oferta");
+        throw new Error(data.error ?? "Error al crear publicación");
       }
       form.reset();
       onCreated();
@@ -237,7 +237,7 @@ export function OfferForm({
     <form onSubmit={handleSubmit} className="space-y-5">
       <div className="flex items-center gap-2 mb-2">
         <Sparkles className="w-5 h-5 text-mm-neon" />
-        <h2 className="text-lg font-semibold text-white">Nueva oferta</h2>
+        <h2 className="text-lg font-semibold text-white">Nueva publicación</h2>
       </div>
 
       {products.length > 0 && (
@@ -351,7 +351,7 @@ export function OfferForm({
       </div>
 
       <div>
-        <label className="block text-sm text-slate-400 mb-1">Descripción de la oferta</label>
+        <label className="block text-sm text-slate-400 mb-1">Descripción de la publicación</label>
         <textarea
           name="description"
           rows={2}

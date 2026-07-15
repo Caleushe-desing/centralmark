@@ -197,7 +197,7 @@ export function OfferCreator({
       const res = await fetch("/api/store/offers", { method: "POST", body: formData });
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.error ?? "Error al crear oferta");
+        throw new Error(data.error ?? "Error al crear publicación");
       }
       setBrief("");
       setUploadedFile(null);
@@ -372,7 +372,7 @@ export function OfferCreator({
                 name="offerHashtags"
                 value={offerHashtags}
                 onChange={setOfferHashtags}
-                placeholder="#Oferta #TuTienda"
+                placeholder="#Publicacion #TuTienda"
                 className="cm-input"
               />
               {mallHashtags && (

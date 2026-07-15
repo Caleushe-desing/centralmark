@@ -12,6 +12,7 @@ import {
   PUBLICATION_INSTRUCTION_PLACEHOLDER,
 } from "@/lib/design-engine/publication-instruction";
 import { buildDefaultHashtags } from "@/lib/offer/default-copy";
+import { createClientId } from "@/lib/id";
 import { ImagePlus, Sparkles, Upload, AlertTriangle } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { CampaignApplyPayload } from "@/components/CampaignStudio";
@@ -153,7 +154,7 @@ export function OfferCreator({
         }
       }
 
-      const clientRequestId = crypto.randomUUID();
+      const clientRequestId = createClientId();
       setGenerationRequest({
         clientRequestId,
         imageSource,

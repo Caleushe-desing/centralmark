@@ -91,12 +91,14 @@ export function normalizeLayer(layer: Partial<TextLayer> & Pick<TextLayer, "id" 
   };
 }
 
+import { createClientId } from "@/lib/id";
+
 export function createTextLayer(
   text: string,
   overrides?: Partial<Omit<TextLayer, "id" | "text">>
 ): TextLayer {
   return normalizeLayer({
-    id: crypto.randomUUID(),
+    id: createClientId(),
     text,
     ...overrides,
   });

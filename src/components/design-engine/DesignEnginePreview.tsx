@@ -78,6 +78,11 @@ export function DesignEnginePreview({
   const inflightRef = useRef(false);
   const lastStartedRequestId = useRef<string | null>(null);
 
+  const demoModeRef = useRef(demoMode);
+  demoModeRef.current = demoMode;
+  const demoBrandRef = useRef(demoBrand);
+  demoBrandRef.current = demoBrand;
+
   const setLoad = useCallback((v: boolean) => {
     setLoading(v);
     inflightRef.current = v;
@@ -113,18 +118,21 @@ export function DesignEnginePreview({
     if (!req) return;
 
     const captured = { ...req };
+    const requestKey = captured.clientRequestId;
 
-    if (lastStartedRequestId.current === captured.clientRequestId) return;
+    if (lastStartedRequestId.current === requestKey) return;
     if (inflightRef.current) return;
 
     const briefText = briefRef.current.trim();
     if (!briefText) return;
 
-    lastStartedRequestId.current = captured.clientRequestId;
+    lastStartedRequestId.current = requestKey;
 
     let cancelled = false;
-    let pollTimer: ReturnType<typeof setTimeout>;
+    let pollTimer: ReturnType<typeof setTimeout> | undefined;
+    let completed = false;
     const callbacks = callbacksRef.current;
+    const useDemo = demoModeRef.current;
 
     async function poll(jobId: string) {
       const res = await fetch(`/api/campaign/generate/${jobId}`);
@@ -154,6 +162,7 @@ export function DesignEnginePreview({
         callbacks.onReady(state);
         setLoad(false);
         setPhaseLabel(null);
+        completed = true;
         return;
       }
 
@@ -175,16 +184,16 @@ export function DesignEnginePreview({
       setLocalError(null);
       callbacks.onExportReady(null);
       setPhaseLabel("Analizando tu instrucción…");
-      await new Promise((r) => setTimeout(r, 700));
+      await new Promise((r) => setTimeout(r, 500));
       if (cancelled) return;
       setPhaseLabel("Componiendo la pieza…");
-      await new Promise((r) => setTimeout(r, 800));
-      if (cancelled) return;
-      setPhaseLabel("Renderizando vista previa…");
       await new Promise((r) => setTimeout(r, 600));
       if (cancelled) return;
+      setPhaseLabel("Renderizando vista previa…");
+      await new Promise((r) => setTimeout(r, 400));
+      if (cancelled) return;
 
-      const brand = demoBrand ?? {
+      const brand = demoBrandRef.current ?? {
         name: "Tienda demo",
         mallName: "Mall Demo",
         primaryColor: "#2F6BFF",
@@ -203,6 +212,7 @@ export function DesignEnginePreview({
         callbacks.onReady(state);
         setLoad(false);
         setPhaseLabel(null);
+        completed = true;
       } catch (err) {
         if (!cancelled) {
           setLoad(false);
@@ -252,7 +262,7 @@ export function DesignEnginePreview({
       }
     }
 
-    if (demoMode) {
+    if (useDemo) {
       void startDemo();
     } else {
       void start();
@@ -260,9 +270,16 @@ export function DesignEnginePreview({
 
     return () => {
       cancelled = true;
-      clearTimeout(pollTimer);
+      if (pollTimer) clearTimeout(pollTimer);
+      if (!completed) {
+        // Permite reintentar el mismo requestId si el efecto se reinicia antes de terminar
+        if (lastStartedRequestId.current === requestKey) {
+          lastStartedRequestId.current = null;
+        }
+        setLoad(false);
+      }
     };
-  }, [trigger, generationRequest, setLoad, demoMode, demoBrand]);
+  }, [trigger, generationRequest, setLoad]);
 
   if (!preview && !loading && !localError) return null;
 

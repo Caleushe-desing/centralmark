@@ -77,9 +77,9 @@ export function buildDemoGeneration(input: {
     compositionCategory: archetype,
     compositionLayoutId: def.defaultLayoutId,
     hook,
-    badge: discount ? `${discount} DTO` : sample.badge,
-    subtext: discount ? `${discount} DTO` : sample.subtext,
-    cta: sample.cta,
+    badge: (discount ? `${discount} DTO` : sample.badge).slice(0, 32) || "NUEVO",
+    subtext: (discount ? `${discount} DTO` : sample.subtext).slice(0, 120) || "Solo hoy",
+    cta: (sample.cta || "VER MÁS").slice(0, 48),
   };
 
   const baseLayout = getLayoutById(design.compositionLayoutId) ?? getLayoutById(def.defaultLayoutId)!;
@@ -92,10 +92,11 @@ export function buildDemoGeneration(input: {
     input.brand.previewImageUrl ||
     getStoreRubroDefinition(input.brand.rubro ?? "fashion").defaultSampleImageUrl;
 
+  // Preferir foto de rubro (siempre en /public); sample de arquetipo como fallback
   const imageUrl =
     input.imageSource === "upload" && input.userImageUrl
       ? input.userImageUrl
-      : def.sampleImageUrl || rubroImg;
+      : rubroImg || def.sampleImageUrl;
 
   // touch shapeCopy to mirror production path
   shapeCopyForLayout(

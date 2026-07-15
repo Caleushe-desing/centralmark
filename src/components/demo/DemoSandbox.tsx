@@ -41,10 +41,10 @@ export function DemoSandbox() {
       <main className="mx-auto max-w-7xl px-6 py-10">
         <div className="mb-8">
           <h1 className="cm-page-title">Mis Publicaciones</h1>
-          <p className="cm-page-subtitle">
-            Describe tu publicación en una sola instrucción. La IA crea imagen, textos y caption en
-            español según los productos que vende tu tienda.
-          </p>
+        <p className="cm-page-subtitle">
+          Describe tu publicación en una sola instrucción. Se crea imagen, textos y caption —
+          mismos pasos que la app real, sin costo de IA.
+        </p>
         </div>
 
         <div className="mb-10">

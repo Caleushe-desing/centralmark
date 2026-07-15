@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useId, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Check, Mail, MessageCircle, X } from "lucide-react";
 import {
   DEMO_REQUEST_MESSAGE,
@@ -57,6 +58,11 @@ export function ContactDemoModal({ open, onClose }: Props) {
   const [channel, setChannel] = useState<Channel>("form");
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
   const [sentHint, setSentHint] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     if (!open) return;
@@ -81,7 +87,7 @@ export function ContactDemoModal({ open, onClose }: Props) {
     }
   }, [open]);
 
-  if (!open) return null;
+  if (!open || !mounted) return null;
 
   function update<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -114,8 +120,8 @@ export function ContactDemoModal({ open, onClose }: Props) {
     { id: "email", label: "Correo" },
   ];
 
-  return (
-    <div className="fixed inset-0 z-[100] flex items-end justify-center p-4 sm:items-center">
+  return createPortal(
+    <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
       <button
         type="button"
         className="absolute inset-0 bg-[#0B1B4D]/55 backdrop-blur-sm"
@@ -126,7 +132,7 @@ export function ContactDemoModal({ open, onClose }: Props) {
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className="relative z-10 max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-slate-200 bg-white shadow-2xl cm-animate-fade-up"
+        className="relative z-10 max-h-[min(90vh,880px)] w-full max-w-lg overflow-y-auto rounded-2xl border border-slate-200 bg-white shadow-2xl cm-animate-fade-up"
       >
         <div className="h-1.5 w-full" style={{ background: "var(--cm-grad)" }} aria-hidden />
         <div className="flex items-start justify-between gap-3 px-6 pt-5">
@@ -328,6 +334,7 @@ export function ContactDemoModal({ open, onClose }: Props) {
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

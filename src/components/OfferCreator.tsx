@@ -61,7 +61,7 @@ export function OfferCreator({
   const [generationRequest, setGenerationRequest] = useState<DesignGenerationRequest | null>(null);
   const [designPreview, setDesignPreview] = useState<DesignPreviewState | null>(null);
   const [previewLoading, setPreviewLoading] = useState(false);
-  const [aiConfigured, setAiConfigured] = useState<boolean | null>(null);
+  const [aiConfigured, setAiConfigured] = useState<boolean | null>(demoMode ? true : null);
   const [campaignImagePrompt, setCampaignImagePrompt] = useState<string | null>(null);
 
   useEffect(() => {
@@ -116,7 +116,7 @@ export function OfferCreator({
       setError("Describe tu publicación con más detalle (mínimo 10 caracteres)");
       return;
     }
-    if (aiConfigured === false) {
+    if (!demoMode && aiConfigured === false) {
       setError(
         "La generación con IA no está disponible. Pide al administrador del mall que configure OPENAI_API_KEY en el servidor."
       );
@@ -294,8 +294,8 @@ export function OfferCreator({
             role="status"
             className="rounded-xl border border-blue-100 bg-blue-50/70 px-4 py-3 text-xs text-blue-900"
           >
-            Modo demo: mismos pasos que la app real. La pieza se genera con el motor visual
-            (sin costo de OpenAI).
+            Modo demo: mismos pasos que la app real. La pieza se arma con el motor visual local
+            (sin OpenAI ni errores de API key).
           </div>
         )}
 
@@ -318,7 +318,7 @@ export function OfferCreator({
             }`}
           >
             <Sparkles className="w-4 h-4" />
-            Crear imagen con IA
+            {demoMode ? "Crear imagen" : "Crear imagen con IA"}
           </button>
           <button
             type="button"
@@ -410,11 +410,15 @@ export function OfferCreator({
 
         <button
           type="button"
-          disabled={previewLoading || loading || aiConfigured === false}
+          disabled={previewLoading || loading || (!demoMode && aiConfigured === false)}
           onClick={handleGenerate}
           className="cm-btn-primary w-full py-2.5 text-sm disabled:opacity-50"
         >
-          {previewLoading ? "Creando publicación…" : "✨ Generar publicación"}
+          {previewLoading
+            ? "Creando publicación…"
+            : demoMode
+              ? "✨ Generar publicación"
+              : "✨ Generar publicación"}
         </button>
 
         {designPreview && (
@@ -430,7 +434,9 @@ export function OfferCreator({
                 className="cm-input resize-none"
               />
               <p className="mt-1 text-xs text-slate-500">
-                Generado por IA en español. Puedes editarlo antes de publicar.
+                {demoMode
+                  ? "Puedes editar el texto antes de publicar."
+                  : "Generado por IA en español. Puedes editarlo antes de publicar."}
               </p>
             </div>
 

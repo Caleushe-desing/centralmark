@@ -35,7 +35,7 @@ export function ProductAssortmentPicker({
           ¿Qué productos vende tu tienda?
         </h2>
         <p className="mt-1 text-sm text-slate-500">
-          Marcá con un click las líneas de cada categoría. La IA usará esta información al generar
+          Marca con un clic las líneas de cada categoría. La IA usará esta información al generar
           imágenes y textos.
         </p>
         {(selectedIds.length > 0 || otherText.trim()) && (
@@ -85,7 +85,7 @@ export function ProductAssortmentPicker({
       <section className="cm-card p-6">
         <h3 className="text-base font-semibold text-[#0B1B4D]">Otros</h3>
         <p className="mt-1 mb-3 text-sm text-slate-500">
-          Si no está en las categorías de arriba, escribilo aquí (separá por comas).
+          Si no está en las categorías de arriba, escríbelo aquí (separa por comas).
         </p>
         <textarea
           className="cm-input min-h-[88px]"

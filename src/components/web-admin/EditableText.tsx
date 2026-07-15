@@ -23,7 +23,7 @@ export function EditableText({
   className = "",
   style,
   multiline = false,
-  placeholder = "Escribí aquí…",
+  placeholder = "Escribe aquí…",
   label,
   as = "div",
 }: Props) {

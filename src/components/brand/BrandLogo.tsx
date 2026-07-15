@@ -4,7 +4,7 @@ import Link from "next/link";
 type Props = {
   className?: string;
   priority?: boolean;
-  /** Pasá `null` o `""` para renderizar el logo sin enlace */
+  /** Pasa `null` o `""` para renderizar el logo sin enlace */
   href?: string | null;
 };
 

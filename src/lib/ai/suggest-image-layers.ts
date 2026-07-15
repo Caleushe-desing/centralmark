@@ -164,7 +164,7 @@ async function proofreadLayerTexts(
       messages: [
         {
           role: "system",
-          content: `Corrige ortografía en español chileno de textos de anuncio.
+          content: `Corrige ortografía en español neutro de Chile (tú/ustedes; sin voseo) de textos de anuncio.
 Devuelve JSON: { "texts": ["texto capa 1", "texto capa 2", ...] }
 Misma cantidad de textos, mismo orden.
 MANTÉN cada texto CORTO (máx 40 caracteres). No alargues ni unas frases.`,

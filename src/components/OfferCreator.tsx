@@ -418,7 +418,7 @@ export function OfferCreator({
         />
         {!designPreview && !previewLoading && (
           <p className="py-12 text-center text-sm text-slate-500">
-            Escribe tu instrucción y pulsa Generar. La vista previa aparecerá aquí.
+            Escribe tu instrucción y presiona Generar. La vista previa aparecerá aquí.
           </p>
         )}
       </div>

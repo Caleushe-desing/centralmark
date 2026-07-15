@@ -44,7 +44,7 @@ export default function WebAdminLoginPage() {
           </div>
           <h1 className="text-2xl font-bold text-[#0B1B4D]">Admin de la web</h1>
           <p className="mt-2 text-slate-600">
-            Editá textos, fotos y mirá estadísticas del sitio. No es el admin del mall.
+            Edita textos, fotos y mira estadísticas del sitio. No es el admin del mall.
           </p>
         </div>
 

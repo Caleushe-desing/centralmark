@@ -41,7 +41,7 @@ export function WebAdminShell({ children }: { children: React.ReactNode }) {
               </p>
               <p className="text-xs text-slate-500">
                 {fullBleed
-                  ? "Editá sobre la misma página que ven tus usuarios"
+                  ? "Edita sobre la misma página que ven tus usuarios"
                   : "Contenido y estadísticas del sitio"}
               </p>
             </div>

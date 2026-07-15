@@ -134,7 +134,7 @@ export default function WebAdminLandingEditorPage() {
             <div>
               <p className="text-sm font-semibold">Estás editando la página real</p>
               <p className="text-xs text-slate-300">
-                Click en cualquier texto o pasá el mouse sobre una foto para cambiarla. Guarda
+                Haz clic en cualquier texto o pasa el mouse sobre una foto para cambiarla. Guarda
                 cuando termines.
               </p>
             </div>

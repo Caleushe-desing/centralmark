@@ -53,7 +53,7 @@ function LoginForm() {
       router.refresh();
       router.push("/tienda");
     } catch {
-      setError("No se pudo conectar. Intentá de nuevo en unos segundos.");
+      setError("No se pudo conectar. Intenta de nuevo en unos segundos.");
       setLoading(false);
       setStatus(null);
     }
@@ -68,7 +68,7 @@ function LoginForm() {
           </div>
           <h1 className="text-2xl font-bold text-[#0B1B4D]">Ingreso Usuarios</h1>
           <p className="mt-2 text-slate-600">
-            Tiendas departamentales — usá el Número ID y la contraseña que te entregó el mall.
+            Tiendas departamentales — usa el Número ID y la contraseña que te entregó el mall.
           </p>
         </div>
 

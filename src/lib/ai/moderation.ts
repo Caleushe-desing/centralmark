@@ -175,7 +175,7 @@ Rechaza CUALQUIER texto que contenga:
 - Racismo, xenofobia o discriminación por origen, etnia o apariencia
 - Contenido sexual explícito o sugerente inapropiado para retail familiar
 
-Si el texto es apto para una publicación comercial familiar, corrige ortografía y redacción en español latinoamericano sin cambiar el significado comercial.
+Si el texto es apto para una publicación comercial familiar, corrige ortografía y redacción en español neutro de Chile (tú/ustedes; sin voseo) sin cambiar el significado comercial.
 Responde JSON: {"approved": true/false, "correctedText": "...", "issues": ["motivo claro si rechazas"]}`,
       },
       { role: "user", content: text },

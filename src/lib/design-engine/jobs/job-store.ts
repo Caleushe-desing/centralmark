@@ -22,7 +22,7 @@ export async function reconcileStaleDesignJobsForStore(storeId: string): Promise
     data: {
       status: "FAILED",
       phase: "failed",
-      errorMessage: "La generación quedó en cola demasiado tiempo. Pulsa Generar de nuevo.",
+      errorMessage: "La generación quedó en cola demasiado tiempo. Presiona Generar de nuevo.",
       completedAt: new Date(),
     },
   });
@@ -36,7 +36,7 @@ export async function reconcileStaleDesignJobsForStore(storeId: string): Promise
     data: {
       status: "FAILED",
       phase: "failed",
-      errorMessage: "La generación expiró. Pulsa Generar de nuevo.",
+      errorMessage: "La generación expiró. Presiona Generar de nuevo.",
       completedAt: new Date(),
     },
   });
@@ -96,7 +96,7 @@ export async function failStaleProcessingJobs(jobId: string): Promise<void> {
     data: {
       status: "FAILED",
       phase: "failed",
-      errorMessage: "La generación expiró. Pulsa Generar de nuevo.",
+      errorMessage: "La generación expiró. Presiona Generar de nuevo.",
       completedAt: new Date(),
     },
   });

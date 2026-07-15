@@ -115,7 +115,7 @@ export function OfferPreview({
 
       <p className="text-xs text-neutral-600 text-center">
         {isComplete
-          ? "Así se verá tu post en Instagram. Pulsa «Subir publicación» cuando esté listo."
+          ? "Así se verá tu publicación en Instagram. Presiona «Subir publicación» cuando esté listo."
           : logoUrl
             ? "Toca tu logo en la imagen para moverlo, rotarlo o cambiar su tamaño"
             : "Sube el logo de tu tienda en Configuración para añadirlo a la imagen"}

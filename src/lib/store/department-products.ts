@@ -4,7 +4,7 @@ export type DepartmentProduct = {
   group: string;
 };
 
-/** Catálogo típico de tiendas departamentales — selección multi por click */
+/** Catálogo típico de tiendas departamentales — selección múltiple por clic */
 export const DEPARTMENT_PRODUCTS: DepartmentProduct[] = [
   // Moda
   { id: "ropa-mujer", label: "Ropa mujer", group: "Moda" },

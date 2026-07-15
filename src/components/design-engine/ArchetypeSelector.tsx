@@ -29,7 +29,7 @@ export function ArchetypeSelector({
       <label className="block text-sm text-neutral-400">Arquetipo visual</label>
       <p className="text-xs text-neutral-600 leading-relaxed">
         La micro-maqueta muestra el peso tipográfico de cada estilo sobre una foto de tu rubro
-        {storeContext.previewImageUrl ? " (tu imagen)" : ""}. Sin costo de IA hasta pulsar Generar.
+        {storeContext.previewImageUrl ? " (tu imagen)" : ""}. Sin costo de IA hasta presionar Generar.
       </p>
       <div className="grid grid-cols-2 gap-3">
         {ARCHETYPE_DEFINITIONS.map((archetype) => {

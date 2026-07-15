@@ -50,7 +50,7 @@ function AccesoForm() {
             Acceso privado
           </h1>
           <p className="mt-2 text-slate-600">
-            Este sitio está protegido. Ingresá la clave para continuar.
+            Este sitio está protegido. Ingresa la clave para continuar.
           </p>
         </div>
 

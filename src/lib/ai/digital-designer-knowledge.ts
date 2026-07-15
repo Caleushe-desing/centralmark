@@ -35,7 +35,7 @@ PRINCIPIOS DE MARKETING:
 - Un mensaje principal por pieza
 - CTA con verbo de acción
 - Beneficio > característica
-- Ortografía impecable en español chileno`;
+- Ortografía impecable en español neutro de Chile (tú/ustedes; sin voseo argentino)`;
 
 export const MARKETING_TECHNIQUES: MarketingTechnique[] = [
   {
@@ -314,5 +314,5 @@ REGLAS DE COPY (lo importante es el TEXTO, no el diseño):
 - Titular: nombre del producto/servicio, máx 26 caracteres
 - Beneficio: una frase de valor, máx 38 caracteres
 - CTA: verbo + acción, máx 18 caracteres (ej. "Solicita demo", "Cotiza hoy")
-- Sin emojis, español chileno impecable
+- Sin emojis, español neutro de Chile impecable (sin voseo)
 - NO párrafos largos, NO saltos de línea`;

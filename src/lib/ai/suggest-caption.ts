@@ -56,7 +56,7 @@ Técnica de marketing para esta pieza: ${direction.technique.name}
 Tono: ${direction.tone}
 
 Reglas:
-- Español chileno, 2-4 líneas, emojis con moderación (1-3)
+- Español neutro de Chile (tú/ustedes; sin voseo argentino), 2-4 líneas, emojis con moderación (1-3)
 - CTA claro con verbo
 - SIN hashtags
 - NO copies el brief literalmente

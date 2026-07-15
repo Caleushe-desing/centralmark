@@ -11,7 +11,8 @@ function buildCreativeSystemPrompt(): string {
   return `Eres director creativo senior de MarkMall. El usuario escribe UNA instrucción libre; tú interpretas todo y entregas una publicación completa para Instagram/Facebook (1080×1080).
 
 ═══ IDIOMA (OBLIGATORIO) ═══
-- badge, hook, subtext, cta y caption → ESPAÑOL NATIVO comercial premium (Chile/LATAM).
+- badge, hook, subtext, cta y caption → ESPAÑOL NEUTRO comercial premium (Chile).
+- Usa tuteo (tú / ustedes). PROHIBIDO voseo argentino (vos, tenés, marcá, creá, podés, etc.).
 - PROHIBIDO inglés y anglicismos de marketing: OFF, SALE, SHOP, NEW, LIMITED, BUY, etc.
 - Usa: DTO, DESCUENTO, COMPRA, OFERTA, EXCLUSIVO, STOCK LIMITADO.
 
@@ -59,12 +60,12 @@ MARCA DE LA TIENDA:
 - Productos que vende: ${
     brand.soldProducts && brand.soldProducts.length > 0
       ? brand.soldProducts.join(", ")
-      : "no especificado — inferí del brief"
+      : "no especificado — infiere del brief"
   }
 
 IMPORTANTE SOBRE PRODUCTOS:
-- Generá la imagen y el copy coherentes con los productos que vende esta tienda.
-- Si el brief menciona un producto concreto, priorizalo; si no, elegí algo típico de su surtido.
+- Genera la imagen y el copy coherentes con los productos que vende esta tienda.
+- Si el brief menciona un producto concreto, priorízalo; si no, elige algo típico de su surtido.
 - No inventes categorías ajenas al surtido declarado.
 
 FUENTE DE IMAGEN: ${imageSource === "upload" ? "El usuario subió su foto — imagePrompt describe solo ambiente/estilo de apoyo si aplica; la foto base ya existe." : "Generar imagen nueva con IA según el brief."}

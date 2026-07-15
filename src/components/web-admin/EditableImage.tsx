@@ -71,7 +71,7 @@ export function EditableImage({
               <ImageIcon className="h-4 w-4" />
               {label}
             </span>
-            <span className="text-xs text-white/80">Click para reemplazar esta imagen</span>
+            <span className="text-xs text-white/80">Haz clic para reemplazar esta imagen</span>
           </>
         )}
         <input

@@ -44,7 +44,7 @@ Responde SOLO JSON:
 {
   "productName": "nombre corto del producto u oferta",
   "discountPercent": número 1-99 si se menciona explícitamente un % de descuento, si no null,
-  "caption": "texto del post en español, 2-4 líneas, emojis moderados, SIN hashtags. NO copies el brief del cliente palabra por palabra; redacta un copy publicitario original",
+  "caption": "texto de la publicación en español neutro de Chile, 2-4 líneas, emojis moderados, SIN hashtags. NO copies el brief del cliente palabra por palabra; redacta un copy publicitario original",
   "hashtags": "#tag1 #tag2 ... (6-10 hashtags)",
   "imageBrief": "descripción corta de lo que se ve en la foto"
 }`,

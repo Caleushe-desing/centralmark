@@ -265,7 +265,7 @@ function ConfiguracionContent() {
         </p>
         <h1 className="cm-page-title mt-1">Configuración de tu tienda</h1>
         <p className="cm-page-subtitle">
-          Cada bloque es una sección aparte. Completá la identidad, el surtido y las redes; la IA
+          Cada bloque es una sección aparte. Completa la identidad, el surtido y las redes; la IA
           usará todo esto en {store.mall.name}.
         </p>
       </div>
@@ -368,7 +368,7 @@ function ConfiguracionContent() {
                       <strong>{getStoreRubroDefinition(rubro).label}</strong>
                     </p>
                     <p className="text-xs leading-relaxed text-amber-800">
-                      Pulsa <strong>Guardar cambios</strong> para aplicarlo en Mis Publicaciones.
+                      Presiona <strong>Guardar cambios</strong> para aplicarlo en Mis Publicaciones.
                     </p>
                   </div>
                 </div>
@@ -380,7 +380,7 @@ function ConfiguracionContent() {
                 Foto de producto de referencia
               </h2>
               <p className="text-sm text-slate-600">
-                Opcional. Subí una foto representativa de tu negocio para las vistas previas. Sin
+                Opcional. Sube una foto representativa de tu negocio para las vistas previas. Sin
                 costo de IA.
               </p>
               <div className="flex flex-wrap items-center gap-6">
@@ -424,7 +424,7 @@ function ConfiguracionContent() {
         {/* ——— Productos ——— */}
         <div>
           <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-500">
-            2 · Productos que vendés
+            2 · Productos que vendes
           </p>
           <ProductAssortmentPicker
             selectedIds={soldProductIds}

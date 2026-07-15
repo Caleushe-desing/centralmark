@@ -102,14 +102,14 @@ export default function AdminTiendasPage() {
         <div className="mb-8">
           <h1 className="cm-page-title">Tiendas departamentales</h1>
           <p className="cm-page-subtitle">
-            Creá usuarios (Número ID + contraseña) para que las tiendas ingresen como usuarios.
+            Crea usuarios (Número ID + contraseña) para que las tiendas ingresen como usuarios.
           </p>
         </div>
 
         {creds ? (
           <div className="mb-6 rounded-xl border border-emerald-200 bg-emerald-50 p-5">
             <p className="text-sm font-semibold text-emerald-900">
-              Credenciales generadas — entregalas a la tienda ahora
+              Credenciales generadas — entrégalas a la tienda ahora
             </p>
             <dl className="mt-3 grid gap-2 text-sm sm:grid-cols-2">
               <div>
@@ -170,7 +170,7 @@ export default function AdminTiendasPage() {
               {stores.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="px-4 py-8 text-center text-slate-500">
-                    Aún no hay tiendas. Creá la primera arriba.
+                    Aún no hay tiendas. Crea la primera arriba.
                   </td>
                 </tr>
               ) : (

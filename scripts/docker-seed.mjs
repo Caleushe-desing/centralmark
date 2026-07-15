@@ -1,10 +1,9 @@
 /**
- * Seed mínimo para contenedor.
- * Usa TypeScript strip-types de Node 20+ sobre el cliente Prisma generado.
+ * Seed mínimo para contenedor (sin TypeScript).
  */
 import bcrypt from "bcryptjs";
 import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
-import { PrismaClient } from "../src/generated/prisma/client.ts";
+import { PrismaClient } from "../src/generated/prisma/client.js";
 
 const databaseUrl = process.env.DATABASE_URL ?? "file:/app/data/dev.db";
 const adapter = new PrismaBetterSqlite3({ url: databaseUrl });
@@ -84,15 +83,14 @@ async function main() {
     await prisma.store.upsert({
       where: { id: store.id },
       update: {
-        name: store.name,
-        category: store.category,
-        rubro: store.rubro,
         username: store.username,
         passwordHash,
         primaryColor: store.primaryColor,
         secondaryColor: store.secondaryColor,
         customHashtags: store.customHashtags,
         templateId: store.templateId,
+        category: store.category,
+        rubro: store.rubro,
       },
       create: {
         ...store,

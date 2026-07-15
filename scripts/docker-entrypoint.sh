@@ -22,9 +22,15 @@ echo "[centralmark] Aplicando migraciones Prisma…"
 ./node_modules/.bin/prisma migrate deploy
 
 echo "[centralmark] Sincronizando datos demo (upsert idempotente)…"
-if ./node_modules/.bin/tsx prisma/seed.ts 2>/dev/null \
-  || node ./node_modules/tsx/dist/cli.mjs prisma/seed.ts 2>/dev/null \
-  || npx --yes tsx@4.23.0 prisma/seed.ts; then
+SEED_OK=0
+if [ -f ./scripts/docker-seed.mjs ]; then
+  if node ./scripts/docker-seed.mjs; then SEED_OK=1; fi
+elif [ -x ./node_modules/.bin/tsx ]; then
+  if ./node_modules/.bin/tsx prisma/seed.ts; then SEED_OK=1; fi
+elif [ -f ./node_modules/tsx/dist/cli.mjs ]; then
+  if node ./node_modules/tsx/dist/cli.mjs prisma/seed.ts; then SEED_OK=1; fi
+fi
+if [ "$SEED_OK" = "1" ]; then
   touch "$SEED_MARKER"
   echo "[centralmark] Seed OK"
 else

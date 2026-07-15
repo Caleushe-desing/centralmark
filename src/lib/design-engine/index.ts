@@ -11,9 +11,17 @@ export {
   proAdInputSchema,
   campaignBriefSchema,
   proAdDesignSchema,
+  designDocumentV2Schema,
+  flattenToLegacyDesign,
+  elevateToDesignV2,
 } from "./schemas";
 export type {
   DesignDocument,
+  DesignDocumentV2,
+  TextOnImage,
+  TextExternal,
+  VisualConcept,
+  CompositionBlock,
   DesignGenerationResult,
   ProAdDesign,
   ProAdInput,
@@ -22,6 +30,21 @@ export type {
   CompositionCategory,
   GenerationCostBreakdown,
 } from "./schemas";
+
+export { parseBriefFacts, extractDiscountPercent, briefFactsSchema } from "./brief-facts";
+export type { BriefFacts } from "./brief-facts";
+
+export {
+  validateDesignOutput,
+  assertSpanishOnly,
+  FORBIDDEN_ANGLICISMS,
+} from "./design-output-validator";
+export type {
+  DesignValidationResult,
+  DesignValidationError,
+  DesignValidationErrorCode,
+  ValidateDesignOutputOptions,
+} from "./design-output-validator";
 
 export {
   CATEGORY_MASTERS,

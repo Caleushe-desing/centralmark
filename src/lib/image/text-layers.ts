@@ -1,6 +1,7 @@
 import { buildOutletInstagramLayers } from "./promo-templates";
 import { drawAccentLine, drawLeftAccentLine, drawPromoScrims } from "./promo-overlays";
 import { drawStoreLogoOnCanvas, type LogoLayer } from "./store-logo";
+import { createClientId } from "@/lib/id";
 
 export type TextVariant = "text" | "badge" | "pill";
 
@@ -90,8 +91,6 @@ export function normalizeLayer(layer: Partial<TextLayer> & Pick<TextLayer, "id" 
     badgeColor: layer.badgeColor ?? null,
   };
 }
-
-import { createClientId } from "@/lib/id";
 
 export function createTextLayer(
   text: string,

@@ -26,21 +26,38 @@ export function ProductAssortmentPicker({
   }
 
   return (
-    <div className="space-y-5">
-      <div>
-        <h3 className="text-sm font-semibold text-[#0B1B4D]">¿Qué productos vende tu tienda?</h3>
+    <div className="space-y-6">
+      <div className="cm-card p-6">
+        <p className="text-xs font-semibold uppercase tracking-wider text-[#2F6BFF]">
+          Surtido de productos
+        </p>
+        <h2 className="mt-1 text-lg font-semibold text-[#0B1B4D]">
+          ¿Qué productos vende tu tienda?
+        </h2>
         <p className="mt-1 text-sm text-slate-500">
-          Marcá con un click las líneas que comercializás. La IA usará esta información al generar
+          Marcá con un click las líneas de cada categoría. La IA usará esta información al generar
           imágenes y textos.
         </p>
+        {(selectedIds.length > 0 || otherText.trim()) && (
+          <p className="mt-3 inline-flex rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-[#2F6BFF]">
+            {selectedIds.length} seleccionados
+            {otherText.trim() ? " · + otros personalizados" : ""}
+          </p>
+        )}
       </div>
 
-      <div className="space-y-6">
-        {groups.map(({ group, items }) => (
-          <div key={group}>
-            <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-slate-500">
-              {group}
-            </p>
+      {groups.map(({ group, items }) => {
+        const countInGroup = items.filter((i) => selected.has(i.id)).length;
+        return (
+          <section key={group} className="cm-card p-6">
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
+              <h3 className="text-base font-semibold text-[#0B1B4D]">{group}</h3>
+              <span className="text-xs text-slate-500">
+                {countInGroup > 0
+                  ? `${countInGroup} de ${items.length} marcados`
+                  : `${items.length} opciones`}
+              </span>
+            </div>
             <div className="flex flex-wrap gap-2">
               {items.map((item) => {
                 const active = selected.has(item.id);
@@ -61,14 +78,14 @@ export function ProductAssortmentPicker({
                 );
               })}
             </div>
-          </div>
-        ))}
-      </div>
+          </section>
+        );
+      })}
 
-      <div>
-        <label className="mb-1 block text-sm font-medium text-[#0B1B4D]">Otros</label>
-        <p className="mb-2 text-xs text-slate-500">
-          Si no está en la lista, escribilo aquí (separá por comas).
+      <section className="cm-card p-6">
+        <h3 className="text-base font-semibold text-[#0B1B4D]">Otros</h3>
+        <p className="mt-1 mb-3 text-sm text-slate-500">
+          Si no está en las categorías de arriba, escribilo aquí (separá por comas).
         </p>
         <textarea
           className="cm-input min-h-[88px]"
@@ -76,14 +93,7 @@ export function ProductAssortmentPicker({
           onChange={(e) => onChangeOther(e.target.value)}
           placeholder="Ej: velas artesanales, suplementos deportivos…"
         />
-      </div>
-
-      {selectedIds.length > 0 || otherText.trim() ? (
-        <p className="text-xs text-slate-500">
-          Seleccionados: {selectedIds.length}
-          {otherText.trim() ? " + otros personalizados" : ""}
-        </p>
-      ) : null}
+      </section>
     </div>
   );
 }

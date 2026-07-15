@@ -260,13 +260,13 @@ function ConfiguracionContent() {
   return (
     <main className="mx-auto max-w-5xl px-6 py-10">
       <div className="mb-8">
-        <p className="text-xs font-semibold uppercase tracking-wider text-[#2563EB]">
-          Identidad de marca
+        <p className="text-xs font-semibold uppercase tracking-wider text-[#2F6BFF]">
+          Portal usuarios · Tienda
         </p>
         <h1 className="cm-page-title mt-1">Configuración de tu tienda</h1>
         <p className="cm-page-subtitle">
-          Define logo, colores, rubro y los productos que vendés. La IA usará esa información en
-          cada publicación para {store.mall.name}.
+          Cada bloque es una sección aparte. Completá la identidad, el surtido y las redes; la IA
+          usará todo esto en {store.mall.name}.
         </p>
       </div>
 
@@ -283,8 +283,8 @@ function ConfiguracionContent() {
       )}
 
       {pagePicker && (
-        <section className="cm-card mb-6 space-y-3 p-6 border-blue-200 bg-blue-50/30">
-          <h2 className="text-lg font-semibold text-[#0F2B5B]">Elige tu página de Facebook</h2>
+        <section className="cm-card mb-6 space-y-3 border-blue-200 bg-blue-50/30 p-6">
+          <h2 className="text-lg font-semibold text-[#0B1B4D]">Elige tu página de Facebook</h2>
           <p className="text-xs text-slate-600">
             Selecciona la página vinculada a tu Instagram Business.
           </p>
@@ -294,9 +294,9 @@ function ConfiguracionContent() {
               type="button"
               disabled={picking}
               onClick={() => selectPage(p.pageId)}
-              className="w-full rounded-xl border border-slate-200 bg-white p-4 text-left transition hover:border-[#2563EB] hover:shadow-sm"
+              className="w-full rounded-xl border border-slate-200 bg-white p-4 text-left transition hover:border-[#2F6BFF] hover:shadow-sm"
             >
-              <p className="font-medium text-[#0F2B5B]">{p.pageName}</p>
+              <p className="font-medium text-[#0B1B4D]">{p.pageName}</p>
               <p className="mt-1 text-xs text-slate-500">
                 {p.hasInstagram
                   ? `Instagram: @${p.igUsername ?? "vinculado"}`
@@ -307,211 +307,227 @@ function ConfiguracionContent() {
         </section>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <section className="cm-card p-6">
-          <LogoUploader currentLogoUrl={store.logoUrl} onFileChange={setLogoFile} />
-        </section>
-
-        <section className="cm-card p-6 space-y-4">
-          <h2 className="text-lg font-semibold text-[#0F2B5B]">Nombre de la tienda</h2>
-          <input
-            name="name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            required
-            placeholder="Ej: Sneaker Zone"
-            className="cm-input"
-          />
-          <p className="text-xs text-slate-500">
-            Aparece en tus publicaciones junto al mall {store.mall.name}
+      <form onSubmit={handleSubmit} className="space-y-8">
+        {/* ——— Identidad ——— */}
+        <div>
+          <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-500">
+            1 · Identidad de marca
           </p>
-        </section>
+          <div className="space-y-4">
+            <section className="cm-card p-6">
+              <LogoUploader currentLogoUrl={store.logoUrl} onFileChange={setLogoFile} />
+            </section>
 
-        <section className="cm-card p-6">
-          <ColorPalettePicker
-            primaryColor={primaryColor}
-            secondaryColor={secondaryColor}
-            onPrimaryChange={setPrimaryColor}
-            onSecondaryChange={setSecondaryColor}
-          />
-          <input type="hidden" name="primaryColor" value={primaryColor} />
-          <input type="hidden" name="secondaryColor" value={secondaryColor} />
-        </section>
+            <section className="cm-card space-y-4 p-6">
+              <h2 className="text-lg font-semibold text-[#0B1B4D]">Nombre de la tienda</h2>
+              <input
+                name="name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+                placeholder="Ej: Sneaker Zone"
+                className="cm-input"
+              />
+              <p className="text-xs text-slate-500">
+                Aparece en tus publicaciones junto al mall {store.mall.name}
+              </p>
+            </section>
 
-        <section className="cm-card p-6 space-y-4">
-          <RubroGridPicker
-            value={rubro}
-            onChange={(id) => {
-              setRubro(id);
-              setRemovePreview(true);
-              setSaved(false);
-              setSaveError(null);
-              setSaveNotice(null);
-            }}
-          />
-          <input type="hidden" name="rubro" value={rubro} />
-          {rubroUnsaved && (
-            <div
-              role="status"
-              className="flex gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4 text-amber-900"
-            >
-              <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
-              <div className="space-y-1 text-sm">
-                <p className="font-medium">
-                  Cambiaste el rubro a <strong>{getStoreRubroDefinition(rubro).label}</strong>
-                </p>
-                <p className="text-xs leading-relaxed text-amber-800">
-                  Pulsa <strong>Guardar cambios</strong> para aplicarlo en Mis Ofertas.
-                </p>
+            <section className="cm-card p-6">
+              <ColorPalettePicker
+                primaryColor={primaryColor}
+                secondaryColor={secondaryColor}
+                onPrimaryChange={setPrimaryColor}
+                onSecondaryChange={setSecondaryColor}
+              />
+              <input type="hidden" name="primaryColor" value={primaryColor} />
+              <input type="hidden" name="secondaryColor" value={secondaryColor} />
+            </section>
+
+            <section className="cm-card space-y-4 p-6">
+              <RubroGridPicker
+                value={rubro}
+                onChange={(id) => {
+                  setRubro(id);
+                  setRemovePreview(true);
+                  setSaved(false);
+                  setSaveError(null);
+                  setSaveNotice(null);
+                }}
+              />
+              <input type="hidden" name="rubro" value={rubro} />
+              {rubroUnsaved && (
+                <div
+                  role="status"
+                  className="flex gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4 text-amber-900"
+                >
+                  <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
+                  <div className="space-y-1 text-sm">
+                    <p className="font-medium">
+                      Cambiaste el rubro a{" "}
+                      <strong>{getStoreRubroDefinition(rubro).label}</strong>
+                    </p>
+                    <p className="text-xs leading-relaxed text-amber-800">
+                      Pulsa <strong>Guardar cambios</strong> para aplicarlo en Mis Ofertas.
+                    </p>
+                  </div>
+                </div>
+              )}
+            </section>
+
+            <section className="cm-card space-y-4 p-6">
+              <h2 className="text-lg font-semibold text-[#0B1B4D]">
+                Foto de producto de referencia
+              </h2>
+              <p className="text-sm text-slate-600">
+                Opcional. Subí una foto representativa de tu negocio para las vistas previas. Sin
+                costo de IA.
+              </p>
+              <div className="flex flex-wrap items-center gap-6">
+                <div className="relative h-32 w-32 overflow-hidden rounded-xl border border-slate-200 bg-slate-100">
+                  <Image
+                    key={previewDisplayUrl}
+                    src={previewDisplayUrl}
+                    alt="Vista previa del rubro"
+                    fill
+                    className="object-cover"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <p className="text-xs text-slate-500">
+                    {store.previewImageUrl && !removePreview
+                      ? "Foto personalizada activa"
+                      : `Imagen del rubro: ${getStoreRubroDefinition(rubro).label}`}
+                  </p>
+                  <input
+                    name="previewImage"
+                    type="file"
+                    accept="image/*"
+                    onChange={() => setRemovePreview(false)}
+                    className="text-sm text-slate-600 file:mr-4 file:rounded-lg file:border-0 file:bg-blue-50 file:px-4 file:py-2 file:text-sm file:font-medium file:text-[#2F6BFF]"
+                  />
+                  {store.previewImageUrl && !removePreview && (
+                    <button
+                      type="button"
+                      onClick={() => setRemovePreview(true)}
+                      className="block text-xs text-red-600 hover:text-red-700"
+                    >
+                      Quitar foto personalizada
+                    </button>
+                  )}
+                </div>
               </div>
-            </div>
-          )}
-        </section>
+            </section>
+          </div>
+        </div>
 
-        <section className="cm-card p-6">
+        {/* ——— Productos ——— */}
+        <div>
+          <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-500">
+            2 · Productos que vendés
+          </p>
           <ProductAssortmentPicker
             selectedIds={soldProductIds}
             otherText={soldProductsOther}
             onChangeIds={setSoldProductIds}
             onChangeOther={setSoldProductsOther}
           />
-        </section>
+        </div>
 
-        <section className="cm-card p-6 space-y-4">
-          <h2 className="text-lg font-semibold text-[#0F2B5B]">Foto de producto de referencia</h2>
-          <p className="text-sm text-slate-600">
-            Opcional. Sube una foto representativa de tu negocio para las vistas previas. Sin costo
-            de IA.
+        {/* ——— Redes ——— */}
+        <div>
+          <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-500">
+            3 · Redes sociales
           </p>
-          <div className="flex flex-wrap items-center gap-6">
-            <div className="relative h-32 w-32 overflow-hidden rounded-xl border border-slate-200 bg-slate-100">
-              <Image
-                key={previewDisplayUrl}
-                src={previewDisplayUrl}
-                alt="Vista previa del rubro"
-                fill
-                className="object-cover"
-              />
-            </div>
-            <div className="space-y-2">
-              <p className="text-xs text-slate-500">
-                {store.previewImageUrl && !removePreview
-                  ? "Foto personalizada activa"
-                  : `Imagen del rubro: ${getStoreRubroDefinition(rubro).label}`}
-              </p>
-              <input
-                name="previewImage"
-                type="file"
-                accept="image/*"
-                onChange={() => setRemovePreview(false)}
-                className="text-sm text-slate-600 file:mr-4 file:rounded-lg file:border-0 file:bg-blue-50 file:px-4 file:py-2 file:text-sm file:font-medium file:text-[#2563EB]"
-              />
-              {store.previewImageUrl && !removePreview && (
-                <button
-                  type="button"
-                  onClick={() => setRemovePreview(true)}
-                  className="block text-xs text-red-600 hover:text-red-700"
+          <div className="space-y-4">
+            <section className="cm-card space-y-4 p-6">
+              <h2 className="flex items-center gap-2 text-lg font-semibold text-[#0B1B4D]">
+                <Link2 className="h-5 w-5 text-[#2F6BFF]" />
+                Facebook + Instagram
+              </h2>
+              <p className="text-xs text-slate-500">{social?.redirectHint}</p>
+
+              {social?.meta.connected ? (
+                <div className="space-y-2 rounded-xl border border-emerald-200 bg-emerald-50/40 p-4">
+                  <p className="text-sm font-medium text-emerald-700">Conectado</p>
+                  <p className="text-xs text-slate-600">
+                    Página: {social.meta.pageName}
+                    {social.meta.igUsername && <> · Instagram @{social.meta.igUsername}</>}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={disconnectMeta}
+                    className="flex items-center gap-2 text-xs text-red-600 hover:text-red-700"
+                  >
+                    <Unlink className="h-3.5 w-3.5" />
+                    Desconectar
+                  </button>
+                </div>
+              ) : social?.oauthAvailable ? (
+                <a
+                  href="/api/meta/connect"
+                  className="inline-flex items-center gap-2 rounded-lg bg-[#2563EB] px-4 py-2.5 text-sm font-medium text-white hover:bg-[#1D4ED8]"
                 >
-                  Quitar foto personalizada
-                </button>
-              )}
-            </div>
-          </div>
-        </section>
-
-        <section className="cm-card space-y-4 p-6">
-          <h2 className="flex items-center gap-2 text-lg font-semibold text-[#0F2B5B]">
-            <Link2 className="h-5 w-5 text-[#2563EB]" />
-            Redes sociales
-          </h2>
-          <p className="text-xs text-slate-500">{social?.redirectHint}</p>
-
-          <div className="space-y-3 rounded-xl border border-slate-200 bg-slate-50 p-4">
-            <div className="flex items-center gap-2 text-sm font-medium text-[#0F2B5B]">
-              <Share2 className="h-4 w-4 text-[#2563EB]" />
-              Facebook + Instagram
-            </div>
-
-            {social?.meta.connected ? (
-              <div className="space-y-2">
-                <p className="text-sm font-medium text-emerald-700">Conectado</p>
-                <p className="text-xs text-slate-600">
-                  Página: {social.meta.pageName}
-                  {social.meta.igUsername && <> · Instagram @{social.meta.igUsername}</>}
+                  <Share2 className="h-4 w-4" />
+                  Conectar con Facebook
+                </a>
+              ) : (
+                <p className="text-xs text-amber-700">
+                  OAuth no disponible — contacta al administrador del mall.
                 </p>
-                <button
-                  type="button"
-                  onClick={disconnectMeta}
-                  className="flex items-center gap-2 text-xs text-red-600 hover:text-red-700"
-                >
-                  <Unlink className="h-3.5 w-3.5" />
-                  Desconectar
-                </button>
-              </div>
-            ) : social?.oauthAvailable ? (
-              <a
-                href="/api/meta/connect"
-                className="inline-flex items-center gap-2 rounded-lg bg-[#2563EB] px-4 py-2.5 text-sm font-medium text-white hover:bg-[#1D4ED8]"
-              >
-                <Share2 className="h-4 w-4" />
-                Conectar con Facebook
-              </a>
-            ) : (
-              <p className="text-xs text-amber-700">
-                OAuth no disponible — contacta al administrador del mall.
-              </p>
-            )}
+              )}
 
-            {!social?.meta.connected && (
-              <div className="border-t border-slate-200 pt-3">
-                <button
-                  type="button"
-                  onClick={() => setManualOpen((v) => !v)}
-                  className="text-xs text-slate-500 underline hover:text-slate-700"
-                >
-                  {manualOpen ? "Ocultar conexión manual" : "Conectar página manualmente"}
-                </button>
+              {!social?.meta.connected && (
+                <div className="border-t border-slate-100 pt-4">
+                  <button
+                    type="button"
+                    onClick={() => setManualOpen((v) => !v)}
+                    className="text-xs text-slate-500 underline hover:text-slate-700"
+                  >
+                    {manualOpen ? "Ocultar conexión manual" : "Conectar página manualmente"}
+                  </button>
 
-                {manualOpen && (
-                  <form onSubmit={connectManual} className="mt-3 space-y-3">
-                    <input
-                      value={manualPageId}
-                      onChange={(e) => setManualPageId(e.target.value)}
-                      placeholder="ID de página Facebook"
-                      className="cm-input text-sm"
-                    />
-                    <input
-                      value={manualIgId}
-                      onChange={(e) => setManualIgId(e.target.value)}
-                      placeholder="ID cuenta Instagram (opcional)"
-                      className="cm-input text-sm"
-                    />
-                    <textarea
-                      value={manualToken}
-                      onChange={(e) => setManualToken(e.target.value)}
-                      required
-                      rows={3}
-                      placeholder="Token de acceso (EAAG...)"
-                      className="cm-input font-mono text-sm"
-                    />
-                    <button
-                      type="submit"
-                      disabled={manualLoading || !manualToken.trim()}
-                      className="cm-btn-primary disabled:opacity-50"
-                    >
-                      {manualLoading ? "Validando..." : "Guardar conexión"}
-                    </button>
-                  </form>
-                )}
-              </div>
-            )}
+                  {manualOpen && (
+                    <form onSubmit={connectManual} className="mt-3 space-y-3">
+                      <input
+                        value={manualPageId}
+                        onChange={(e) => setManualPageId(e.target.value)}
+                        placeholder="ID de página Facebook"
+                        className="cm-input text-sm"
+                      />
+                      <input
+                        value={manualIgId}
+                        onChange={(e) => setManualIgId(e.target.value)}
+                        placeholder="ID cuenta Instagram (opcional)"
+                        className="cm-input text-sm"
+                      />
+                      <textarea
+                        value={manualToken}
+                        onChange={(e) => setManualToken(e.target.value)}
+                        required
+                        rows={3}
+                        placeholder="Token de acceso (EAAG...)"
+                        className="cm-input font-mono text-sm"
+                      />
+                      <button
+                        type="submit"
+                        disabled={manualLoading || !manualToken.trim()}
+                        className="cm-btn-primary disabled:opacity-50"
+                      >
+                        {manualLoading ? "Validando..." : "Guardar conexión"}
+                      </button>
+                    </form>
+                  )}
+                </div>
+              )}
+            </section>
+
+            <section className="cm-card space-y-2 p-6 opacity-90">
+              <h2 className="text-lg font-semibold text-slate-600">TikTok</h2>
+              <p className="text-sm text-slate-500">{social?.tiktok.message}</p>
+            </section>
           </div>
-
-          <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-4 opacity-80">
-            <p className="text-sm font-medium text-slate-600">TikTok</p>
-            <p className="mt-1 text-xs text-slate-500">{social?.tiktok.message}</p>
-          </div>
-        </section>
+        </div>
 
         {saveNotice && (
           <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">

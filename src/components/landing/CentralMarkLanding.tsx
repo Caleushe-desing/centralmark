@@ -305,7 +305,7 @@ export function CentralMarkLanding({ content, editor }: Props) {
   return (
     <div className="min-h-screen bg-[#F7F9FF] text-[#0B1B4D]">
       <LandingNavbar
-        ctaLabel={c("nav.cta") || "Solicitar demo"}
+        ctaLabel={c("nav.cta") || "Solicitar una demo"}
         disableLinks={editing}
         ctaSlot={
           editing ? (
@@ -381,26 +381,27 @@ export function CentralMarkLanding({ content, editor }: Props) {
                 </p>
               )}
               <div className="mt-10 flex flex-wrap gap-4">
-                <CtaPrimary
-                  href="/demo"
-                  labelKey="hero.ctaPrimary"
-                  className="cm-btn-primary inline-flex items-center gap-2 px-7 py-3.5 text-sm shadow-lg shadow-[#2F6BFF]/25"
-                />
                 {editing ? (
-                  <div className="inline-flex items-center gap-2 rounded-lg border border-white/35 bg-white/10 px-7 py-3.5 text-sm font-semibold text-white backdrop-blur-sm">
+                  <div className="cm-btn-primary inline-flex cursor-default items-center gap-2 px-7 py-3.5 text-sm shadow-lg shadow-[#2F6BFF]/25">
                     <EditableText
-                      value={c("hero.ctaSecondary")}
-                      onChange={(v) => set?.("hero.ctaSecondary", v)}
+                      value={c("hero.ctaPrimary")}
+                      onChange={(v) => set?.("hero.ctaPrimary", v)}
                       className="text-center text-inherit"
                       label="Botón"
                     />
+                    <ArrowRight className="h-4 w-4 shrink-0" />
                   </div>
                 ) : (
                   <ContactDemoButton
-                    label={c("hero.ctaSecondary") || "Hablar con ventas"}
-                    className="inline-flex items-center gap-2 rounded-lg border border-white/35 bg-white/10 px-7 py-3.5 text-sm font-semibold text-white backdrop-blur-sm transition hover:bg-white/20"
+                    label={c("hero.ctaPrimary") || "Solicitar una demo"}
+                    className="cm-btn-primary inline-flex items-center gap-2 px-7 py-3.5 text-sm shadow-lg shadow-[#2F6BFF]/25"
                   />
                 )}
+                <CtaSecondary
+                  href="/demo"
+                  labelKey="hero.ctaSecondary"
+                  className="inline-flex items-center gap-2 rounded-lg border border-white/35 bg-white/10 px-7 py-3.5 text-sm font-semibold text-white backdrop-blur-sm transition hover:bg-white/20"
+                />
               </div>
             </div>
           </div>
@@ -1021,7 +1022,7 @@ export function CentralMarkLanding({ content, editor }: Props) {
                 </div>
                 {editing ? (
                   <span className="relative mt-8 inline-flex items-center gap-2 text-sm font-semibold text-[#2F6BFF]">
-                    Probar el flujo de tienda
+                    Ver plataforma
                     <ArrowRight className="h-4 w-4" />
                   </span>
                 ) : (
@@ -1029,7 +1030,7 @@ export function CentralMarkLanding({ content, editor }: Props) {
                     href="/demo"
                     className="relative mt-8 inline-flex items-center gap-2 text-sm font-semibold text-[#2F6BFF] transition hover:text-[#C026FF]"
                   >
-                    Probar el flujo de tienda
+                    Ver plataforma
                     <ArrowRight className="h-4 w-4" />
                   </Link>
                 )}
@@ -1161,13 +1162,24 @@ export function CentralMarkLanding({ content, editor }: Props) {
               </>
             )}
             <div className="mt-10 flex flex-wrap justify-center gap-4">
-              <CtaPrimary
-                href="/demo"
-                labelKey="cta.primary"
-                className="cm-btn-primary inline-flex items-center gap-2 px-8 py-4 text-sm shadow-lg shadow-[#2F6BFF]/25"
-              />
+              {editing ? (
+                <div className="cm-btn-primary inline-flex cursor-default items-center gap-2 px-8 py-4 text-sm shadow-lg shadow-[#2F6BFF]/25">
+                  <EditableText
+                    value={c("cta.primary")}
+                    onChange={(v) => set?.("cta.primary", v)}
+                    className="text-center text-inherit"
+                    label="Botón"
+                  />
+                  <ArrowRight className="h-4 w-4 shrink-0" />
+                </div>
+              ) : (
+                <ContactDemoButton
+                  label={c("cta.primary") || "Solicitar una demo"}
+                  className="cm-btn-primary inline-flex items-center gap-2 px-8 py-4 text-sm shadow-lg shadow-[#2F6BFF]/25"
+                />
+              )}
               <CtaSecondary
-                href="/vitrina"
+                href="/demo"
                 labelKey="cta.secondary"
                 className="cm-btn-secondary inline-flex items-center gap-2 px-8 py-4 text-sm"
               />

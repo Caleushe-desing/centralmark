@@ -8,9 +8,9 @@ type Props = {
   className?: string;
 };
 
-/** Botón que abre el modal de contacto (WhatsApp / correo / demo). */
+/** Botón que abre el modal de contacto (WhatsApp / correo / formulario). */
 export function ContactDemoButton({
-  label = "Solicitar demo",
+  label = "Solicitar una demo",
   className = "cm-btn-primary px-4 py-2",
 }: Props) {
   const [open, setOpen] = useState(false);

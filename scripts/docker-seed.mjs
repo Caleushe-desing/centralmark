@@ -100,5 +100,24 @@ if (!site) {
   }
 }
 
+// Alinear CTAs de landing (Solicitar demo / Ver plataforma)
+try {
+  const updateCms = db.prepare(
+    `UPDATE SiteCmsField SET value = ? WHERE page = 'landing' AND key = ?`
+  );
+  for (const [key, value] of [
+    ["hero.ctaPrimary", "Solicitar una demo"],
+    ["hero.ctaSecondary", "Ver plataforma"],
+    ["cta.primary", "Solicitar una demo"],
+    ["cta.secondary", "Ver plataforma"],
+    ["nav.cta", "Solicitar una demo"],
+    ["footer.email", "ventas@centralmark.cl"],
+  ]) {
+    updateCms.run(value, key);
+  }
+} catch {
+  /* tabla CMS puede no existir aún */
+}
+
 console.log("[docker-seed] OK — ID 1001 / tienda123 | admin: admin2026");
 db.close();

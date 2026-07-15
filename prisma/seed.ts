@@ -107,6 +107,14 @@ async function main() {
   });
 
   for (const field of LANDING_FIELD_DEFS) {
+    const forceValueKeys = new Set([
+      "hero.ctaPrimary",
+      "hero.ctaSecondary",
+      "cta.primary",
+      "cta.secondary",
+      "nav.cta",
+      "footer.email",
+    ]);
     await prisma.siteCmsField.upsert({
       where: { page_key: { page: "landing", key: field.key } },
       update: {
@@ -115,7 +123,7 @@ async function main() {
         section: field.section,
         sectionLabel: field.sectionLabel,
         sortOrder: field.sortOrder,
-        // No pisa value si ya existe (preserva ediciones del admin web)
+        ...(forceValueKeys.has(field.key) ? { value: field.value } : {}),
       },
       create: {
         page: "landing",

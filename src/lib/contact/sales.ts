@@ -18,11 +18,11 @@ export function getSalesWhatsAppE164(): string {
 export const DEMO_REQUEST_MESSAGE =
   "Hola, quiero solicitar una demostración de CentralMark para mi centro comercial.";
 
-export function salesMailtoHref(subject = "Solicitar demo CentralMark"): string {
-  const params = new URLSearchParams({
-    subject,
-    body: `${DEMO_REQUEST_MESSAGE}\n\nNombre:\nCentro comercial:\nCiudad:\nTeléfono:\n`,
-  });
+export function salesMailtoHref(
+  subject = "Solicitar demo CentralMark",
+  body = `${DEMO_REQUEST_MESSAGE}\n\nNombre:\nCentro comercial:\nCiudad:\nTeléfono:\n`
+): string {
+  const params = new URLSearchParams({ subject, body });
   return `mailto:${SALES_EMAIL}?${params.toString()}`;
 }
 

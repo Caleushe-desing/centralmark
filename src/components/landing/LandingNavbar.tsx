@@ -12,7 +12,7 @@ type Props = {
 };
 
 export function LandingNavbar({
-  ctaLabel = "Solicitar una demo",
+  ctaLabel = "Conseguir una demo",
   ctaSlot,
   disableLinks,
 }: Props) {
@@ -42,10 +42,6 @@ export function LandingNavbar({
             </>
           ) : (
             <>
-              <Link href="/demo" className={linkClass}>
-                <span className="hidden sm:inline">Ver plataforma</span>
-                <span className="sm:hidden">Plataforma</span>
-              </Link>
               <Link href="/tienda/login" className={linkClass}>
                 <Users className="h-4 w-4" />
                 <span className="hidden sm:inline">Ingreso Usuarios</span>

@@ -1,7 +1,6 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
 import {
   ArrowRight,
   BarChart3,
@@ -252,60 +251,10 @@ export function CentralMarkLanding({ content, editor }: Props) {
     );
   };
 
-  const CtaPrimary = ({
-    href,
-    labelKey,
-    className,
-  }: {
-    href: string;
-    labelKey: string;
-    className: string;
-  }) =>
-    editing ? (
-      <div className={`${className} cursor-default`}>
-        <EditableText
-          value={c(labelKey)}
-          onChange={(v) => set?.(labelKey, v)}
-          className="text-center text-inherit"
-          label="Botón"
-        />
-        <ArrowRight className="h-4 w-4 shrink-0" />
-      </div>
-    ) : (
-      <Link href={href} className={className}>
-        {c(labelKey)}
-        <ArrowRight className="h-4 w-4" />
-      </Link>
-    );
-
-  const CtaSecondary = ({
-    href,
-    labelKey,
-    className,
-  }: {
-    href: string;
-    labelKey: string;
-    className: string;
-  }) =>
-    editing ? (
-      <div className={`${className} cursor-default`}>
-        <EditableText
-          value={c(labelKey)}
-          onChange={(v) => set?.(labelKey, v)}
-          className="text-center text-inherit"
-          label="Botón"
-        />
-      </div>
-    ) : (
-      <Link href={href} className={className}>
-        {c(labelKey)}
-      </Link>
-    );
-
   return (
     <div className="min-h-screen bg-[#F7F9FF] text-[#0B1B4D]">
       <LandingNavbar
-        ctaLabel={c("nav.cta") || "Solicitar una demo"}
+        ctaLabel={c("nav.cta") || "Conseguir una demo"}
         disableLinks={editing}
         ctaSlot={
           editing ? (
@@ -393,15 +342,10 @@ export function CentralMarkLanding({ content, editor }: Props) {
                   </div>
                 ) : (
                   <ContactDemoButton
-                    label={c("hero.ctaPrimary") || "Solicitar una demo"}
+                    label={c("hero.ctaPrimary") || "Conseguir una demo"}
                     className="cm-btn-primary inline-flex items-center gap-2 px-7 py-3.5 text-sm shadow-lg shadow-[#2F6BFF]/25"
                   />
                 )}
-                <CtaSecondary
-                  href="/demo"
-                  labelKey="hero.ctaSecondary"
-                  className="inline-flex items-center gap-2 rounded-lg border border-white/35 bg-white/10 px-7 py-3.5 text-sm font-semibold text-white backdrop-blur-sm transition hover:bg-white/20"
-                />
               </div>
             </div>
           </div>
@@ -1022,17 +966,14 @@ export function CentralMarkLanding({ content, editor }: Props) {
                 </div>
                 {editing ? (
                   <span className="relative mt-8 inline-flex items-center gap-2 text-sm font-semibold text-[#2F6BFF]">
-                    Ver plataforma
+                    Conseguir una demo
                     <ArrowRight className="h-4 w-4" />
                   </span>
                 ) : (
-                  <Link
-                    href="/demo"
+                  <ContactDemoButton
+                    label="Conseguir una demo"
                     className="relative mt-8 inline-flex items-center gap-2 text-sm font-semibold text-[#2F6BFF] transition hover:text-[#C026FF]"
-                  >
-                    Ver plataforma
-                    <ArrowRight className="h-4 w-4" />
-                  </Link>
+                  />
                 )}
               </div>
             </div>
@@ -1174,15 +1115,10 @@ export function CentralMarkLanding({ content, editor }: Props) {
                 </div>
               ) : (
                 <ContactDemoButton
-                  label={c("cta.primary") || "Solicitar una demo"}
+                  label={c("cta.primary") || "Conseguir una demo"}
                   className="cm-btn-primary inline-flex items-center gap-2 px-8 py-4 text-sm shadow-lg shadow-[#2F6BFF]/25"
                 />
               )}
-              <CtaSecondary
-                href="/demo"
-                labelKey="cta.secondary"
-                className="cm-btn-secondary inline-flex items-center gap-2 px-8 py-4 text-sm"
-              />
             </div>
           </div>
         </section>

@@ -143,7 +143,7 @@ export function ContactDemoModal({ open, onClose }: Props) {
               className="mt-4 text-xl font-bold tracking-tight text-[#0B1B4D]"
               style={{ fontFamily: "var(--font-outfit), sans-serif" }}
             >
-              Solicitar una demo
+              Conseguir una demo
             </h2>
             <p className="mt-1.5 text-sm leading-relaxed text-slate-600">
               Elige WhatsApp, correo o completa el formulario. Te responde el equipo de ventas.

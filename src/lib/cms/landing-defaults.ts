@@ -47,17 +47,8 @@ export const LANDING_FIELD_DEFS: LandingFieldDef[] = [
     label: "Botón principal",
     section: "hero",
     sectionLabel: "1. Hero (primera pantalla)",
-    value: "Solicitar una demo",
+    value: "Conseguir una demo",
     sortOrder: 40,
-  },
-  {
-    key: "hero.ctaSecondary",
-    type: "text",
-    label: "Botón secundario",
-    section: "hero",
-    sectionLabel: "1. Hero (primera pantalla)",
-    value: "Ver plataforma",
-    sortOrder: 50,
   },
   {
     key: "hero.image",
@@ -519,17 +510,8 @@ export const LANDING_FIELD_DEFS: LandingFieldDef[] = [
     label: "Botón principal",
     section: "cta",
     sectionLabel: "9. Llamado a la acción",
-    value: "Solicitar una demo",
+    value: "Conseguir una demo",
     sortOrder: 820,
-  },
-  {
-    key: "cta.secondary",
-    type: "text",
-    label: "Botón secundario",
-    section: "cta",
-    sectionLabel: "9. Llamado a la acción",
-    value: "Ver plataforma",
-    sortOrder: 830,
   },
 
   // ——— Footer ———
@@ -558,7 +540,7 @@ export const LANDING_FIELD_DEFS: LandingFieldDef[] = [
     label: "CTA del menú superior",
     section: "nav",
     sectionLabel: "0. Navegación",
-    value: "Solicitar una demo",
+    value: "Conseguir una demo",
     sortOrder: 5,
   },
 ];

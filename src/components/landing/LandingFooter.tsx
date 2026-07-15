@@ -46,15 +46,6 @@ export function LandingFooter({
             <ul className="space-y-2 text-sm">
               <li>
                 {disableLinks ? (
-                  <span>Demo interactiva</span>
-                ) : (
-                  <Link href="/demo" className="transition hover:text-white">
-                    Demo interactiva
-                  </Link>
-                )}
-              </li>
-              <li>
-                {disableLinks ? (
                   <span>Ingreso Clientes (mall)</span>
                 ) : (
                   <Link href="/admin/login" className="transition hover:text-white">

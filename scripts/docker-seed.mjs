@@ -100,17 +100,15 @@ if (!site) {
   }
 }
 
-// Alinear CTAs de landing (Solicitar demo / Ver plataforma)
+// Alinear CTAs de landing (solo Conseguir una demo — sin Ver demo/plataforma)
 try {
   const updateCms = db.prepare(
     `UPDATE SiteCmsField SET value = ? WHERE page = 'landing' AND key = ?`
   );
   for (const [key, value] of [
-    ["hero.ctaPrimary", "Solicitar una demo"],
-    ["hero.ctaSecondary", "Ver plataforma"],
-    ["cta.primary", "Solicitar una demo"],
-    ["cta.secondary", "Ver plataforma"],
-    ["nav.cta", "Solicitar una demo"],
+    ["hero.ctaPrimary", "Conseguir una demo"],
+    ["cta.primary", "Conseguir una demo"],
+    ["nav.cta", "Conseguir una demo"],
     ["footer.email", "ventas@centralmark.cl"],
   ]) {
     updateCms.run(value, key);

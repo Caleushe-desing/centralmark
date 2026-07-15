@@ -30,6 +30,13 @@ export interface DemoPreset {
   };
 }
 
+/** Chips de sugerencia rápida en el formulario demo (orden de UI). */
+export const DEMO_SUGGESTION_CHIPS: { presetId: string; label: string }[] = [
+  { presetId: "zapatillas", label: "👟 Probar con Zapatillas" },
+  { presetId: "cafe", label: "☕ Probar con Café" },
+  { presetId: "audifonos", label: "🎧 Probar con Audífonos" },
+];
+
 export const DEMO_PRESETS: DemoPreset[] = [
   {
     id: "zapatillas",
@@ -163,6 +170,27 @@ function normalizeForMatch(value: string): string {
     .toLowerCase();
 }
 
+function scoreDemoPreset(normalizedBrief: string, preset: DemoPreset): number {
+  let score = 0;
+  for (const keyword of preset.keywords) {
+    if (normalizedBrief.includes(normalizeForMatch(keyword))) score += 1;
+  }
+  if (normalizedBrief.includes(normalizeForMatch(preset.id))) score += 2;
+  if (
+    normalizedBrief.includes(normalizeForMatch(preset.design.textOnImage.productName))
+  ) {
+    score += 3;
+  }
+  return score;
+}
+
+/** True si el brief toca al menos una keyword/id/producto de los presets demo. */
+export function hasDemoKeywordMatch(brief: string): boolean {
+  const normalized = normalizeForMatch(brief.trim());
+  if (!normalized) return false;
+  return DEMO_PRESETS.some((preset) => scoreDemoPreset(normalized, preset) > 0);
+}
+
 /**
  * Elige el preset más cercano al brief del usuario.
  * Prioridad: keyword hits → fallback por índice estable del brief.
@@ -175,16 +203,7 @@ export function matchDemoPreset(brief: string): DemoPreset {
   let bestScore = 0;
 
   for (const preset of DEMO_PRESETS) {
-    let score = 0;
-    for (const keyword of preset.keywords) {
-      if (normalized.includes(normalizeForMatch(keyword))) score += 1;
-    }
-    if (normalized.includes(normalizeForMatch(preset.id))) score += 2;
-    if (
-      normalized.includes(normalizeForMatch(preset.design.textOnImage.productName))
-    ) {
-      score += 3;
-    }
+    const score = scoreDemoPreset(normalized, preset);
     if (score > bestScore) {
       bestScore = score;
       best = preset;
@@ -198,4 +217,8 @@ export function matchDemoPreset(brief: string): DemoPreset {
     hash = (hash + normalized.charCodeAt(i) * (i + 1)) % 997;
   }
   return DEMO_PRESETS[hash % DEMO_PRESETS.length]!;
+}
+
+export function getDemoPresetById(id: string): DemoPreset | undefined {
+  return DEMO_PRESETS.find((p) => p.id === id);
 }

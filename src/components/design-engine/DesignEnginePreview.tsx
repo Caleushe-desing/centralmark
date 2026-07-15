@@ -16,6 +16,8 @@ export interface DesignGenerationRequest {
   clientRequestId: string;
   imageSource: "ai" | "upload";
   userImageUrl?: string;
+  /** Si viene, prioritario frente al prop `brief` (chips demo / autofill). */
+  briefOverride?: string;
 }
 
 export interface DesignPreviewState {
@@ -123,7 +125,7 @@ export function DesignEnginePreview({
     if (lastStartedRequestId.current === requestKey) return;
     if (inflightRef.current) return;
 
-    const briefText = briefRef.current.trim();
+    const briefText = (captured.briefOverride ?? briefRef.current).trim();
     if (!briefText) return;
 
     lastStartedRequestId.current = requestKey;

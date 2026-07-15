@@ -11,11 +11,16 @@ import {
   PUBLICATION_INSTRUCTION_HINT,
   PUBLICATION_INSTRUCTION_PLACEHOLDER,
 } from "@/lib/design-engine/publication-instruction";
-import { DEMO_PRESETS } from "@/lib/design-engine/demo-presets";
+import {
+  DEMO_PRESETS,
+  DEMO_SUGGESTION_CHIPS,
+  getDemoPresetById,
+  hasDemoKeywordMatch,
+} from "@/lib/design-engine/demo-presets";
 import { buildDefaultHashtags } from "@/lib/offer/default-copy";
 import { createClientId } from "@/lib/id";
 import { ImagePlus, Sparkles, Upload, AlertTriangle } from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { CampaignApplyPayload } from "@/components/CampaignStudio";
 
 interface StoreBranding {
@@ -111,10 +116,16 @@ export function OfferCreator({
     if (designPreview) resetPreview();
   }
 
-  async function handleGenerate() {
+  async function handleGenerate(
+    briefOverride?: string,
+    options?: { forceImageSource?: ImageSource }
+  ) {
     if (generateLockRef.current || previewLoading) return;
 
-    if (!brief.trim() || brief.trim().length < 10) {
+    const briefText = (briefOverride ?? brief).trim();
+    const effectiveSource = options?.forceImageSource ?? imageSource;
+
+    if (!briefText || briefText.length < 10) {
       setError("Describe tu publicación con más detalle (mínimo 10 caracteres)");
       return;
     }
@@ -124,7 +135,7 @@ export function OfferCreator({
       );
       return;
     }
-    if (imageSource === "upload" && !uploadedFile) {
+    if (effectiveSource === "upload" && !uploadedFile) {
       setError("Sube una foto de tu producto o elige «Crear imagen con IA»");
       return;
     }
@@ -137,7 +148,7 @@ export function OfferCreator({
     try {
       let userImageUrl: string | undefined;
 
-      if (imageSource === "upload" && uploadedFile) {
+      if (effectiveSource === "upload" && uploadedFile) {
         if (demoMode) {
           userImageUrl = URL.createObjectURL(uploadedFile);
         } else {
@@ -158,8 +169,9 @@ export function OfferCreator({
       const clientRequestId = createClientId();
       setGenerationRequest({
         clientRequestId,
-        imageSource,
+        imageSource: effectiveSource,
         userImageUrl,
+        briefOverride: briefOverride?.trim() || undefined,
       });
       setDesignTrigger((t) => t + 1);
     } catch (err) {
@@ -170,6 +182,25 @@ export function OfferCreator({
       }, 800);
     }
   }
+
+  function handleDemoPresetChip(presetId: string) {
+    const preset = getDemoPresetById(presetId);
+    if (!preset || previewLoading || loading) return;
+
+    setImageSource("ai");
+    setUploadedFile(null);
+    resetPreview();
+    setError(null);
+    setBrief(preset.userBriefExample);
+    void handleGenerate(preset.userBriefExample, { forceImageSource: "ai" });
+  }
+
+  const showDemoKeywordHint = useMemo(() => {
+    if (!demoMode) return false;
+    const trimmed = brief.trim();
+    if (trimmed.length < 8) return false;
+    return !hasDemoKeywordMatch(trimmed);
+  }, [demoMode, brief]);
 
   const handleDesignReady = useCallback((state: DesignPreviewState) => {
     setDesignPreview(state);
@@ -368,6 +399,29 @@ export function OfferCreator({
         )}
 
         <div>
+          {demoMode && (
+            <div className="mb-2.5 flex flex-wrap gap-2" role="group" aria-label="Sugerencias demo">
+              {DEMO_SUGGESTION_CHIPS.map((chip) => {
+                const active =
+                  brief.trim() === getDemoPresetById(chip.presetId)?.userBriefExample;
+                return (
+                  <button
+                    key={chip.presetId}
+                    type="button"
+                    disabled={previewLoading || loading}
+                    onClick={() => handleDemoPresetChip(chip.presetId)}
+                    className={`rounded-full border px-3 py-1.5 text-xs font-medium transition disabled:opacity-50 ${
+                      active
+                        ? "border-[#0F2B5B]/20 bg-[#0F2B5B]/[0.06] text-[#0F2B5B]"
+                        : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50 hover:text-[#0F2B5B]"
+                    }`}
+                  >
+                    {chip.label}
+                  </button>
+                );
+              })}
+            </div>
+          )}
           <label className="mb-1 block text-sm text-slate-600">
             Describe tu publicación *
           </label>
@@ -393,7 +447,16 @@ export function OfferCreator({
             }
             className="cm-input resize-none"
           />
-          <p className="mt-1.5 text-xs leading-relaxed text-slate-500">{PUBLICATION_INSTRUCTION_HINT}</p>
+          {showDemoKeywordHint ? (
+            <p className="mt-1.5 text-xs leading-relaxed text-amber-700/90">
+              ⚠️ Modo Demo activo: Para ver resultados óptimos, intenta usar palabras
+              relacionadas con zapatillas, café o audífonos.
+            </p>
+          ) : (
+            <p className="mt-1.5 text-xs leading-relaxed text-slate-500">
+              {PUBLICATION_INSTRUCTION_HINT}
+            </p>
+          )}
         </div>
 
         {storeBranding && (
@@ -417,7 +480,7 @@ export function OfferCreator({
         <button
           type="button"
           disabled={previewLoading || loading || (!demoMode && aiConfigured === false)}
-          onClick={handleGenerate}
+          onClick={() => void handleGenerate()}
           className="cm-btn-primary w-full py-2.5 text-sm disabled:opacity-50"
         >
           {previewLoading

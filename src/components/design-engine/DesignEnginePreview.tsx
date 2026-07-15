@@ -6,6 +6,7 @@ import { AdEngine } from "@/components/design-engine";
 import type { CompositionLayout } from "@/lib/design-engine/composition/rules";
 import type { DesignDocument } from "@/lib/design-engine/schemas";
 import { shapeCopyForLayout } from "@/lib/design-engine/copy/shape-slot-copy";
+import { buildDemoGeneration } from "@/lib/demo/mock-generate";
 import { Loader2 } from "lucide-react";
 
 const POLL_MS = 1500;
@@ -34,6 +35,17 @@ interface DesignEnginePreviewProps {
   onExportReady: (exporter: (() => Promise<Blob>) | null) => void;
   onError: (message: string) => void;
   onLoadingChange?: (loading: boolean) => void;
+  /** Simula el motor real sin OpenAI (misma composición AdEngine). */
+  demoMode?: boolean;
+  demoBrand?: {
+    name: string;
+    mallName: string;
+    primaryColor: string;
+    secondaryColor: string;
+    logoUrl?: string | null;
+    rubro?: string | null;
+    previewImageUrl?: string | null;
+  };
 }
 
 export function DesignEnginePreview({
@@ -45,6 +57,8 @@ export function DesignEnginePreview({
   onExportReady,
   onError,
   onLoadingChange,
+  demoMode = false,
+  demoBrand,
 }: DesignEnginePreviewProps) {
   const composerRef = useRef<HTMLDivElement>(null);
   const [loading, setLoading] = useState(false);
@@ -155,6 +169,51 @@ export function DesignEnginePreview({
       pollTimer = setTimeout(() => poll(jobId), POLL_MS);
     }
 
+    async function startDemo() {
+      setLoad(true);
+      setPreview(null);
+      setLocalError(null);
+      callbacks.onExportReady(null);
+      setPhaseLabel("Analizando tu instrucción…");
+      await new Promise((r) => setTimeout(r, 700));
+      if (cancelled) return;
+      setPhaseLabel("Componiendo la pieza…");
+      await new Promise((r) => setTimeout(r, 800));
+      if (cancelled) return;
+      setPhaseLabel("Renderizando vista previa…");
+      await new Promise((r) => setTimeout(r, 600));
+      if (cancelled) return;
+
+      const brand = demoBrand ?? {
+        name: "Tienda demo",
+        mallName: "Mall Demo",
+        primaryColor: "#2F6BFF",
+        secondaryColor: "#0B1B4D",
+      };
+
+      try {
+        const state = buildDemoGeneration({
+          brief: briefText,
+          imageSource: captured.imageSource,
+          userImageUrl: captured.userImageUrl,
+          brand,
+        });
+        if (cancelled) return;
+        setPreview(state);
+        callbacks.onReady(state);
+        setLoad(false);
+        setPhaseLabel(null);
+      } catch (err) {
+        if (!cancelled) {
+          setLoad(false);
+          lastStartedRequestId.current = null;
+          const msg = err instanceof Error ? err.message : "Error en demo";
+          setLocalError(msg);
+          callbacks.onError(msg);
+        }
+      }
+    }
+
     async function start() {
       setLoad(true);
       setPreview(null);
@@ -193,13 +252,17 @@ export function DesignEnginePreview({
       }
     }
 
-    void start();
+    if (demoMode) {
+      void startDemo();
+    } else {
+      void start();
+    }
 
     return () => {
       cancelled = true;
       clearTimeout(pollTimer);
     };
-  }, [trigger, generationRequest, setLoad]);
+  }, [trigger, generationRequest, setLoad, demoMode, demoBrand]);
 
   if (!preview && !loading && !localError) return null;
 

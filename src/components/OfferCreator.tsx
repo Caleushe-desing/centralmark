@@ -35,11 +35,16 @@ export function OfferCreator({
   storeBranding,
   campaignSeed,
   onCreated,
+  demoMode = false,
+  configHref = "/tienda/configuracion",
 }: {
   mallHashtags?: string;
   storeBranding?: StoreBranding;
   campaignSeed?: CampaignApplyPayload | null;
   onCreated: () => void;
+  /** Misma UI; generación y guardado locales sin OpenAI ni API. */
+  demoMode?: boolean;
+  configHref?: string;
 }) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const generateLockRef = useRef(false);
@@ -60,11 +65,15 @@ export function OfferCreator({
   const [campaignImagePrompt, setCampaignImagePrompt] = useState<string | null>(null);
 
   useEffect(() => {
+    if (demoMode) {
+      setAiConfigured(true);
+      return;
+    }
     fetch("/api/config")
       .then((r) => (r.ok ? r.json() : null))
       .then((data) => setAiConfigured(Boolean(data?.hasOpenAI)))
       .catch(() => setAiConfigured(false));
-  }, []);
+  }, [demoMode]);
 
   useEffect(() => {
     if (!campaignSeed?.applyId) return;
@@ -127,17 +136,21 @@ export function OfferCreator({
       let userImageUrl: string | undefined;
 
       if (imageSource === "upload" && uploadedFile) {
-        const formData = new FormData();
-        formData.set("image", uploadedFile);
-        const uploadRes = await fetch("/api/store/upload-source-image", {
-          method: "POST",
-          body: formData,
-        });
-        const uploadData = await uploadRes.json();
-        if (!uploadRes.ok) {
-          throw new Error(uploadData.error ?? "No se pudo subir la imagen");
+        if (demoMode) {
+          userImageUrl = URL.createObjectURL(uploadedFile);
+        } else {
+          const formData = new FormData();
+          formData.set("image", uploadedFile);
+          const uploadRes = await fetch("/api/store/upload-source-image", {
+            method: "POST",
+            body: formData,
+          });
+          const uploadData = await uploadRes.json();
+          if (!uploadRes.ok) {
+            throw new Error(uploadData.error ?? "No se pudo subir la imagen");
+          }
+          userImageUrl = uploadData.imageUrl as string;
         }
-        userImageUrl = uploadData.imageUrl as string;
       }
 
       const clientRequestId = crypto.randomUUID();
@@ -188,6 +201,51 @@ export function OfferCreator({
 
     try {
       const finalBlob = await exportImage();
+
+      if (demoMode) {
+        const { loadDemoState, saveDemoState, newDemoOfferId } = await import("@/lib/demo/store");
+        const reader = new FileReader();
+        const imageDataUrl = await new Promise<string>((resolve, reject) => {
+          reader.onload = () => resolve(String(reader.result));
+          reader.onerror = () => reject(new Error("No se pudo leer la imagen"));
+          reader.readAsDataURL(finalBlob);
+        });
+
+        const pctMatch = brief.match(/(\d{1,2})\s*%/);
+        const discountPercent = pctMatch ? Number(pctMatch[1]) : 0;
+        const productName =
+          designPreview?.design.hook?.slice(0, 48) ||
+          brief.trim().split(/[.!\n]/)[0]?.trim().slice(0, 48) ||
+          "Publicación demo";
+
+        const state = loadDemoState();
+        const now = new Date();
+        const end = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+        state.offers = [
+          {
+            id: newDemoOfferId(),
+            productName,
+            discountPercent,
+            status: "PENDING",
+            startDate: now.toISOString(),
+            endDate: end.toISOString(),
+            aiBrief: brief.trim(),
+            imageDataUrl,
+            captionInstagram: caption.trim(),
+            hashtags: offerHashtags.trim(),
+            visualStyle: designPreview?.styleName ?? null,
+            createdAt: Date.now(),
+          },
+          ...state.offers,
+        ];
+        saveDemoState(state);
+        setBrief("");
+        setUploadedFile(null);
+        resetPreview();
+        onCreated();
+        return;
+      }
+
       const formData = new FormData();
       formData.set("aiBrief", brief.trim());
       formData.set("caption", caption.trim());
@@ -215,7 +273,7 @@ export function OfferCreator({
   return (
     <div className="grid lg:grid-cols-2 gap-6 items-start">
       <form onSubmit={handleSubmit} className="space-y-4">
-        {aiConfigured === false && (
+        {aiConfigured === false && !demoMode && (
           <div
             role="alert"
             className="flex gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900"
@@ -228,6 +286,16 @@ export function OfferCreator({
                 crear publicaciones con IA.
               </p>
             </div>
+          </div>
+        )}
+
+        {demoMode && (
+          <div
+            role="status"
+            className="rounded-xl border border-blue-100 bg-blue-50/70 px-4 py-3 text-xs text-blue-900"
+          >
+            Modo demo: mismos pasos que la app real. La pieza se genera con el motor visual
+            (sin costo de OpenAI).
           </div>
         )}
 
@@ -332,7 +400,7 @@ export function OfferCreator({
             <span>
               La IA usará los colores de tu marca
               {storeBranding.logoUrl ? " y tu logo" : ""}. Configúralos en{" "}
-              <a href="/tienda/configuracion" className="text-[#2563EB] underline">
+              <a href={configHref} className="text-[#2563EB] underline">
                 Configuración
               </a>
               .
@@ -389,7 +457,7 @@ export function OfferCreator({
         {storeBranding && !storeBranding.logoUrl && (
           <p className="text-xs text-amber-700">
             Sube el logo en{" "}
-            <a href="/tienda/configuracion" className="underline hover:text-amber-900">
+            <a href={configHref} className="underline hover:text-amber-900">
               Configuración
             </a>{" "}
             para que aparezca en tus publicaciones.
@@ -415,6 +483,20 @@ export function OfferCreator({
           onExportReady={handleRegisterExport}
           onError={setError}
           onLoadingChange={handlePreviewLoadingChange}
+          demoMode={demoMode}
+          demoBrand={
+            storeBranding
+              ? {
+                  name: storeBranding.name,
+                  mallName: storeBranding.mallName,
+                  primaryColor: storeBranding.primaryColor ?? "#2F6BFF",
+                  secondaryColor: storeBranding.secondaryColor ?? "#0B1B4D",
+                  logoUrl: storeBranding.logoUrl,
+                  rubro: storeBranding.rubro,
+                  previewImageUrl: storeBranding.previewImageUrl,
+                }
+              : undefined
+          }
         />
         {!designPreview && !previewLoading && (
           <p className="py-12 text-center text-sm text-slate-500">

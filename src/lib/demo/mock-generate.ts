@@ -6,9 +6,9 @@ import {
 import { getLayoutById } from "@/lib/design-engine/composition/rules";
 import { applyStoreBrandToLayout } from "@/lib/design-engine/store-branding";
 import { shapeCopyForLayout } from "@/lib/design-engine/copy/shape-slot-copy";
+import { matchDemoPreset, type DemoPreset } from "@/lib/design-engine/demo-presets";
 import type { DesignDocument } from "@/lib/design-engine/schemas";
 import type { DesignPreviewState } from "@/components/design-engine/DesignEnginePreview";
-import { getStoreRubroDefinition } from "@/lib/store/rubros";
 
 export type DemoBrand = {
   name: string;
@@ -20,35 +20,28 @@ export type DemoBrand = {
   previewImageUrl?: string | null;
 };
 
-function pickArchetype(brief: string): VisualArchetype {
-  const t = brief.toLowerCase();
-  if (/editorial|histor|story|colecci[oó]n|lifestyle/.test(t)) return "editorial";
-  if (/spotlight|h[eé]roe|producto|detalle|premium/.test(t)) return "spotlight";
-  if (/promo|descuento|%|liquidaci|oferta|outlet|2x1/.test(t)) return "promo";
-  if (/drop|lanzamiento|nueva|street|hype/.test(t)) return "drop";
+function layoutToArchetype(layoutId: string): VisualArchetype {
+  const layout = getLayoutById(layoutId);
+  if (layout?.archetype) return layout.archetype as VisualArchetype;
   return "promo";
 }
 
-function extractDiscount(brief: string): string | null {
-  const m = brief.match(/(\d{1,2})\s*%/);
-  return m ? `${m[1]}%` : null;
-}
+/** Adapta un DemoPreset al DesignDocument que consume el AdEngine actual. */
+export function presetToDesignDocument(preset: DemoPreset): DesignDocument {
+  const { design } = preset;
+  const text = design.textOnImage;
+  const archetype = layoutToArchetype(design.layoutId);
 
-function extractHook(brief: string, archetype: VisualArchetype): string {
-  const first = brief
-    .split(/[.!\n]/)
-    .map((s) => s.trim())
-    .filter(Boolean)[0];
-  if (!first) return getArchetypeDefinition(archetype).sampleCopy.hook;
-  const words = first.split(/\s+/).slice(0, getArchetypeDefinition(archetype).maxHookWords);
-  return words.join(" ").toUpperCase();
-}
-
-function extractProductName(brief: string): string {
-  const cleaned = brief.trim().replace(/\s+/g, " ");
-  const withoutPct = cleaned.replace(/\d{1,2}\s*%/g, "").trim();
-  const chunk = withoutPct.split(/[.!,]/)[0]?.trim() ?? withoutPct;
-  return chunk.slice(0, 48) || "Publicación demo";
+  return {
+    imagePrompt: design.visualConcept.imagePrompt,
+    caption: design.textExternal.caption,
+    compositionCategory: archetype,
+    compositionLayoutId: design.layoutId,
+    hook: text.hook,
+    badge: text.badge,
+    subtext: text.subtext,
+    cta: text.cta,
+  };
 }
 
 /** Genera el mismo tipo de pieza que el motor real, sin llamar a OpenAI. */
@@ -58,54 +51,39 @@ export function buildDemoGeneration(input: {
   userImageUrl?: string;
   brand: DemoBrand;
 }): DesignPreviewState {
-  const archetype = pickArchetype(input.brief);
-  const def = getArchetypeDefinition(archetype);
-  const sample = def.sampleCopy;
-  const discount = extractDiscount(input.brief);
-  const hook = extractHook(input.brief, archetype);
-  const productName = extractProductName(input.brief);
+  const preset = matchDemoPreset(input.brief);
+  const design = presetToDesignDocument(preset);
+  const def = getArchetypeDefinition(design.compositionCategory);
 
-  const design: DesignDocument = {
-    imagePrompt: `Demo mock scene for: ${input.brief.slice(0, 120)}`,
-    caption: [
-      discount ? `🔥 ${discount} DTO` : "✨ Llegó lo nuevo",
-      productName,
-      `📍 ${input.brand.name} — ${input.brand.mallName}`,
-      "",
-      "Ven a conocerlo este fin de semana. Stock limitado.",
-    ].join("\n"),
-    compositionCategory: archetype,
-    compositionLayoutId: def.defaultLayoutId,
-    hook,
-    badge: (discount ? `${discount} DTO` : sample.badge).slice(0, 32) || "NUEVO",
-    subtext: (discount ? `${discount} DTO` : sample.subtext).slice(0, 120) || "Solo hoy",
-    cta: (sample.cta || "VER MÁS").slice(0, 48),
-  };
-
-  const baseLayout = getLayoutById(design.compositionLayoutId) ?? getLayoutById(def.defaultLayoutId)!;
+  const baseLayout =
+    getLayoutById(design.compositionLayoutId) ?? getLayoutById(def.defaultLayoutId)!;
   const layout = applyStoreBrandToLayout(baseLayout, {
     primaryColor: input.brand.primaryColor,
     secondaryColor: input.brand.secondaryColor,
   });
 
-  const rubroImg =
-    input.brand.previewImageUrl ||
-    getStoreRubroDefinition(input.brand.rubro ?? "fashion").defaultSampleImageUrl;
-
-  // Preferir foto de rubro (siempre en /public); sample de arquetipo como fallback
-  const imageUrl =
-    input.imageSource === "upload" && input.userImageUrl
-      ? input.userImageUrl
-      : rubroImg || def.sampleImageUrl;
-
-  // touch shapeCopy to mirror production path
-  shapeCopyForLayout(
-    { hook: design.hook, badge: design.badge, subtext: design.subtext, cta: design.cta },
+  const shaped = shapeCopyForLayout(
+    {
+      hook: design.hook,
+      badge: design.badge,
+      subtext: design.subtext,
+      cta: design.cta,
+    },
     layout
   );
 
+  const shapedDesign: DesignDocument = {
+    ...design,
+    ...shaped,
+  };
+
+  const imageUrl =
+    input.imageSource === "upload" && input.userImageUrl
+      ? input.userImageUrl
+      : preset.design.visualConcept.imageUrl;
+
   return {
-    design,
+    design: shapedDesign,
     layout,
     imageUrl,
     styleName: def.label,
@@ -113,4 +91,6 @@ export function buildDemoGeneration(input: {
   };
 }
 
+export { DEMO_PRESETS, matchDemoPreset } from "@/lib/design-engine/demo-presets";
+export type { DemoPreset } from "@/lib/design-engine/demo-presets";
 export const DEMO_ARCHETYPE_LABELS = ARCHETYPE_DEFINITIONS.map((d) => d.label);

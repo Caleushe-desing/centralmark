@@ -11,6 +11,7 @@ import {
   PUBLICATION_INSTRUCTION_HINT,
   PUBLICATION_INSTRUCTION_PLACEHOLDER,
 } from "@/lib/design-engine/publication-instruction";
+import { DEMO_PRESETS } from "@/lib/design-engine/demo-presets";
 import { buildDefaultHashtags } from "@/lib/offer/default-copy";
 import { createClientId } from "@/lib/id";
 import { ImagePlus, Sparkles, Upload, AlertTriangle } from "lucide-react";
@@ -295,8 +296,8 @@ export function OfferCreator({
             role="status"
             className="rounded-xl border border-blue-100 bg-blue-50/70 px-4 py-3 text-xs text-blue-900"
           >
-            Modo demo: mismos pasos que la app real. La pieza se arma con el motor visual local
-            (sin OpenAI ni errores de API key).
+            Modo demo: mismos pasos y visual AdEngine. Usa un brief de zapatillas, audífonos o
+            café (o escribe libre) — se elige un preset estático, sin OpenAI ni DB.
           </div>
         )}
 
@@ -385,7 +386,11 @@ export function OfferCreator({
               if (designPreview) resetPreview();
             }}
             rows={6}
-            placeholder={PUBLICATION_INSTRUCTION_PLACEHOLDER}
+            placeholder={
+              demoMode
+                ? DEMO_PRESETS[0]?.userBriefExample ?? PUBLICATION_INSTRUCTION_PLACEHOLDER
+                : PUBLICATION_INSTRUCTION_PLACEHOLDER
+            }
             className="cm-input resize-none"
           />
           <p className="mt-1.5 text-xs leading-relaxed text-slate-500">{PUBLICATION_INSTRUCTION_HINT}</p>

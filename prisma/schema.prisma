@@ -35,6 +35,10 @@ model Store {
   secondaryColor String    @default("#1E1B4B")
   customHashtags String?
   templateId     String    @default("flash-sale")
+  /** IDs de líneas de producto (JSON array de strings) */
+  soldProductIds   String  @default("[]")
+  /** Otras líneas de producto escritas a mano */
+  soldProductsOther String?
   mallId         String
   mall           Mall      @relation(fields: [mallId], references: [id])
   createdAt      DateTime  @default(now())

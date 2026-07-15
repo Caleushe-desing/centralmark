@@ -1,5 +1,6 @@
-import { GestorPublicaciones } from "@/components/gestor-publicaciones/GestorPublicaciones";
+import { redirect } from "next/navigation";
 
-export default function GestorPublicacionesPage() {
-  return <GestorPublicaciones />;
+/** Gestor Pro eliminado — redirige a Ofertas */
+export default function GestorPublicacionesRedirectPage() {
+  redirect("/tienda");
 }

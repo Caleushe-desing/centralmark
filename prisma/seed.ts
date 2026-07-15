@@ -37,7 +37,7 @@ async function main() {
       name: "Sneaker Zone",
       category: "Calzado deportivo",
       rubro: "footwear",
-      username: "sneakerzone",
+      username: "1001",
       primaryColor: "#2563EB",
       secondaryColor: "#0F172A",
       customHashtags: "#SneakerZone #Zapatillas #Nike",
@@ -48,7 +48,7 @@ async function main() {
       name: "Moda Urbana",
       category: "Ropa y accesorios",
       rubro: "fashion",
-      username: "modaurbana",
+      username: "1002",
       primaryColor: "#DB2777",
       secondaryColor: "#431407",
       customHashtags: "#ModaUrbana #Fashion #Estilo",
@@ -59,7 +59,7 @@ async function main() {
       name: "TechHub",
       category: "Electrónica",
       rubro: "tech",
-      username: "techhub",
+      username: "1003",
       primaryColor: "#06B6D4",
       secondaryColor: "#0F172A",
       customHashtags: "#TechHub #Tecnologia #Gadgets",
@@ -70,7 +70,7 @@ async function main() {
       name: "Café Central",
       category: "Gastronomía",
       rubro: "food",
-      username: "cafecentral",
+      username: "1004",
       primaryColor: "#16A34A",
       secondaryColor: "#14532D",
       customHashtags: "#CafeCentral #Gastronomia #Cafe",
@@ -131,9 +131,9 @@ async function main() {
   }
 
   console.log("Seed completado");
-  console.log("Tiendas — usuario / contraseña: tienda123");
+  console.log("Usuarios (tiendas) — ID / contraseña: tienda123");
   stores.forEach((s) => console.log(`  ${s.name}: ${s.username}`));
-  console.log("Admin mall — contraseña: admin2026");
+  console.log("Admin mall (cliente) — contraseña: admin2026");
   console.log("Admin web (CMS) — contraseña: webadmin2026  → /web-admin");
 }
 

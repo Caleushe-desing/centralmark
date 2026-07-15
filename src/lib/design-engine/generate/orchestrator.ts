@@ -14,6 +14,7 @@ import { sanitizeSpanishCopy } from "../copy/sanitize-spanish";
 import { shapeCopyForLayout } from "../copy/shape-slot-copy";
 import { getArchetypeDefinition, parseArchetype } from "../archetypes";
 import { applyStoreBrandToLayout, type StoreBrandContext } from "../store-branding";
+import { resolveSoldProductLabels } from "@/lib/store/department-products";
 import {
   campaignBriefSchema,
   proAdDesignSchema,
@@ -79,6 +80,7 @@ async function loadStoreBrand(storeId: string): Promise<StoreBrandContext> {
     logoUrl: store.logoUrl,
     rubro: store.rubro,
     category: store.category,
+    soldProducts: resolveSoldProductLabels(store.soldProductIds, store.soldProductsOther),
   };
 }
 

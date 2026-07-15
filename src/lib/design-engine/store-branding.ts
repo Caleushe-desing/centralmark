@@ -7,6 +7,8 @@ export interface StoreBrandContext {
   logoUrl?: string | null;
   rubro?: string | null;
   category?: string | null;
+  /** Líneas de producto que vende la tienda (para orientar la IA) */
+  soldProducts?: string[];
 }
 
 /** Aplica la paleta de la tienda al layout de composición */

@@ -2,7 +2,8 @@
 
 import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Store } from "lucide-react";
+import Link from "next/link";
+import { Users } from "lucide-react";
 import { BrandLogo } from "@/components/brand/BrandLogo";
 
 function LoginForm() {
@@ -21,10 +22,10 @@ function LoginForm() {
 
     setLoading(true);
     setError(null);
-    setStatus("Conectando con el servidor…");
+    setStatus("Verificando acceso…");
 
     const form = new FormData(e.currentTarget);
-    const username = form.get("username") as string;
+    const username = (form.get("username") as string).trim();
     const password = form.get("password") as string;
 
     try {
@@ -42,20 +43,17 @@ function LoginForm() {
       const data = await res.json().catch(() => ({}));
 
       if (!res.ok) {
-        setError((data as { error?: string }).error ?? "Error al iniciar sesión");
+        setError((data as { error?: string }).error ?? "ID o contraseña incorrectos");
         setLoading(false);
         setStatus(null);
         return;
       }
 
-      setStatus("Entrando a tu tienda…");
-      // Soft navigation: refresh RSC/cookie cache, luego push (sin hard reload)
+      setStatus("Entrando…");
       router.refresh();
       router.push("/tienda");
     } catch {
-      setError(
-        "No se pudo conectar. Espera 1 minuto (primera carga lenta) o usa http://localhost:3000"
-      );
+      setError("No se pudo conectar. Intentá de nuevo en unos segundos.");
       setLoading(false);
       setStatus(null);
     }
@@ -68,19 +66,22 @@ function LoginForm() {
           <div className="mb-6 flex justify-center">
             <BrandLogo className="h-12 w-auto" />
           </div>
-          <h1 className="text-2xl font-bold text-[#0B1B4D]">Acceso de Tienda</h1>
-          <p className="mt-2 text-slate-600">Ingresa con tu usuario y contraseña</p>
+          <h1 className="text-2xl font-bold text-[#0B1B4D]">Ingreso Usuarios</h1>
+          <p className="mt-2 text-slate-600">
+            Tiendas departamentales — usá el Número ID y la contraseña que te entregó el mall.
+          </p>
         </div>
 
         <form onSubmit={handleSubmit} className="cm-card space-y-5 p-8">
           <div>
-            <label className="mb-1 block text-sm text-slate-600">Usuario</label>
+            <label className="mb-1 block text-sm text-slate-600">Número ID</label>
             <input
               name="username"
               required
               autoComplete="username"
+              inputMode="numeric"
               defaultValue={defaultUsername}
-              placeholder="ej: sneakerzone"
+              placeholder="Ej: 1001"
               className="cm-input"
             />
           </div>
@@ -104,13 +105,17 @@ function LoginForm() {
             disabled={loading}
             className="cm-btn-primary flex w-full items-center justify-center gap-2 py-3 disabled:opacity-50"
           >
-            <Store className="h-5 w-5" />
-            {loading ? "Ingresando..." : "Entrar a mi tienda"}
+            <Users className="h-5 w-5" />
+            {loading ? "Ingresando..." : "Entrar"}
           </button>
         </form>
 
         <p className="mt-6 text-center text-xs text-slate-500">
-          Demo: sneakerzone / tienda123
+          Demo: ID <span className="font-mono">1001</span> / <span className="font-mono">tienda123</span>
+          {" · "}
+          <Link href="/admin/login" className="text-[#2F6BFF] hover:underline">
+            Ingreso Clientes
+          </Link>
         </p>
       </div>
     </div>

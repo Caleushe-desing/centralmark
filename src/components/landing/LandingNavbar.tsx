@@ -1,12 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { Shield, Store } from "lucide-react";
+import { Building2, Users } from "lucide-react";
 import { BrandLogo } from "@/components/brand/BrandLogo";
 
 type Props = {
   ctaLabel?: string;
-  /** Si está en modo edición, el CTA no navega y se puede reemplazar por un nodo editable */
   ctaSlot?: React.ReactNode;
   disableLinks?: boolean;
 };
@@ -32,23 +31,23 @@ export function LandingNavbar({
           {disableLinks ? (
             <>
               <span className={linkClass}>
-                <Store className="h-4 w-4" />
-                <span className="hidden sm:inline">Tiendas</span>
+                <Users className="h-4 w-4" />
+                <span className="hidden sm:inline">Ingreso Usuarios</span>
               </span>
               <span className={linkClass}>
-                <Shield className="h-4 w-4" />
-                <span className="hidden sm:inline">Admin mall</span>
+                <Building2 className="h-4 w-4" />
+                <span className="hidden sm:inline">Ingreso Clientes</span>
               </span>
             </>
           ) : (
             <>
-              <Link href="/tienda" className={linkClass}>
-                <Store className="h-4 w-4" />
-                <span className="hidden sm:inline">Tiendas</span>
+              <Link href="/tienda/login" className={linkClass}>
+                <Users className="h-4 w-4" />
+                <span className="hidden sm:inline">Ingreso Usuarios</span>
               </Link>
-              <Link href="/admin" className={linkClass}>
-                <Shield className="h-4 w-4" />
-                <span className="hidden sm:inline">Admin mall</span>
+              <Link href="/admin/login" className={linkClass}>
+                <Building2 className="h-4 w-4" />
+                <span className="hidden sm:inline">Ingreso Clientes</span>
               </Link>
             </>
           )}
@@ -57,7 +56,10 @@ export function LandingNavbar({
           ) : disableLinks ? (
             <span className="cm-btn-primary ml-1 hidden px-4 py-2 sm:inline-flex">{ctaLabel}</span>
           ) : (
-            <Link href="/tienda" className="cm-btn-primary ml-1 hidden px-4 py-2 sm:inline-flex">
+            <Link
+              href="/tienda/login"
+              className="cm-btn-primary ml-1 hidden px-4 py-2 sm:inline-flex"
+            >
               {ctaLabel}
             </Link>
           )}

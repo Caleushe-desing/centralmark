@@ -46,19 +46,19 @@ export function LandingFooter({
             <ul className="space-y-2 text-sm">
               <li>
                 {disableLinks ? (
-                  <span>Panel de administración del mall</span>
+                  <span>Ingreso Clientes (mall)</span>
                 ) : (
-                  <Link href="/admin" className="transition hover:text-white">
-                    Panel de administración del mall
+                  <Link href="/admin/login" className="transition hover:text-white">
+                    Ingreso Clientes (mall)
                   </Link>
                 )}
               </li>
               <li>
                 {disableLinks ? (
-                  <span>Portal de tiendas</span>
+                  <span>Ingreso Usuarios (tiendas)</span>
                 ) : (
-                  <Link href="/tienda" className="transition hover:text-white">
-                    Portal de tiendas
+                  <Link href="/tienda/login" className="transition hover:text-white">
+                    Ingreso Usuarios (tiendas)
                   </Link>
                 )}
               </li>

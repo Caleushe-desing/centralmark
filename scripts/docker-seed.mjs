@@ -39,7 +39,7 @@ async function main() {
       name: "Sneaker Zone",
       category: "Calzado deportivo",
       rubro: "footwear",
-      username: "sneakerzone",
+      username: "1001",
       primaryColor: "#2563EB",
       secondaryColor: "#0F172A",
       customHashtags: "#SneakerZone #Zapatillas",
@@ -50,7 +50,7 @@ async function main() {
       name: "Moda Urbana",
       category: "Ropa y accesorios",
       rubro: "fashion",
-      username: "modaurbana",
+      username: "1002",
       primaryColor: "#DB2777",
       secondaryColor: "#431407",
       customHashtags: "#ModaUrbana #Fashion",
@@ -61,7 +61,7 @@ async function main() {
       name: "TechHub",
       category: "Electrónica",
       rubro: "tech",
-      username: "techhub",
+      username: "1003",
       primaryColor: "#06B6D4",
       secondaryColor: "#0F172A",
       customHashtags: "#TechHub #Tecnologia",
@@ -72,7 +72,7 @@ async function main() {
       name: "Café Central",
       category: "Gastronomía",
       rubro: "food",
-      username: "cafecentral",
+      username: "1004",
       primaryColor: "#16A34A",
       secondaryColor: "#14532D",
       customHashtags: "#CafeCentral #Gastronomia",
@@ -87,6 +87,7 @@ async function main() {
         name: store.name,
         category: store.category,
         rubro: store.rubro,
+        username: store.username,
         passwordHash,
         primaryColor: store.primaryColor,
         secondaryColor: store.secondaryColor,
@@ -102,7 +103,7 @@ async function main() {
   }
 
   console.log("[docker-seed] Mall + tiendas demo listos");
-  console.log("[docker-seed] sneakerzone / tienda123 | admin: admin2026");
+  console.log("[docker-seed] ID 1001 / tienda123 | admin: admin2026");
 }
 
 main()

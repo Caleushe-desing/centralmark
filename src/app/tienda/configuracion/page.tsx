@@ -7,6 +7,7 @@ import { AlertTriangle, Link2, Save, Share2, Unlink } from "lucide-react";
 import { ColorPalettePicker } from "@/components/settings/ColorPalettePicker";
 import { LogoUploader } from "@/components/settings/LogoUploader";
 import { RubroGridPicker } from "@/components/settings/RubroGridPicker";
+import { ProductAssortmentPicker } from "@/components/settings/ProductAssortmentPicker";
 import { getStoreRubroDefinition } from "@/lib/store/rubros";
 
 interface StoreSettings {
@@ -17,6 +18,8 @@ interface StoreSettings {
   rubro: string;
   category: string;
   previewImageUrl: string | null;
+  soldProductIds?: string;
+  soldProductsOther?: string | null;
   mall: { name: string; fixedHashtags: string };
 }
 
@@ -69,6 +72,8 @@ function ConfiguracionContent() {
   const [manualToken, setManualToken] = useState("");
   const [manualIgId, setManualIgId] = useState("17841462337526610");
   const [manualLoading, setManualLoading] = useState(false);
+  const [soldProductIds, setSoldProductIds] = useState<string[]>([]);
+  const [soldProductsOther, setSoldProductsOther] = useState("");
 
   const loadSocial = useCallback(async () => {
     const res = await fetch("/api/store/social");
@@ -84,6 +89,17 @@ function ConfiguracionContent() {
       setRubro(data.rubro ?? "fashion");
       setPrimaryColor(data.primaryColor ?? "#E11D48");
       setSecondaryColor(data.secondaryColor ?? "#1E1B4B");
+      try {
+        const parsed = JSON.parse(data.soldProductIds ?? "[]") as unknown;
+        setSoldProductIds(
+          Array.isArray(parsed)
+            ? parsed.filter((x): x is string => typeof x === "string")
+            : []
+        );
+      } catch {
+        setSoldProductIds([]);
+      }
+      setSoldProductsOther(data.soldProductsOther ?? "");
       setRemovePreview(false);
       setLogoFile(null);
     }
@@ -125,6 +141,8 @@ function ConfiguracionContent() {
     formData.set("rubro", rubro);
     formData.set("primaryColor", primaryColor);
     formData.set("secondaryColor", secondaryColor);
+    formData.set("soldProductIds", JSON.stringify(soldProductIds));
+    formData.set("soldProductsOther", soldProductsOther);
     if (removePreview) formData.set("removePreviewImage", "true");
     if (logoFile) formData.set("logo", logoFile);
 
@@ -148,6 +166,17 @@ function ConfiguracionContent() {
       setRubro(data.rubro ?? "fashion");
       setPrimaryColor(data.primaryColor ?? "#E11D48");
       setSecondaryColor(data.secondaryColor ?? "#1E1B4B");
+      try {
+        const parsed = JSON.parse(data.soldProductIds ?? "[]") as unknown;
+        setSoldProductIds(
+          Array.isArray(parsed)
+            ? parsed.filter((x): x is string => typeof x === "string")
+            : []
+        );
+      } catch {
+        setSoldProductIds([]);
+      }
+      setSoldProductsOther(data.soldProductsOther ?? "");
       setRemovePreview(false);
       setLogoFile(null);
       setSaved(true);
@@ -236,8 +265,8 @@ function ConfiguracionContent() {
         </p>
         <h1 className="cm-page-title mt-1">Configuración de tu tienda</h1>
         <p className="cm-page-subtitle">
-          Define logo, colores y rubro. La IA usará esta información en cada publicación para
-          {store.mall.name}.
+          Define logo, colores, rubro y los productos que vendés. La IA usará esa información en
+          cada publicación para {store.mall.name}.
         </p>
       </div>
 
@@ -337,6 +366,15 @@ function ConfiguracionContent() {
               </div>
             </div>
           )}
+        </section>
+
+        <section className="cm-card p-6">
+          <ProductAssortmentPicker
+            selectedIds={soldProductIds}
+            otherText={soldProductsOther}
+            onChangeIds={setSoldProductIds}
+            onChangeOther={setSoldProductsOther}
+          />
         </section>
 
         <section className="cm-card p-6 space-y-4">

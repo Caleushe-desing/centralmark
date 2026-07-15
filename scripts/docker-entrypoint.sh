@@ -21,19 +21,14 @@ echo "[centralmark] uid=$(id -u) DATABASE_URL=$DATABASE_URL"
 echo "[centralmark] Aplicando migraciones Prisma…"
 ./node_modules/.bin/prisma migrate deploy
 
-if [ ! -f "$SEED_MARKER" ]; then
-  echo "[centralmark] Primera ejecución: sembrando datos demo…"
-  # tsx puede estar como binario o solo como paquete; npx lo resuelve
-  if ./node_modules/.bin/tsx prisma/seed.ts 2>/dev/null \
-    || node ./node_modules/tsx/dist/cli.mjs prisma/seed.ts 2>/dev/null \
-    || npx --yes tsx@4.23.0 prisma/seed.ts; then
-    touch "$SEED_MARKER"
-    echo "[centralmark] Seed OK"
-  else
-    echo "[centralmark] WARN: seed falló (continuamos arranque)"
-  fi
+echo "[centralmark] Sincronizando datos demo (upsert idempotente)…"
+if ./node_modules/.bin/tsx prisma/seed.ts 2>/dev/null \
+  || node ./node_modules/tsx/dist/cli.mjs prisma/seed.ts 2>/dev/null \
+  || npx --yes tsx@4.23.0 prisma/seed.ts; then
+  touch "$SEED_MARKER"
+  echo "[centralmark] Seed OK"
 else
-  echo "[centralmark] Seed ya aplicado (omitido)"
+  echo "[centralmark] WARN: seed falló (continuamos arranque)"
 fi
 
 echo "[centralmark] Iniciando Next.js en :${PORT:-3000}"

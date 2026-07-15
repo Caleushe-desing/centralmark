@@ -56,6 +56,16 @@ MARCA DE LA TIENDA:
 - Color primario (acentos): ${brand.primaryColor}
 - Color secundario (contraste): ${brand.secondaryColor}
 - Rubro: ${brand.category ?? brand.rubro ?? "retail"}
+- Productos que vende: ${
+    brand.soldProducts && brand.soldProducts.length > 0
+      ? brand.soldProducts.join(", ")
+      : "no especificado — inferí del brief"
+  }
+
+IMPORTANTE SOBRE PRODUCTOS:
+- Generá la imagen y el copy coherentes con los productos que vende esta tienda.
+- Si el brief menciona un producto concreto, priorizalo; si no, elegí algo típico de su surtido.
+- No inventes categorías ajenas al surtido declarado.
 
 FUENTE DE IMAGEN: ${imageSource === "upload" ? "El usuario subió su foto — imagePrompt describe solo ambiente/estilo de apoyo si aplica; la foto base ya existe." : "Generar imagen nueva con IA según el brief."}
 

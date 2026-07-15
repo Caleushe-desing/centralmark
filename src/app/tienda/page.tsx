@@ -4,7 +4,6 @@ import { useCallback, useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { OfferCard } from "@/components/OfferCard";
 import { OfferCreator } from "@/components/OfferCreator";
-import { CampaignStudio, type CampaignApplyPayload } from "@/components/CampaignStudio";
 
 interface StoreSettings {
   name: string;
@@ -22,7 +21,6 @@ export default function TiendaPage() {
   const pathname = usePathname();
   const [offers, setOffers] = useState<never[]>([]);
   const [store, setStore] = useState<StoreSettings | null>(null);
-  const [campaignSeed, setCampaignSeed] = useState<CampaignApplyPayload | null>(null);
 
   const loadData = useCallback(async () => {
     const [offersRes, settingsRes] = await Promise.all([
@@ -50,42 +48,36 @@ export default function TiendaPage() {
       <div className="mb-8">
         <h1 className="cm-page-title">Mis Ofertas</h1>
         <p className="cm-page-subtitle">
-          Describe tu publicación en una sola instrucción. La IA crea imagen, textos y caption en español.
+          Describe tu publicación en una sola instrucción. La IA crea imagen, textos y caption en
+          español según los productos que vende tu tienda.
         </p>
       </div>
 
-      <div className="mb-10 space-y-6">
+      <div className="mb-10">
         {store && (
-          <>
-            <CampaignStudio
-              storeName={store.name}
-              onApply={setCampaignSeed}
+          <div className="p-6 mm-card">
+            <OfferCreator
+              key={`${store.rubro}-${store.previewImageUrl ?? "default"}`}
+              mallHashtags={store.mall.fixedHashtags}
+              storeBranding={{
+                name: store.name,
+                mallName: store.mall.name,
+                logoUrl: store.logoUrl,
+                primaryColor: store.primaryColor,
+                secondaryColor: store.secondaryColor,
+                customHashtags: store.customHashtags,
+                rubro: store.rubro,
+                category: store.category,
+                previewImageUrl: store.previewImageUrl,
+              }}
+              onCreated={loadData}
             />
-            <div className="p-6 mm-card">
-              <OfferCreator
-                key={`${store.rubro}-${store.previewImageUrl ?? "default"}`}
-                mallHashtags={store.mall.fixedHashtags}
-                storeBranding={{
-                  name: store.name,
-                  mallName: store.mall.name,
-                  logoUrl: store.logoUrl,
-                  primaryColor: store.primaryColor,
-                  secondaryColor: store.secondaryColor,
-                  customHashtags: store.customHashtags,
-                  rubro: store.rubro,
-                  category: store.category,
-                  previewImageUrl: store.previewImageUrl,
-                }}
-                campaignSeed={campaignSeed}
-                onCreated={loadData}
-              />
-            </div>
-          </>
+          </div>
         )}
       </div>
 
       <div className="space-y-6">
-        <h2 className="text-lg font-semibold text-[#0F2B5B]">Ofertas creadas</h2>
+        <h2 className="text-lg font-semibold text-[#0B1B4D]">Ofertas creadas</h2>
         {offers.length === 0 ? (
           <p className="text-slate-500">Aún no hay ofertas publicadas.</p>
         ) : (

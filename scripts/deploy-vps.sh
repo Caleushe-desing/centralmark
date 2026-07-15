@@ -132,6 +132,6 @@ ssh "${SSH_OPTS[@]}" "$SSH_HOST" "cd '$REMOTE_DIR' && docker compose ps && docke
 echo ""
 echo "✅ Deploy listo: $APP_PUBLIC_URL"
 echo "   Clave de acceso al sitio: ${SITE_PASS}"
-echo "   Tienda: sneakerzone / tienda123"
-echo "   Admin mall:  admin2026"
+echo "   Ingreso Usuarios (tienda): ID 1001 / tienda123"
+echo "   Ingreso Clientes (mall):   admin2026"
 echo "   Admin web:   webadmin2026 → /web-admin"

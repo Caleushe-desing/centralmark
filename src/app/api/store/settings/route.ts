@@ -74,6 +74,24 @@ export async function PATCH(request: NextRequest) {
 
     const removePreview = formData.get("removePreviewImage") === "true";
 
+    let soldProductIds: string | undefined;
+    const soldRaw = formData.get("soldProductIds");
+    if (typeof soldRaw === "string" && soldRaw.trim()) {
+      try {
+        const parsed = JSON.parse(soldRaw) as unknown;
+        if (Array.isArray(parsed)) {
+          soldProductIds = JSON.stringify(
+            parsed.filter((x): x is string => typeof x === "string")
+          );
+        }
+      } catch {
+        /* ignore invalid */
+      }
+    }
+    const soldOtherRaw = formData.get("soldProductsOther");
+    const soldProductsOther =
+      typeof soldOtherRaw === "string" ? soldOtherRaw.trim() || null : undefined;
+
     const existing = await prisma.store.findUnique({ where: { id: session.storeId } });
     const rubroChanged =
       rubroDef && existing && rubroDef.id !== parseStoreRubro(existing.rubro);
@@ -90,6 +108,8 @@ export async function PATCH(request: NextRequest) {
         ...(removePreview ? { previewImageUrl: null } : {}),
         ...(primaryColor ? { primaryColor } : {}),
         ...(secondaryColor ? { secondaryColor } : {}),
+        ...(soldProductIds !== undefined ? { soldProductIds } : {}),
+        ...(soldProductsOther !== undefined ? { soldProductsOther } : {}),
         // Al cambiar rubro sin nueva foto, usar imagen por defecto del rubro
         ...(rubroChanged && !hasNewPreviewImage ? { previewImageUrl: null } : {}),
       },

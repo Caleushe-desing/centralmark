@@ -22,6 +22,7 @@ import {
 } from "@/lib/cms/json-edit";
 import { EditableText } from "@/components/web-admin/EditableText";
 import { EditableImage } from "@/components/web-admin/EditableImage";
+import { ContactDemoButton } from "@/components/contact/ContactDemoButton";
 
 const PILLAR_ICONS = [Target, Lightbulb, FileText, BarChart3] as const;
 const INTEL_ICONS = [Lightbulb, Bell, CalendarClock, BarChart3, Target, FileText] as const;
@@ -381,15 +382,25 @@ export function CentralMarkLanding({ content, editor }: Props) {
               )}
               <div className="mt-10 flex flex-wrap gap-4">
                 <CtaPrimary
-                  href="/tienda"
+                  href="/demo"
                   labelKey="hero.ctaPrimary"
                   className="cm-btn-primary inline-flex items-center gap-2 px-7 py-3.5 text-sm shadow-lg shadow-[#2F6BFF]/25"
                 />
-                <CtaSecondary
-                  href="/admin"
-                  labelKey="hero.ctaSecondary"
-                  className="inline-flex items-center gap-2 rounded-lg border border-white/35 bg-white/10 px-7 py-3.5 text-sm font-semibold text-white backdrop-blur-sm transition hover:bg-white/20"
-                />
+                {editing ? (
+                  <div className="inline-flex items-center gap-2 rounded-lg border border-white/35 bg-white/10 px-7 py-3.5 text-sm font-semibold text-white backdrop-blur-sm">
+                    <EditableText
+                      value={c("hero.ctaSecondary")}
+                      onChange={(v) => set?.("hero.ctaSecondary", v)}
+                      className="text-center text-inherit"
+                      label="Botón"
+                    />
+                  </div>
+                ) : (
+                  <ContactDemoButton
+                    label={c("hero.ctaSecondary") || "Hablar con ventas"}
+                    className="inline-flex items-center gap-2 rounded-lg border border-white/35 bg-white/10 px-7 py-3.5 text-sm font-semibold text-white backdrop-blur-sm transition hover:bg-white/20"
+                  />
+                )}
               </div>
             </div>
           </div>
@@ -1015,7 +1026,7 @@ export function CentralMarkLanding({ content, editor }: Props) {
                   </span>
                 ) : (
                   <Link
-                    href="/tienda"
+                    href="/demo"
                     className="relative mt-8 inline-flex items-center gap-2 text-sm font-semibold text-[#2F6BFF] transition hover:text-[#C026FF]"
                   >
                     Probar el flujo de tienda
@@ -1151,7 +1162,7 @@ export function CentralMarkLanding({ content, editor }: Props) {
             )}
             <div className="mt-10 flex flex-wrap justify-center gap-4">
               <CtaPrimary
-                href="/tienda"
+                href="/demo"
                 labelKey="cta.primary"
                 className="cm-btn-primary inline-flex items-center gap-2 px-8 py-4 text-sm shadow-lg shadow-[#2F6BFF]/25"
               />
@@ -1167,7 +1178,7 @@ export function CentralMarkLanding({ content, editor }: Props) {
 
       <LandingFooter
         blurb={c("footer.blurb")}
-        email={c("footer.email")}
+        email={c("footer.email") || "ventas@centralmark.cl"}
         disableLinks={editing}
         blurbSlot={
           editing ? (

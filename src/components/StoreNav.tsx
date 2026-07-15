@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Building2, Settings, ImageIcon, LogOut } from "lucide-react";
+import { ImageIcon, LogOut, Settings } from "lucide-react";
+import { BrandLogo } from "@/components/brand/BrandLogo";
 
 interface StoreNavProps {
   storeName: string;
@@ -28,13 +29,8 @@ export function StoreNav({ storeName, mallName }: StoreNavProps) {
       <div className="mx-auto max-w-7xl px-6 py-3">
         <div className="flex items-center justify-between gap-4">
           <Link href="/tienda" className="flex min-w-0 items-center gap-3">
-            <div
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-white shadow-sm"
-              style={{ background: "var(--cm-grad)" }}
-            >
-              <Building2 className="h-5 w-5" />
-            </div>
-            <div className="min-w-0">
+            <BrandLogo className="h-9 w-auto shrink-0" href={null} />
+            <div className="min-w-0 border-l border-slate-200 pl-3">
               <span className="block truncate text-base font-bold text-[#0B1B4D]">{storeName}</span>
               {mallName && (
                 <span className="block truncate text-xs text-slate-500">{mallName}</span>

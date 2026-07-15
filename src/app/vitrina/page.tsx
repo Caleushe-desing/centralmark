@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import { Sparkles } from "lucide-react";
+import { BrandLogo } from "@/components/brand/BrandLogo";
 
 interface VitrinaOffer {
   id: string;
@@ -37,33 +38,35 @@ export default function VitrinaPage() {
 
   if (!data) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#0F2B5B]">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-white border-t-transparent" />
+      <div className="cm-app-bg flex min-h-screen items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#2563EB] border-t-transparent" />
       </div>
     );
   }
 
   const offer = data.offers[current];
-  const primary = data.mall?.primaryColor ?? "#E11D48";
+  const primary = data.mall?.primaryColor ?? "#2F6BFF";
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-slate-100">
+    <div className="relative min-h-screen overflow-hidden bg-[#F7F9FF]">
       <div
-        className="absolute inset-0 opacity-20"
+        className="absolute inset-0 opacity-30"
         style={{
           background: `radial-gradient(circle at 30% 50%, ${primary}, transparent 60%)`,
         }}
       />
 
-      <header className="relative z-10 flex items-center justify-between bg-[#0F2B5B] p-8 text-white shadow-md">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-wider text-blue-200">CentralMark</p>
-          <h1 className="text-4xl font-black">{data.mall?.name ?? "CentralMark"}</h1>
-          <p className="mt-1 text-lg text-blue-100">{data.mall?.tagline}</p>
+      <header className="relative z-10 flex items-center justify-between border-b border-white/10 bg-[#0B1B4D] px-6 py-5 text-white shadow-md sm:px-8">
+        <div className="flex items-center gap-4">
+          <BrandLogo className="h-9 w-auto brightness-0 invert" href="/" />
+          <div className="border-l border-white/20 pl-4">
+            <h1 className="text-xl font-bold sm:text-2xl">{data.mall?.name ?? "CentralMark"}</h1>
+            <p className="text-sm text-blue-100">{data.mall?.tagline}</p>
+          </div>
         </div>
         <div className="flex items-center gap-2 text-blue-100">
-          <Sparkles className="h-6 w-6" />
-          <span className="text-lg font-semibold">Ofertas del día</span>
+          <Sparkles className="h-5 w-5" />
+          <span className="hidden text-sm font-semibold sm:inline">Publicaciones del día</span>
         </div>
       </header>
 
@@ -98,7 +101,7 @@ export default function VitrinaPage() {
         </main>
       ) : (
         <main className="relative z-10 flex items-center justify-center min-h-[calc(100vh-120px)]">
-          <p className="text-2xl text-slate-500">No hay ofertas activas hoy</p>
+          <p className="text-2xl text-slate-500">No hay publicaciones activas hoy</p>
         </main>
       )}
 

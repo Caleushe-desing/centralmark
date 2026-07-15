@@ -56,7 +56,7 @@ export const LANDING_FIELD_DEFS: LandingFieldDef[] = [
     label: "Botón secundario",
     section: "hero",
     sectionLabel: "1. Hero (primera pantalla)",
-    value: "Ver panel del mall",
+    value: "Hablar con ventas",
     sortOrder: 50,
   },
   {
@@ -519,7 +519,7 @@ export const LANDING_FIELD_DEFS: LandingFieldDef[] = [
     label: "Botón principal",
     section: "cta",
     sectionLabel: "9. Llamado a la acción",
-    value: "Acceder a demo de tienda",
+    value: "Probar demo interactiva",
     sortOrder: 820,
   },
   {
@@ -549,7 +549,7 @@ export const LANDING_FIELD_DEFS: LandingFieldDef[] = [
     label: "Email de contacto",
     section: "footer",
     sectionLabel: "10. Pie de página",
-    value: "contacto@centralmark.cl",
+    value: "ventas@centralmark.cl",
     sortOrder: 910,
   },
   {

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { Building2, Users } from "lucide-react";
 import { BrandLogo } from "@/components/brand/BrandLogo";
+import { ContactDemoButton } from "@/components/contact/ContactDemoButton";
 
 type Props = {
   ctaLabel?: string;
@@ -22,7 +23,7 @@ export function LandingNavbar({
     <header className="sticky top-0 z-50 border-b border-slate-200/70 bg-white/90 backdrop-blur-md">
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-6 py-3.5">
         <BrandLogo
-          className="h-11 w-auto sm:h-12"
+          className="h-9 w-auto sm:h-10"
           priority
           href={disableLinks ? null : "/"}
         />
@@ -41,6 +42,10 @@ export function LandingNavbar({
             </>
           ) : (
             <>
+              <Link href="/demo" className={linkClass}>
+                <span className="hidden sm:inline">Demo</span>
+                <span className="sm:hidden">Demo</span>
+              </Link>
               <Link href="/tienda/login" className={linkClass}>
                 <Users className="h-4 w-4" />
                 <span className="hidden sm:inline">Ingreso Usuarios</span>
@@ -56,12 +61,9 @@ export function LandingNavbar({
           ) : disableLinks ? (
             <span className="cm-btn-primary ml-1 hidden px-4 py-2 sm:inline-flex">{ctaLabel}</span>
           ) : (
-            <Link
-              href="/tienda/login"
-              className="cm-btn-primary ml-1 hidden px-4 py-2 sm:inline-flex"
-            >
-              {ctaLabel}
-            </Link>
+            <div className="ml-1 hidden sm:block">
+              <ContactDemoButton label={ctaLabel} className="cm-btn-primary px-4 py-2" />
+            </div>
           )}
         </nav>
       </div>

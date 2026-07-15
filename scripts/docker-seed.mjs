@@ -1,114 +1,104 @@
 /**
- * Seed mínimo para contenedor (sin TypeScript).
+ * Seed mínimo del contenedor — mejor-sqlite3 + bcrypt (sin Prisma TS).
+ * Idempotente: upsert mall demo y tiendas 1001–1004.
  */
 import bcrypt from "bcryptjs";
-import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
-import { PrismaClient } from "../src/generated/prisma/client.js";
+import Database from "better-sqlite3";
+import { randomBytes } from "crypto";
 
-const databaseUrl = process.env.DATABASE_URL ?? "file:/app/data/dev.db";
-const adapter = new PrismaBetterSqlite3({ url: databaseUrl });
-const prisma = new PrismaClient({ adapter });
+const dbPath = (process.env.DATABASE_URL ?? "file:/app/data/dev.db").replace(
+  /^file:/,
+  ""
+);
+const db = new Database(dbPath);
+const passwordHash = await bcrypt.hash("tienda123", 10);
+const now = new Date().toISOString();
 
-const DEFAULT_PASSWORD = "tienda123";
-
-async function main() {
-  const passwordHash = await bcrypt.hash(DEFAULT_PASSWORD, 10);
-
-  await prisma.mall.upsert({
-    where: { id: "demo-mall" },
-    update: {
-      fixedHashtags: "#CentralMark #Ofertas #MallCentro",
-      adminPassword: "admin2026",
-      name: "CentralMark Centro",
-    },
-    create: {
-      id: "demo-mall",
-      name: "CentralMark Centro",
-      tagline: "Centro de Marketing Inteligente",
-      primaryColor: "#0F2B5B",
-      secondaryColor: "#2563EB",
-      fixedHashtags: "#CentralMark #Ofertas #MallCentro",
-      adminPassword: "admin2026",
-    },
-  });
-
-  const stores = [
-    {
-      id: "store-sneakers",
-      name: "Sneaker Zone",
-      category: "Calzado deportivo",
-      rubro: "footwear",
-      username: "1001",
-      primaryColor: "#2563EB",
-      secondaryColor: "#0F172A",
-      customHashtags: "#SneakerZone #Zapatillas",
-      templateId: "sport",
-    },
-    {
-      id: "store-fashion",
-      name: "Moda Urbana",
-      category: "Ropa y accesorios",
-      rubro: "fashion",
-      username: "1002",
-      primaryColor: "#DB2777",
-      secondaryColor: "#431407",
-      customHashtags: "#ModaUrbana #Fashion",
-      templateId: "retro",
-    },
-    {
-      id: "store-tech",
-      name: "TechHub",
-      category: "Electrónica",
-      rubro: "tech",
-      username: "1003",
-      primaryColor: "#06B6D4",
-      secondaryColor: "#0F172A",
-      customHashtags: "#TechHub #Tecnologia",
-      templateId: "tech",
-    },
-    {
-      id: "store-cafe",
-      name: "Café Central",
-      category: "Gastronomía",
-      rubro: "food",
-      username: "1004",
-      primaryColor: "#16A34A",
-      secondaryColor: "#14532D",
-      customHashtags: "#CafeCentral #Gastronomia",
-      templateId: "nature",
-    },
-  ];
-
-  for (const store of stores) {
-    await prisma.store.upsert({
-      where: { id: store.id },
-      update: {
-        username: store.username,
-        passwordHash,
-        primaryColor: store.primaryColor,
-        secondaryColor: store.secondaryColor,
-        customHashtags: store.customHashtags,
-        templateId: store.templateId,
-        category: store.category,
-        rubro: store.rubro,
-      },
-      create: {
-        ...store,
-        passwordHash,
-        mallId: "demo-mall",
-      },
-    });
-  }
-
-  console.log("[docker-seed] Mall + tiendas demo listos");
-  console.log("[docker-seed] ID 1001 / tienda123 | admin: admin2026");
+function cuid() {
+  return `c${randomBytes(12).toString("hex")}`;
 }
 
-main()
-  .catch((err) => {
-    console.error("[docker-seed] ERROR", err);
-    process.exit(1);
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
+db.exec(`
+  CREATE TABLE IF NOT EXISTS Mall (
+    id TEXT PRIMARY KEY NOT NULL,
+    name TEXT NOT NULL,
+    tagline TEXT,
+    primaryColor TEXT NOT NULL DEFAULT '#E11D48',
+    secondaryColor TEXT NOT NULL DEFAULT '#1E1B4B',
+    fixedHashtags TEXT NOT NULL DEFAULT '#MarkMall #Ofertas',
+    adminPassword TEXT NOT NULL DEFAULT 'admin2026',
+    createdAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updatedAt DATETIME NOT NULL
+  );
+`);
+
+const mall = db.prepare("SELECT id FROM Mall WHERE id = ?").get("demo-mall");
+if (!mall) {
+  db.prepare(
+    `INSERT INTO Mall (id, name, tagline, primaryColor, secondaryColor, fixedHashtags, adminPassword, createdAt, updatedAt)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+  ).run(
+    "demo-mall",
+    "CentralMark Centro",
+    "Centro de Marketing Inteligente",
+    "#0F2B5B",
+    "#2563EB",
+    "#CentralMark #Ofertas #MallCentro",
+    "admin2026",
+    now,
+    now
+  );
+} else {
+  db.prepare(
+    `UPDATE Mall SET adminPassword = ?, fixedHashtags = ?, updatedAt = ? WHERE id = ?`
+  ).run("admin2026", "#CentralMark #Ofertas #MallCentro", now, "demo-mall");
+}
+
+const stores = [
+  ["store-sneakers", "Sneaker Zone", "Calzado deportivo", "footwear", "1001", "#2563EB", "#0F172A"],
+  ["store-fashion", "Moda Urbana", "Ropa y accesorios", "fashion", "1002", "#DB2777", "#431407"],
+  ["store-tech", "TechHub", "Electrónica", "tech", "1003", "#06B6D4", "#0F172A"],
+  ["store-cafe", "Café Central", "Gastronomía", "food", "1004", "#16A34A", "#14532D"],
+];
+
+const upsert = db.prepare(`
+  INSERT INTO Store (id, name, category, rubro, username, passwordHash, primaryColor, secondaryColor, templateId, soldProductIds, mallId, createdAt, updatedAt)
+  VALUES (@id, @name, @category, @rubro, @username, @passwordHash, @primaryColor, @secondaryColor, 'flash-sale', '[]', 'demo-mall', @now, @now)
+  ON CONFLICT(id) DO UPDATE SET
+    username = excluded.username,
+    passwordHash = excluded.passwordHash,
+    category = excluded.category,
+    rubro = excluded.rubro,
+    primaryColor = excluded.primaryColor,
+    secondaryColor = excluded.secondaryColor,
+    updatedAt = excluded.updatedAt
+`);
+
+for (const [id, name, category, rubro, username, primaryColor, secondaryColor] of stores) {
+  upsert.run({
+    id,
+    name,
+    category,
+    rubro,
+    username,
+    passwordHash,
+    primaryColor,
+    secondaryColor,
+    now,
   });
+}
+
+// Site settings for web admin
+const site = db.prepare("SELECT id FROM SiteSettings WHERE id = ?").get("default");
+if (!site) {
+  try {
+    db.prepare(
+      `INSERT INTO SiteSettings (id, webAdminPassword, updatedAt) VALUES ('default', 'webadmin2026', ?)`
+    ).run(now);
+  } catch {
+    /* table may not exist yet before migrate — ok */
+  }
+}
+
+console.log("[docker-seed] OK — ID 1001 / tienda123 | admin: admin2026");
+db.close();

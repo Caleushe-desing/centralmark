@@ -156,7 +156,7 @@ export const LANDING_FIELD_DEFS: LandingFieldDef[] = [
   {
     key: "howto.steps",
     type: "json",
-    label: "Pasos (JSON: title, description, image, imageAlt)",
+    label: "Pasos + sección independiente (JSON). Los primeros 3 llevan “Paso N”; el 4º en adelante se muestra como sección propia sin número.",
     section: "howto",
     sectionLabel: "3. Cómo funciona (con imágenes)",
     value: JSON.stringify(
@@ -183,9 +183,9 @@ export const LANDING_FIELD_DEFS: LandingFieldDef[] = [
           imageAlt: "Vitrina digital del mall con ofertas publicadas",
         },
         {
-          title: "Medí el impacto",
+          title: "Todo el marketing bajo control",
           description:
-            "Compará campañas, detectá tiendas sin actividad y recibí informes semanales para la gerencia.",
+            "Mientras las tiendas crean campañas en segundos con IA, la administración del centro comercial accede a un panel ejecutivo con información en tiempo real para supervisar la actividad de todas las marcas.\n\n• Compara el rendimiento entre campañas.\n• Identifica tiendas con baja actividad.\n• Mide alcance, interacción y resultados.\n• Recibe reportes automáticos para tomar mejores decisiones.",
           image: "/landing/analytics.png",
           imageAlt: "Dashboard de analítica y resultados de marketing",
         },

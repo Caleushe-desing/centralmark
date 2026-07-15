@@ -42,6 +42,114 @@ type TitleDesc = { title: string; description: string };
 type HowStep = { title: string; description: string; image: string; imageAlt: string };
 type ExpansionItem = { label: string; active: boolean };
 
+function HowToArticle({
+  step,
+  index,
+  reverse,
+  showStepBadge,
+  editing,
+  uploadingKey,
+  onChangeTitle,
+  onChangeDescription,
+  onUploadImage,
+}: {
+  step: HowStep;
+  index: number;
+  reverse: boolean;
+  showStepBadge: boolean;
+  editing: boolean;
+  uploadingKey?: string | null;
+  onChangeTitle: (value: string) => void;
+  onChangeDescription: (value: string) => void;
+  onUploadImage: (file: File) => void;
+}) {
+  const editLabel = showStepBadge ? `Paso ${index + 1}` : "Sección";
+
+  return (
+    <article className="grid items-center gap-10 lg:grid-cols-2">
+      <div className={reverse ? "lg:order-2" : ""}>
+        {showStepBadge ? (
+          <span
+            className="mb-3 inline-flex h-9 items-center rounded-full px-3 text-xs font-bold uppercase tracking-wider text-white"
+            style={{ background: "var(--cm-grad)" }}
+          >
+            Paso {index + 1}
+          </span>
+        ) : null}
+        {editing ? (
+          <>
+            <EditableText
+              value={step.title}
+              onChange={onChangeTitle}
+              label={`${editLabel} · título`}
+              className="text-2xl font-bold text-[#0B1B4D] sm:text-3xl"
+              style={{ fontFamily: "var(--font-outfit), sans-serif" }}
+            />
+            <EditableText
+              value={step.description}
+              onChange={onChangeDescription}
+              multiline
+              label={`${editLabel} · texto`}
+              className="mt-3 text-base leading-relaxed text-slate-600"
+            />
+          </>
+        ) : (
+          <>
+            <h3
+              className={`font-bold text-[#0B1B4D] ${
+                showStepBadge ? "text-2xl" : "text-3xl sm:text-4xl"
+              }`}
+              style={{ fontFamily: "var(--font-outfit), sans-serif" }}
+            >
+              {step.title}
+            </h3>
+            <p className="mt-3 text-base leading-relaxed text-slate-600 whitespace-pre-line">
+              {step.description}
+            </p>
+          </>
+        )}
+      </div>
+      <div
+        className={`relative overflow-hidden rounded-2xl shadow-xl shadow-slate-200/80 ${
+          editing ? "" : "cm-animate-float"
+        } ${reverse ? "lg:order-1" : ""}`}
+      >
+        <div
+          className="pointer-events-none absolute inset-0 z-10 opacity-30"
+          style={{
+            background:
+              "linear-gradient(135deg, rgba(0,194,255,0.25), transparent 40%, rgba(192,38,255,0.2))",
+          }}
+        />
+        {editing ? (
+          <EditableImage
+            src={step.image}
+            alt={step.imageAlt || step.title}
+            width={1280}
+            height={800}
+            className="h-auto w-full object-cover"
+            uploading={uploadingKey === `howto.steps.${index}.image`}
+            label={
+              showStepBadge
+                ? `Cambiar foto paso ${index + 1}`
+                : "Cambiar foto de la sección"
+            }
+            onUpload={onUploadImage}
+          />
+        ) : (
+          <Image
+            src={step.image}
+            alt={step.imageAlt || step.title}
+            width={1280}
+            height={800}
+            className="h-auto w-full object-cover"
+          />
+        )}
+      </div>
+    </article>
+  );
+}
+
 export function CentralMarkLanding({ content, editor }: Props) {
   const editing = !!editor;
   const c = (key: string) => content[key] ?? "";
@@ -50,6 +158,12 @@ export function CentralMarkLanding({ content, editor }: Props) {
 
   const pillars = parseJsonField<TitleDesc[]>(c("pillars.items"), []);
   const howto = parseJsonField<HowStep[]>(c("howto.steps"), []);
+  /** Primeros 3 = pasos numerados; el resto = secciones independientes (sin “Paso N”) */
+  const howtoNumbered = howto.slice(0, 3);
+  const howtoIndependent = howto.slice(3).map((step, i) => ({
+    step,
+    originalIndex: i + 3,
+  }));
   const ecoBullets = parseJsonField<string[]>(c("ecosystem.bullets"), []);
   const intelligence = parseJsonField<TitleDesc[]>(c("intelligence.items"), []);
   const channels = parseJsonField<string[]>(c("channels.items"), []);
@@ -418,113 +532,97 @@ export function CentralMarkLanding({ content, editor }: Props) {
             </div>
 
             <div className="mt-14 space-y-16">
-              {howto.map((step, index) => {
+              {howtoNumbered.map((step, index) => {
                 const reverse = index % 2 === 1;
                 return (
-                  <article
+                  <HowToArticle
                     key={`howto-${index}`}
-                    className="grid items-center gap-10 lg:grid-cols-2"
-                  >
-                    <div className={reverse ? "lg:order-2" : ""}>
-                      <span
-                        className="mb-3 inline-flex h-9 items-center rounded-full px-3 text-xs font-bold uppercase tracking-wider text-white"
-                        style={{ background: "var(--cm-grad)" }}
-                      >
-                        Paso {index + 1}
-                      </span>
-                      {editing ? (
-                        <>
-                          <EditableText
-                            value={step.title}
-                            onChange={(v) =>
-                              set?.(
-                                "howto.steps",
-                                updateObjectArrayItem<HowStep>(
-                                  c("howto.steps"),
-                                  index,
-                                  { title: v },
-                                  howto
-                                )
-                              )
-                            }
-                            label={`Paso ${index + 1} · título`}
-                            className="text-2xl font-bold text-[#0B1B4D]"
-                            style={{ fontFamily: "var(--font-outfit), sans-serif" }}
-                          />
-                          <EditableText
-                            value={step.description}
-                            onChange={(v) =>
-                              set?.(
-                                "howto.steps",
-                                updateObjectArrayItem<HowStep>(
-                                  c("howto.steps"),
-                                  index,
-                                  { description: v },
-                                  howto
-                                )
-                              )
-                            }
-                            multiline
-                            label={`Paso ${index + 1} · texto`}
-                            className="mt-3 text-base leading-relaxed text-slate-600"
-                          />
-                        </>
-                      ) : (
-                        <>
-                          <h3
-                            className="text-2xl font-bold text-[#0B1B4D]"
-                            style={{ fontFamily: "var(--font-outfit), sans-serif" }}
-                          >
-                            {step.title}
-                          </h3>
-                          <p className="mt-3 text-base leading-relaxed text-slate-600">
-                            {step.description}
-                          </p>
-                        </>
-                      )}
-                    </div>
-                    <div
-                      className={`relative overflow-hidden rounded-2xl shadow-xl shadow-slate-200/80 ${
-                        editing ? "" : "cm-animate-float"
-                      } ${reverse ? "lg:order-1" : ""}`}
-                    >
-                      <div
-                        className="pointer-events-none absolute inset-0 z-10 opacity-30"
-                        style={{
-                          background:
-                            "linear-gradient(135deg, rgba(0,194,255,0.25), transparent 40%, rgba(192,38,255,0.2))",
-                        }}
-                      />
-                      {editing ? (
-                        <EditableImage
-                          src={step.image}
-                          alt={step.imageAlt || step.title}
-                          width={1280}
-                          height={800}
-                          className="h-auto w-full object-cover"
-                          uploading={editor?.uploadingKey === `howto.steps.${index}.image`}
-                          label={`Cambiar foto paso ${index + 1}`}
-                          onUpload={(file) => {
-                            // upload to temp key then patch JSON — handled by page via special key
-                            editor?.onUploadImage(`howto.steps.${index}.image`, file);
-                          }}
-                        />
-                      ) : (
-                        <Image
-                          src={step.image}
-                          alt={step.imageAlt || step.title}
-                          width={1280}
-                          height={800}
-                          className="h-auto w-full object-cover"
-                        />
-                      )}
-                    </div>
-                  </article>
+                    step={step}
+                    index={index}
+                    reverse={reverse}
+                    showStepBadge
+                    editing={editing}
+                    uploadingKey={editor?.uploadingKey}
+                    onChangeTitle={(v) =>
+                      set?.(
+                        "howto.steps",
+                        updateObjectArrayItem<HowStep>(
+                          c("howto.steps"),
+                          index,
+                          { title: v },
+                          howto
+                        )
+                      )
+                    }
+                    onChangeDescription={(v) =>
+                      set?.(
+                        "howto.steps",
+                        updateObjectArrayItem<HowStep>(
+                          c("howto.steps"),
+                          index,
+                          { description: v },
+                          howto
+                        )
+                      )
+                    }
+                    onUploadImage={(file) =>
+                      editor?.onUploadImage(`howto.steps.${index}.image`, file)
+                    }
+                  />
                 );
               })}
             </div>
           </div>
         </section>
+
+        {/* Bloques independientes (antes “Paso 4+”) — mismo sitio, sin número de paso */}
+        {howtoIndependent.map(({ step, originalIndex }, i) => {
+          const reverse = originalIndex % 2 === 1;
+          return (
+            <section
+              key={`howto-independent-${originalIndex}`}
+              className={`border-b border-slate-200/80 py-20 ${
+                i % 2 === 0 ? "bg-white" : "bg-[#F7F9FF]"
+              }`}
+            >
+              <div className="mx-auto max-w-7xl px-6">
+                <HowToArticle
+                  step={step}
+                  index={originalIndex}
+                  reverse={reverse}
+                  showStepBadge={false}
+                  editing={editing}
+                  uploadingKey={editor?.uploadingKey}
+                  onChangeTitle={(v) =>
+                    set?.(
+                      "howto.steps",
+                      updateObjectArrayItem<HowStep>(
+                        c("howto.steps"),
+                        originalIndex,
+                        { title: v },
+                        howto
+                      )
+                    )
+                  }
+                  onChangeDescription={(v) =>
+                    set?.(
+                      "howto.steps",
+                      updateObjectArrayItem<HowStep>(
+                        c("howto.steps"),
+                        originalIndex,
+                        { description: v },
+                        howto
+                      )
+                    )
+                  }
+                  onUploadImage={(file) =>
+                    editor?.onUploadImage(`howto.steps.${originalIndex}.image`, file)
+                  }
+                />
+              </div>
+            </section>
+          );
+        })}
 
         {/* Ecosystem */}
         <section className="border-b border-slate-200/80 bg-white py-20">
